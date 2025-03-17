@@ -6,17 +6,28 @@
     systems.url = "github:nix-systems/default";
   };
 
-  outputs = inputs: inputs.parts.lib.mkFlake { inherit inputs; } {
-    systems = import inputs.systems;
+  outputs = inputs:
+    let
+      lib = with inputs; builtins // nixpkgs.lib // parts.lib;
+    in
+    inputs.parts.lib.mkFlake
+      { inherit inputs; }
+      {
+        systems = import inputs.systems;
 
-    perSystem = { pkgs, ... }: {
-      _module.args.lib = with inputs; builtins // nixpkgs.lib // parts.lib;
+        flake.nixosModules.default =
+          lib.modules.importApply
+            ./module.nix
+            { inherit lib; };
 
-      devShells.default = pkgs.mkShell {
-        packages = [ ];
+        perSystem = { pkgs, ... }: {
+          _module.args = { inherit lib; };
+
+          devShells.default = pkgs.mkShell {
+            packages = [ ];
+          };
+
+          formatter = pkgs.nixpkgs-fmt;
+        };
       };
-
-      formatter = pkgs.nixpkgs-fmt;
-    };
-  };
 }
