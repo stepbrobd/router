@@ -254,6 +254,7 @@ in
       };
 
       sessions = lib.mkOption {
+        description = "BGP sessions";
         type = lib.types.listOf (lib.types.submodule {
           options = {
             name = lib.mkOption {

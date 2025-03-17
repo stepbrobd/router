@@ -4,6 +4,7 @@
     parts.url = "github:hercules-ci/flake-parts";
     parts.inputs.nixpkgs-lib.follows = "nixpkgs";
     systems.url = "github:nix-systems/default";
+    search.url = "github:nuschtos/search";
   };
 
   outputs = inputs:
@@ -20,7 +21,7 @@
             ./module.nix
             { inherit lib; };
 
-        perSystem = { pkgs, ... }: {
+        perSystem = { inputs', pkgs, ... }: {
           _module.args = { inherit lib; };
 
           devShells.default = pkgs.mkShell {
@@ -28,6 +29,11 @@
           };
 
           formatter = pkgs.nixpkgs-fmt;
+
+          packages.default = inputs'.search.packages.mkSearch {
+            modules = [ inputs.self.nixosModules.default ];
+            urlPrefix = "https://github.com/stepbrobd/router/blob/master/";
+          };
         };
       };
 }
