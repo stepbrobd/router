@@ -1,0 +1,35 @@
+name: GitHub Pages
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install
+        uses: cachix/install-nix-action@v31
+      - name: Build
+        run: nix build -L
+      - name: Upload
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: result
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
