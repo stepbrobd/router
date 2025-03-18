@@ -33,6 +33,7 @@
           packages.default = inputs'.search.packages.mkSearch {
             modules = [ inputs.self.nixosModules.default ];
             urlPrefix = "https://github.com/stepbrobd/router/blob/master/";
+            baseHref = "/router/";
           };
         };
       };
