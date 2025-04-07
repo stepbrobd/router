@@ -255,7 +255,6 @@ in
       };
 
       sessions = lib.mkOption {
-        description = "BGP sessions";
         type = lib.types.listOf (lib.types.submodule {
           options = {
             name = lib.mkOption {
@@ -270,12 +269,31 @@ in
 
             type = {
               ipv4 = lib.mkOption {
-                type = lib.types.enum [ "direct" "multihop" ];
+                type = lib.types.enum [ "disabled" "direct" "multihop" ];
                 description = "IPv4 peer connection type";
               };
               ipv6 = lib.mkOption {
-                type = lib.types.enum [ "direct" "multihop" ];
+                type = lib.types.enum [ "disabled" "direct" "multihop" ];
                 description = "IPv6 peer connection type";
+              };
+            };
+
+            mp = lib.mkOption {
+              type = lib.types.nullOr (lib.types.enum [ "v4 over v6" "v6 over v4" ]);
+              default = null;
+              description = "BGP multi-protocol extension";
+            };
+
+            source = {
+              ipv4 = lib.mkOption {
+                type = with lib.types; nullOr str;
+                default = cfg.router.source.ipv4;
+                description = "IPv4 source address if different from router's default outbound IPv4";
+              };
+              ipv6 = lib.mkOption {
+                type = with lib.types; nullOr str;
+                default = cfg.router.source.ipv6;
+                description = "IPv6 source address if different from router's default outbound IPv6";
               };
             };
 
@@ -285,11 +303,13 @@ in
                 description = "ASN of BGP neighbor";
               };
               ipv4 = lib.mkOption {
-                type = lib.types.str;
+                type = with lib.types; nullOr str;
+                default = null;
                 description = "IPv4 of BGP neighbor";
               };
               ipv6 = lib.mkOption {
-                type = lib.types.str;
+                type = with lib.types; nullOr str;
+                default = null;
                 description = "IPv6 of BGP neighbor";
               };
             };
@@ -435,12 +455,12 @@ in
 
         ${lib.concatMapStringsSep
         "\n\n"
-        (session: ''
+        (session: (lib.optionalString (session.type.ipv4 != "disabled") ''
           protocol bgp ${session.name}4 {
             graceful restart on;
 
             ${session.type.ipv4};
-            source address ${cfg.router.source.ipv4};
+            source address ${session.source.ipv4};
             local as ${lib.toString cfg.asn};
             neighbor ${session.neighbor.ipv4} as ${lib.toString session.neighbor.asn};${
               if lib.isNull session.password
@@ -453,13 +473,19 @@ in
               ${session.import.ipv4}
               ${session.export.ipv4}
             };
+            ${lib.optionalString (session.mp == "v6 over v4") ''
+              ipv6 {
+                  add paths ${session.addpath};
+                  ${session.import.ipv6}
+                  ${session.export.ipv6}
+                };''}
           }
-
+          '') + "\n" + (lib.optionalString (session.type.ipv6 != "disabled") ''
           protocol bgp ${session.name}6 {
             graceful restart on;
 
             ${session.type.ipv6};
-            source address ${cfg.router.source.ipv6};
+            source address ${session.source.ipv6};
             local as ${lib.toString cfg.asn};
             neighbor ${session.neighbor.ipv6} as ${lib.toString session.neighbor.asn};${
               if lib.isNull session.password
@@ -472,8 +498,13 @@ in
               ${session.import.ipv6}
               ${session.export.ipv6}
             };
-          }'')
-        cfg.router.sessions}'';
+            ${lib.optionalString (session.mp == "v4 over v6") ''
+              ipv4 {
+                  add paths ${session.addpath};
+                  ${session.import.ipv4}
+                  ${session.export.ipv4}
+                };''}
+          }'')) cfg.router.sessions}'';
     }
     {
       boot.kernelModules = [ "dummy" ];
