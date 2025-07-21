@@ -89,7 +89,70 @@
 ]
 
 #slide[
-  == Bird NixOS module is bad
+== Bird NixOS module is bad
+
+- `services.bird.config` text based config only
+- The module defaults to Bird 3 since a couple months ago, and it's unstable
+- Solution: use Nix as a templating engine
+]
+
+#slide[
+== RPKI setup
+
+- Bird `rpki` protocol and `roa` table
+- Delcaritive filter
+
+```nix
+router.rpki.validators = [{
+  id = 0;
+  remote = "rtr.rpki.cloudflare.com";
+  port = 8282;
+}];
+```
+
+```nix
+  services.bird.config = ''
+    roa4 table ${cfg.router.rpki.ipv4.table};
+    roa6 table ${cfg.router.rpki.ipv6.table};
+
+    ${lib.concatMapStringsSep
+    "\n\n"
+    (validator: ''
+      protocol rpki rpki${lib.toString validator.id} {
+        roa4 { table ${cfg.router.rpki.ipv4.table}; };
+        roa6 { table ${cfg.router.rpki.ipv6.table}; };
+
+        remote "${validator.remote}" port ${lib.toString validator.port};
+
+        retry keep ${lib.toString cfg.router.rpki.retry};
+        refresh keep ${lib.toString cfg.router.rpki.refresh};
+        expire ${lib.toString cfg.router.rpki.expire};
+      }'')
+    cfg.router.rpki.validators}
+  '';
+```
+]
+
+#slide[
+  == Kernel protocol
+
+  - Export full table to kernel - 250MB+ from Bird, and another copy in kernel
+  - Will break if upstream router have unusual configuration
+]
+
+#slide[
+  == Multi-protocol BGP
+
+  - usual: 1 session per protocol
+  - MP-BGP: 1 session for all protocols
+]
+
+#slide[
+  == Adding announced prefixes to interfaces
+]
+
+#slide[
+  == Internal routing
 ]
 
 #slide[
