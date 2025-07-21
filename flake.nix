@@ -1,11 +1,17 @@
 {
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    parts.url = "github:hercules-ci/flake-parts";
-    parts.inputs.nixpkgs-lib.follows = "nixpkgs";
-    systems.url = "github:nix-systems/default";
-    search.url = "github:nuschtos/search";
-  };
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+  inputs.systems.url = "github:nix-systems/default";
+  inputs.parts.url = "github:hercules-ci/flake-parts";
+  inputs.parts.inputs.nixpkgs-lib.follows = "nixpkgs";
+  inputs.utils.url = "github:numtide/flake-utils";
+  inputs.utils.inputs.systems.follows = "systems";
+  inputs.ixx.url = "github:nuschtos/ixx";
+  inputs.ixx.inputs.nixpkgs.follows = "nixpkgs";
+  inputs.ixx.inputs.flake-utils.follows = "utils";
+  inputs.search.url = "github:nuschtos/search";
+  inputs.search.inputs.nixpkgs.follows = "nixpkgs";
+  inputs.search.inputs.flake-utils.follows = "utils";
+  inputs.search.inputs.ixx.follows = "ixx";
 
   outputs = inputs:
     let
