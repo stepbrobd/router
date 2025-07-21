@@ -31,10 +31,16 @@
           _module.args = { inherit lib; };
 
           devShells.default = pkgs.mkShell {
-            packages = [ ];
+            packages = with pkgs; [ typst ];
           };
 
-          formatter = pkgs.nixpkgs-fmt;
+          formatter = pkgs.writeShellScriptBin "formatter" ''
+            set -eoux pipefail
+            shopt -s globstar
+            ${lib.getExe pkgs.deno} fmt .
+            ${lib.getExe pkgs.nixpkgs-fmt} .
+            ${lib.getExe pkgs.typstfmt} **/*.typ
+          '';
 
           packages.default = inputs'.search.packages.mkSearch {
             modules = [ inputs.self.nixosModules.default ];
