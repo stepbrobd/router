@@ -23,59 +23,54 @@
 #slide[
   == Address assignment
 
-  - Getting an assignment
-    - From a Regional Internet Registry
+  #toolbox.side-by-side[
+    - DN42
+    - 44NET from ARDC
+    - Lease or purchase from a third party
+  ][
+    - Getting an assignment from RIR
       - APNIC
       - ARIN
       - RIPE NCC
       - LACNIC
       - AFRINIC
-    - 44NET
-    - DN42
-    - Lease or purchase from a third party
+  ]
 ]
 
 #slide[
   == Routing security
 
   - Setup
-    - RPKI Route Origin Authorization
-      - Who's allowed to announce which prefix(es)?
-    - Internet Routing Registry Objects
-      - route/route6
-      - as-set
-      - aut-num
-      - route-set
+    - ROA
+    - IRR objects
 ]
 
 #slide[
-  == Upstream
+  == Getting connected
 
-  - Finding an upstream
+  - Find an upstream
   - Physical presence at a data center
     - Equinix, Hurricane Electric, Cogent, etc.
   - Virtual presence at a cloud provider that provides IP transit
     - https://bgp.services
-  - Any VPS + virtual transit providers
+  - Any VPS + virtual IX or transit providers
     - https://route64.org
     - https://bgp.exchange
     - https://evix.org
 ]
 
 #slide[
-  == Module system magic
+  == Overview
 
-  - Setting up BGP session(s)
-    - How to get routes from upstream(s)?
-      - Full table
+  - Setting up BGP session
+    - Get routes from upstream
       - Default route
+      - Full table (250MB+ for \~1M IPv4 routes + \~230K IPv6 routes)
   - Routing policies
+    - Import/export
     - Filtering
-    - Community tagging
+    - ...
   - Add address(es) within announced prefix(es) to an interface
-  - Multiple upstreams
-    - Internal routing
-  - Anycast?
 ]
 
 #slide[
@@ -89,19 +84,28 @@
 ]
 
 #slide[
-== Bird NixOS module is bad
+== Wrapping `services.bird`
 
-- `services.bird.config` text based config only
-- The module defaults to Bird 3 since a couple months ago, and it's unstable
-- Solution: use Nix as a templating engine
+- `services.bird.config` text config only
+- Defaults to Bird 3
+  - Since a couple months ago
+  - Unstable
+- Solution:
+  - Use Nix as a templating engine
+  - Bird 2
 ]
 
 #slide[
 == RPKI setup
 
+#toolbox.side-by-side[
 - Bird `rpki` protocol and `roa` table
 - Delcaritive filter
-
+- Defining `options.router.rpki`
+  - v4/v6 table and filter names
+  - retry, refresh, expire times
+  - validators
+][
 ```nix
 router.rpki.validators = [{
   id = 0;
@@ -109,53 +113,121 @@ router.rpki.validators = [{
   port = 8282;
 }];
 ```
+]
+]
+
+#slide[
+== RPKI setup
 
 ```nix
-  services.bird.config = ''
-    roa4 table ${cfg.router.rpki.ipv4.table};
-    roa6 table ${cfg.router.rpki.ipv6.table};
+services.bird.config = ''
+  ${lib.concatMapStringsSep
+  "\n\n"
+  (validator: ''
+    protocol rpki rpki${lib.toString validator.id} {
+      remote "${validator.remote}" port ${lib.toString validator.port};
 
-    ${lib.concatMapStringsSep
-    "\n\n"
-    (validator: ''
-      protocol rpki rpki${lib.toString validator.id} {
-        roa4 { table ${cfg.router.rpki.ipv4.table}; };
-        roa6 { table ${cfg.router.rpki.ipv6.table}; };
-
-        remote "${validator.remote}" port ${lib.toString validator.port};
-
-        retry keep ${lib.toString cfg.router.rpki.retry};
-        refresh keep ${lib.toString cfg.router.rpki.refresh};
-        expire ${lib.toString cfg.router.rpki.expire};
-      }'')
-    cfg.router.rpki.validators}
-  '';
+      retry keep ${lib.toString cfg.router.rpki.retry};
+      refresh keep ${lib.toString cfg.router.rpki.refresh};
+      expire ${lib.toString cfg.router.rpki.expire};
+    }'')
+  cfg.router.rpki.validators}
+'';
 ```
 ]
 
 #slide[
-  == Kernel protocol
+== Kernel protocol
 
-  - Export full table to kernel - 250MB+ from Bird, and another copy in kernel
-  - Will break if upstream router have unusual configuration
+#toolbox.side-by-side[
+  - Export full table to kernel
+    - 250MB+ from Bird, and another copy in kernel
+  - Don't export but manually add routes
+    - Might break if upstream router have unusual configuration
+][
+```nix
+options.router.kernel = {
+  ipv4 = {
+    import = lib.mkOption { ... };
+    export = lib.mkOption { ... };
+  };
+  ipv6 = {
+    import = lib.mkOption { ... };
+    export = lib.mkOption { ... };
+  };
+};
+```
+]
 ]
 
 #slide[
-  == Multi-protocol BGP
+== Static routes
 
-  - usual: 1 session per protocol
-  - MP-BGP: 1 session for all protocols
+#toolbox.side-by-side[
+
+][
+#set text(size: 15pt)
+```nix
+options.router.static.ipv4.routes = lib.mkOption {
+  type = lib.types.listOf (lib.types.submodule {
+    options = {
+      prefix = ...;
+      option = ...;
+    };
+  });
+};
+```
+
+```nix
+# config.services.bird.config
+lib.concatMapStringsSep
+  "\n  "
+  (r: "route ${r.prefix} ${r.option};")
+  cfg.router.static.ipv4.routes
+```
+]
+]
+
+#slide[
+== eBPG sessions
+
+#toolbox.side-by-side[
+  - The usual: 1 session per protocol
+  - MP-BGP: 1 session for both v4 and v6
+][
+#set text(size: 15pt)
+```nix
+options.router.sessions = lib.mkOption {
+  type = lib.types.listOf (lib.types.submodule {
+    options = {
+      name = ...;
+      type = ...; # disable, direct, multihop
+      mp = ...; # null, v4 over v6, v6 over v4
+      neighbor = ...; # ASN, IPv4, IPv6
+      import = ...#; IPv4/IPv6 import filter
+      export = ...#; IPv4/IPv6 export filter
+      ...
+    };
+  });
+};
+```
+]
 ]
 
 #slide[
   == Adding announced prefixes to interfaces
+
 ]
 
 #slide[
-  == Internal routing
+  == Multiple upstreams?
+
+  - Internal routing
+  - Tailscale
 ]
 
 #slide[
   #set align(center + horizon)
   == Questions?
+
 ]
