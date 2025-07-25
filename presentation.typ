@@ -184,6 +184,15 @@ lib.concatMapStringsSep
   "\n  "
   (r: "route ${r.prefix} ${r.option};")
   cfg.router.static.ipv4.routes
+
+# example
+router.static = {
+  ipv4.routes = [
+    { prefix = "0.0.0.0/0"; option = "via 198.51.100.130"; }
+    { prefix = "203.0.113.0/24"; option = "blackhole"; }
+  ];
+  ipv6.routes = [{ prefix = "2001:db8::/32"; option = "reject"; }];
+};
 ```
 ]
 ]
@@ -210,6 +219,26 @@ options.router.sessions = lib.mkOption {
     };
   });
 };
+
+# example
+router.sessions = [
+  {
+    name = "bgptools";
+    password = null;
+    type = { ipv4 = "disabled"; ipv6 = "multihop"; };
+    mp = "v4 over v6";
+    neighbor = {
+      asn = 212232;
+      ipv4 = null;
+      ipv6 = "2a0c:2f07:9459::b6";
+    };
+    import.ipv4 = "import none;";
+    import.ipv6 = "import none;";
+    export.ipv4 = "export all;";
+    export.ipv6 = "export all;";
+  }
+  ...
+];
 ```
 ]
 ]
