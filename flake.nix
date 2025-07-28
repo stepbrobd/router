@@ -27,6 +27,11 @@
             ./module.nix
             { inherit lib; };
 
+        flake.nixosModules.alpha =
+          lib.modules.importApply
+            ./alpha
+            { inherit lib; };
+
         perSystem = { inputs', pkgs, ... }: {
           _module.args = { inherit lib; };
 
