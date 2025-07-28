@@ -164,7 +164,18 @@ options.router.kernel = {
 == Static routes
 
 #toolbox.side-by-side[
+- Manually configured routes
 
+#set text(size: 15pt)
+```nix
+router.static = {
+  ipv4.routes = [
+    { prefix = "0.0.0.0/0"; option = "via 198.51.100.130"; }
+    { prefix = "203.0.113.0/24"; option = "blackhole"; }
+  ];
+  ipv6.routes = [{ prefix = "2001:db8::/32"; option = "reject"; }];
+};
+```
 ][
 #set text(size: 15pt)
 ```nix
@@ -176,34 +187,23 @@ options.router.static.ipv4.routes = lib.mkOption {
     };
   });
 };
-```
 
-```nix
 # config.services.bird.config
 lib.concatMapStringsSep
   "\n  "
   (r: "route ${r.prefix} ${r.option};")
   cfg.router.static.ipv4.routes
-
-# example
-router.static = {
-  ipv4.routes = [
-    { prefix = "0.0.0.0/0"; option = "via 198.51.100.130"; }
-    { prefix = "203.0.113.0/24"; option = "blackhole"; }
-  ];
-  ipv6.routes = [{ prefix = "2001:db8::/32"; option = "reject"; }];
-};
 ```
 ]
 ]
 
 #slide[
-== eBPG sessions
+== BPG sessions
 
 #toolbox.side-by-side[
-  - The usual: 1 session per protocol
-  - MP-BGP: 1 session for both v4 and v6
-][
+- The usual: 1 session per protocol
+- MP-BGP: 1 session for both v4 and v6
+
 #set text(size: 15pt)
 ```nix
 options.router.sessions = lib.mkOption {
@@ -219,40 +219,110 @@ options.router.sessions = lib.mkOption {
     };
   });
 };
-
+```
+][
+#set text(size: 15pt)
+```nix
 # example
-router.sessions = [
-  {
-    name = "bgptools";
-    password = null;
-    type = { ipv4 = "disabled"; ipv6 = "multihop"; };
-    mp = "v4 over v6";
-    neighbor = {
-      asn = 212232;
-      ipv4 = null;
-      ipv6 = "2a0c:2f07:9459::b6";
-    };
-    import.ipv4 = "import none;";
-    import.ipv6 = "import none;";
-    export.ipv4 = "export all;";
-    export.ipv6 = "export all;";
-  }
-  ...
+router.sessions = [{
+  name = "bgptools";
+  password = null;
+  type = { ipv4 = "disabled"; ipv6 = "multihop"; };
+  mp = "v4 over v6";
+  neighbor = {
+    asn = 212232;
+    ipv4 = null;
+    ipv6 = "2a0c:2f07:9459::b6";
+  };
+  import.ipv4 = "import none;";
+  import.ipv6 = "import none;";
+  export.ipv4 = "export all;";
+  export.ipv6 = "export all;";
+}];
+```
+]
+]
+
+#slide[
+== Adding announced prefixes to interfaces
+
+#toolbox.side-by-side[
+- Enable forwarding
+- Use `dummy` interface (or use the main interface or whatever)
+- Disable `ManageForeignRoutes` in systemd-networkd (will delete routes exported
+  by Bird)
+][
+#set text(size: 15pt)
+```nix
+  boot.kernelModules = [ "dummy" ];
+  boot.kernel.sysctl = {
+    "net.ipv4.conf.all.forwarding" = 1;
+    "net.ipv4.conf.default.forwarding" = 1;
+    "net.ipv6.conf.all.forwarding" = 1;
+    "net.ipv6.conf.default.forwarding" = 1;
+  };
+  systemd.network.config.networkConfig.ManageForeignRoutes = false;
+```
+]
+]
+
+#slide[
+== Adding announced prefixes to interfaces
+
+#toolbox.side-by-side[
+- Use `systemd.network.netdevs` to configure virtual interfaces
+- Use `systemd.network.networks` to configure addresses and routing policies
+  - `routingPolicyRules` is only needed when the outbound gateway of the announced
+    prefixes is different from the default gateway of the main interface
+][
+#set text(size: 15pt)
+```nix
+  systemd.network.netdevs."40-dummy0".netdevConfig = {
+    Kind = "dummy";
+    Name = "dummy0";
+  };
+
+  systemd.network.networks."40-dummy0" = {
+    name = "dummy0";
+    address = ipv4.addresses ++ ipv6.addresses;
+    routingPolicyRules = ...;
+  };
+```
+]
+]
+
+#slide[
+== Multiple upstreams?
+
+#toolbox.side-by-side[
+  - Internal routing
+    - Usually with WireGuard, VxLAN, or other tunneling protocols
+  - Tailscale
+][
+#set text(size: 15pt)
+```nix
+services.tailscale.extraSetFlags =
+let
+  v4s = lib.concatStringsSep "," ipv4.addresses;
+  v6s = lib.concatStringsSep "," ipv6.addresses;
+  addresses =
+    if v4s == "" then v6s
+    else if v6s == "" then v4s
+    else v4s + "," + v6s;
+in
+[
+  "--accept-routes"
+  "--advertise-exit-node"
+  "--advertise-routes=${addresses}"
+  "--snat-subnet-routes=false"
+  "--ssh"
 ];
 ```
 ]
 ]
 
 #slide[
-  == Adding announced prefixes to interfaces
-
-]
-
-#slide[
-  == Multiple upstreams?
-
-  - Internal routing
-  - Tailscale
+  == Anycast
 ]
 
 #slide[
