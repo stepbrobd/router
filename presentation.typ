@@ -323,6 +323,11 @@ in
 
 #slide[
   == Anycast
+
+  - Announce the same prefixes on multiple geographically distributed machines
+  - Add the same address within the prefixes to multiple machines
+  - Bind to the same address on multiple machines
+  - Profit
 ]
 
 #slide[
