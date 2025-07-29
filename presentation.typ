@@ -10,7 +10,9 @@
 #set page(paper: "presentation-16-9", margin: 2cm, footer: [
   #set text(size: 12pt)
   #set align(horizon)
-  #author #h(1fr) #toolbox.slide-number / #toolbox.last-slide-number
+  NixCon 2025 - #author
+  #h(1fr)
+  #toolbox.slide-number / #toolbox.last-slide-number
 ])
 
 #slide[
@@ -24,11 +26,11 @@
   == Address assignment
 
   #toolbox.side-by-side[
-    - DN42
+    - DN42 (all reserved addresses)
     - 44NET from ARDC
     - Lease or purchase from a third party
   ][
-    - Getting an assignment from RIR
+    - Get assignment directly from RIR
       - APNIC
       - ARIN
       - RIPE NCC
@@ -40,37 +42,52 @@
 #slide[
   == Routing security
 
-  - Setup
+  #toolbox.side-by-side[
+    - Add objects to your new prefixes
+      - ROA
+      - IRR
+
+    - RPKI repository: cryptographically signed authorization objects based on chain
+      of trust hosted by registries
+  ][
     - ROA
-    - IRR objects
+      - Which AS can announce the prefix under some max length
+      - Only registries can host ROAs
+      - X.509 cert signed objects
+
+    - IRR
+      - Mostly who can announce the prefix
+      - Aside from registries, known entities can also host IRR (NTT, RADB, etc.)
+      - Queryable
+  ]
 ]
 
 #slide[
   == Getting connected
 
-  - Find an upstream
-  - Physical presence at a data center
-    - Equinix, Hurricane Electric, Cogent, etc.
-  - Virtual presence at a cloud provider that provides IP transit
-    - https://bgp.services
-  - Any VPS + virtual IX or transit providers
-    - https://route64.org
-    - https://bgp.exchange
-    - https://evix.org
+  - Find upstream(s)
+    - Physical presence at a data center
+      - Equinix, Hurricane Electric, Cogent, etc.
+    - Virtual presence at a cloud provider that provides IP transit
+      - https://bgp.services
+    - Any VPS + virtual IX or transit providers
+      - https://route64.org
+      - https://bgp.exchange
+      - https://evix.org
 ]
 
 #slide[
-  == Overview
+  == Going live
 
   - Setting up BGP session
     - Get routes from upstream
       - Default route
-      - Full table (250MB+ for \~1M IPv4 routes + \~230K IPv6 routes)
+      - Full table (BIRD: 250MB+ for \~1M IPv4 routes + \~230K IPv6 routes)// maybe smaller or larger depending on routing daemon
   - Routing policies
     - Import/export
     - Filtering
     - ...
-  - Add address(es) within announced prefix(es) to an interface
+  - Add address within announced prefix to interface
 ]
 
 #slide[
@@ -79,7 +96,7 @@
   - NixOS
     - systemd-networkd
     - nftables
-  - Bird
+  - BIRD
   - Tailscale
 ]
 
@@ -87,12 +104,8 @@
 == Wrapping `services.bird`
 
 - `services.bird.config` text config only
-- Defaults to Bird 3
-  - Since a couple months ago
-  - Unstable
 - Solution:
   - Use Nix as a templating engine
-  - Bird 2
 ]
 
 #slide[
@@ -328,10 +341,21 @@ in
   - Add the same address within the prefixes to multiple machines
   - Bind to the same address on multiple machines
   - Profit
+
+  - This is what Cloudflare, BunnyCDN, Google, and many other providers do
+]
+
+#slide[
+  == Closing remarks
+
+  - Possible to run your own RPKI validator (ROA based and IRR based)
 ]
 
 #slide[
   #set align(center + horizon)
   == Questions?
 
+  #v(2em)
+
+  Special thanks to Nick Cao (github.com/NickCao)
 ]
