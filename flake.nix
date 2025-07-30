@@ -13,25 +13,26 @@
   inputs.search.inputs.flake-utils.follows = "utils";
   inputs.search.inputs.ixx.follows = "ixx";
 
-  outputs = inputs:
+  outputs =
+    inputs:
     let
       lib = with inputs; builtins // nixpkgs.lib // parts.lib;
     in
-    inputs.parts.lib.mkFlake
-      { inherit inputs; }
-      {
-        systems = import inputs.systems;
+    inputs.parts.lib.mkFlake { inherit inputs; } {
+      systems = import inputs.systems;
 
-        flake.nixosModules =
-          let
-            moduleFrom = path: lib.modules.importApply path { inherit lib; };
-          in
-          {
-            default = moduleFrom ./modules;
-            alpha = moduleFrom ./modules/alpha;
-          };
+      flake.nixosModules =
+        let
+          moduleFrom = path: lib.modules.importApply path { inherit lib; };
+        in
+        {
+          default = moduleFrom ./modules;
+          alpha = moduleFrom ./modules/alpha;
+        };
 
-        perSystem = { inputs', pkgs, ... }: {
+      perSystem =
+        { inputs', pkgs, ... }:
+        {
           _module.args = { inherit lib; };
 
           devShells.default = pkgs.mkShell {
@@ -46,11 +47,23 @@
             ${lib.getExe pkgs.typstfmt} **/*.typ
           '';
 
-          packages.default = inputs'.search.packages.mkSearch {
-            modules = [ inputs.self.nixosModules.default ];
-            urlPrefix = "https://github.com/stepbrobd/router/blob/master/";
-            baseHref = "/router/";
-          };
+          packages.default = # only meant for github pages
+            let
+              mkSearchForModule =
+                modules: baseHref:
+                inputs'.search.packages.mkSearch {
+                  inherit modules baseHref;
+                  urlPrefix = "https://github.com/stepbrobd/router/blob/master/";
+                };
+            in
+            pkgs.linkFarm "ghp" (
+              lib.mapAttrsToList
+                (name: value: {
+                  inherit name;
+                  path = mkSearchForModule [ value ] "/router/${name}/";
+                })
+                inputs.self.nixosModules
+            );
 
           packages.slides = pkgs.stdenvNoCC.mkDerivation {
             name = "slides";
@@ -61,5 +74,5 @@
             installPhase = "mv main.pdf $out";
           };
         };
-      };
+    };
 }
