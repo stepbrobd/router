@@ -94,22 +94,33 @@
 
   - Setting up BGP session
     - Get routes from upstream
-      - Default route
-      - Full table (BIRD: 250MB+ for \~1M IPv4 routes + \~230K IPv6 routes)// maybe smaller or larger depending on routing daemon
+      - Default route (0.0.0.0/0, ::/0)
+      - Full table
+        - BIRD: 250MB+ for \~1M IPv4 routes + \~230K IPv6 routes)
+        - May be smaller or larger depending on routing daemon
+
   - Routing policies
     - Import/export
     - Filtering
     - ...
+
   - Add address within announced prefix to interface
 ]
 
 #slide[
   == Prerequisites
 
-  - NixOS
+  - The Nix templating engine ;) and NixOS
+
+  #v(1em)
+
+  - Some netwoking knowledge
     - systemd-networkd
     - nftables
-  - BIRD
+
+  #v(1em)
+
+  - BIRD Internet Routing Daemon
   - Tailscale
 ]
 
