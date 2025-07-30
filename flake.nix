@@ -31,9 +31,21 @@
         };
 
       perSystem =
-        { inputs', pkgs, ... }:
+        { inputs', pkgs, system, ... }:
         {
-          _module.args = { inherit lib; };
+          _module.args = {
+            inherit lib;
+            pkgs = import inputs.nixpkgs {
+              inherit system;
+              overlays = [
+                (_: _: {
+                  typst =
+                    inputs'.nixpkgs.legacyPackages.typst.withPackages
+                      (ps: with ps; [ polylux ]);
+                })
+              ];
+            };
+          };
 
           devShells.default = pkgs.mkShell {
             packages = with pkgs; [ typst ];
@@ -69,7 +81,7 @@
             name = "slides";
             version = with inputs; self.shortRev or self.dirtyShortRev;
             src = ./docs;
-            nativeBuildInputs = [ pkgs.typst ];
+            nativeBuildInputs = with pkgs; [ typst ];
             buildPhase = "typst compile main.typ main.pdf";
             installPhase = "mv main.pdf $out";
           };
