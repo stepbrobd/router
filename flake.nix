@@ -22,15 +22,14 @@
       {
         systems = import inputs.systems;
 
-        flake.nixosModules.default =
-          lib.modules.importApply
-            ./module.nix
-            { inherit lib; };
-
-        flake.nixosModules.alpha =
-          lib.modules.importApply
-            ./alpha
-            { inherit lib; };
+        flake.nixosModules =
+          let
+            moduleFrom = path: lib.modules.importApply path { inherit lib; };
+          in
+          {
+            default = moduleFrom ./modules;
+            alpha = moduleFrom ./modules/alpha;
+          };
 
         perSystem = { inputs', pkgs, ... }: {
           _module.args = { inherit lib; };
@@ -51,6 +50,15 @@
             modules = [ inputs.self.nixosModules.default ];
             urlPrefix = "https://github.com/stepbrobd/router/blob/master/";
             baseHref = "/router/";
+          };
+
+          packages.slides = pkgs.stdenvNoCC.mkDerivation {
+            name = "slides";
+            version = with inputs; self.shortRev or self.dirtyShortRev;
+            src = ./docs;
+            nativeBuildInputs = [ pkgs.typst ];
+            buildPhase = "typst compile main.typ main.pdf";
+            installPhase = "mv main.pdf $out";
           };
         };
       };
