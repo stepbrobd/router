@@ -23,57 +23,70 @@
 ]
 
 #slide[
-  == Address assignment
+  == Acquisition
 
   #toolbox.side-by-side[
-    - DN42 (all reserved addresses)
-    - 44NET from ARDC
-    - Lease or purchase from a third party
+    *ASN*:
+    - DN42/experimental networks (reserved)
+    - RIR direct assignment or LIR sponsorship
   ][
-    - Get assignment directly from RIR
-      - APNIC
-      - ARIN
-      - RIPE NCC
-      - LACNIC
-      - AFRINIC
+    *IP address*:
+    - DN42/experimental networks (reserved)
+    - ARDC 44NET (AR callsign required)
+    - Lease/purchase from third-party
   ]
+
+  #set align(center)
+  #image("rir.jpg", width: 60%)
 ]
 
 #slide[
   == Routing security
 
   #toolbox.side-by-side[
-    - Add objects to your new prefixes
-      - ROA
-      - IRR
+    *RPKI*: cryptographically signed authorization objects based on chain of trust
+    hosted by registries
 
-    - RPKI repository: cryptographically signed authorization objects based on chain
-      of trust hosted by registries
+    *IRR*: database of routing policies, hosted by registries and other entities
+
+    #v(3.25em)
+    - Add object to new prefix
+      - ROA (RPKI)
+      - ROUTE/ROUTE6, AS-SET, etc. (IRR)
   ][
-    - ROA
-      - Which AS can announce the prefix under some max length
-      - Only registries can host ROAs
-      - X.509 cert signed objects
+    *ROA*
+    - Which AS can announce the prefix under some max length
+    - Only registries can host ROAs
+    - X.509 cert signed objects
 
-    - IRR
-      - Mostly who can announce the prefix
-      - Aside from registries, known entities can also host IRR (NTT, RADB, etc.)
-      - Queryable
+    *IRR objects*
+    - Mostly who can announce the prefix, who is customer, who is provider, etc.
+    - Queryable
+    - Aside from registries, known entities can also host IRR (NTT, RADB, etc.)
   ]
 ]
 
 #slide[
   == Getting connected
 
-  - Find upstream(s)
-    - Physical presence at a data center
-      - Equinix, Hurricane Electric, Cogent, etc.
-    - Virtual presence at a cloud provider that provides IP transit
+  #toolbox.side-by-side[
+    - Physical presence in datacenter
+      - Cogent
+      - Equinix
+      - Hurricane Electric
+      - ...
+  ][
+    - Virtual presence at cloud provider that provide IP transit
+      - Vultr, V.PS, Neptune Networks, etc.
       - https://bgp.services
+
+    #v(3em)
+
     - Any VPS + virtual IX or transit providers
-      - https://route64.org
       - https://bgp.exchange
       - https://evix.org
+      - https://route64.org
+  ]
 ]
 
 #slide[
