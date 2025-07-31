@@ -1,3 +1,10 @@
+// FIXME: text too dense
+// spend more time on what nixos can bring?
+// e.g. benifets of using nixos for routing
+// the code is kinda useless with all the explanation?
+// memory consumption of BIRD, maybe add why the global routing table is
+// needed and when default routes is necessary
+
 #import "@preview/polylux:0.4.0": *
 
 #let title = "Internet scale routing with NixOS"
