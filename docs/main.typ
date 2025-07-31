@@ -174,6 +174,26 @@ services.bird.config = ''
 ]
 
 #slide[
+== Predefined filters
+
+- Renamable ROA filters
+- Can be referred later in import/export filters
+- Have future improvements in mind
+
+```nix
+services.bird.config = ''
+  filter ${cfg.router.rpki.ipv4.filter} {
+    if (roa_check(roa4, net, bgp_path.last) = ROA_INVALID) then {
+      print "Ignore RPKI invalid ", net, " for ASN ", bgp_path.last;
+      reject;
+    }
+    accept;
+  }
+'';
+```
+]
+
+#slide[
 == Kernel protocol
 
 #toolbox.side-by-side[
@@ -359,20 +379,50 @@ in
 ]
 
 #slide[
-  == Anycast
+== Anycast
 
-  - Announce the same prefixes on multiple geographically distributed machines
-  - Add the same address within the prefixes to multiple machines
-  - Bind to the same address on multiple machines
-  - Profit
+- Announce the same prefixes on multiple geographically distributed machines
+- Add the same address within the prefixes to multiple machines
+- Bind to the same address on multiple machines
+- Profit
 
-  - This is what Cloudflare, BunnyCDN, Google, and many other providers do
+- This is what GitHub Pages, Cloudflare, Google, and many other providers do
+
+- Example
+  #set text(size: 15pt)
+  - https://github.com/search?q=repo%3Astepbrobd%2Fdotfiles%20personal%20site%20anycast&type=code
+  - https://anycast.as10779.net
+  - `curl -6 -I https://anycast.as10779.net`
 ]
 
 #slide[
-  == Closing remarks
+== Lessons learned
 
-  - Possible to run your own RPKI validator (ROA based and IRR based)
+- NAT is not your friend
+  - Use IPv6 if possible
+
+- Debugging
+  - All network operators should have public looking glass
+    - `bird-lg` or other looking glass tools
+    - Feed full table to BGP.Tools or NLNOG
+  - `mtr`, `ping`, `traceroute`, `dig`, etc. are your friends
+  - Tailscale is buggy
+    - They eat the entirety of CGNAT address space (100.64.0.0/10)
+    - `nodeAttrs` -> `ipPool` is half-baked, outstanding issue since Feb 2021
+      (tailscale\#1381)
+    - My workaround: set very specific priority in nftables
+]
+
+#slide[
+== Closing remarks
+
+- Possible to run your own RPKI validator (ROA based and IRR based)
+
+- Plan to write a more generic module to replace `services.bird` and upstream it
+  - Proof of concept: `github:stepbrobd/router#nixosModules.alpha`
+  - Idea from: `github:NuschtOS/bird.nix`
+  - Support all protocols
+  - Integrate flow exporter for better observability
 ]
 
 #slide[
