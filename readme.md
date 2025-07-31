@@ -1,8 +1,11 @@
 # Simple and Declarative NixOS Router
 
-Default: <https://stepbrobd.github.io/router/default/>
+NixCon 2025 slide deck: <https://stepbrobd.github.io/router/slides.pdf>
 
-Alpha: <https://stepbrobd.github.io/router/alpha/>
+Options:
+
+- Default: <https://stepbrobd.github.io/router/default/>
+- Alpha: <https://stepbrobd.github.io/router/alpha/>
 
 ## License
 
