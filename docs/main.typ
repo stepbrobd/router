@@ -9,7 +9,7 @@
 
 #let title = "Internet scale routing with NixOS"
 #let author = "Yifei Sun"
-#let date = datetime(year: 2025, month: 9, day: 5)
+#let date = datetime(year: 2025, month: 9, day: 6)
 
 #set document(title: title, author: author, date: date)
 
@@ -17,16 +17,34 @@
 #set page(paper: "presentation-16-9", margin: 2cm, footer: [
   #set text(size: 12pt)
   #set align(horizon)
-  NixCon 2025 - #author
+  #date.display("[month repr:short]. [day padding:none], [year]")
   #h(1fr)
   #toolbox.slide-number / #toolbox.last-slide-number
 ])
 
 #slide[
-  #set align(horizon)
-  = Experience report:\ #title
+= #title
 
-  #date.display("[month repr:long] [day padding:none], [year]")
+#v(1em)
+#set text(size: 20pt)
+
+Yifei Sun $arrow.l.r.double.long$ #link("https://ysun.co/")[`https://ysun.co/`]
+
+#v(1fr)
+#set text(size: 12pt)
+```console
+  $ dig +short NS ysun.co
+  mom.ns.ysun.co.
+  dad.ns.ysun.co.
+  ```
+
+#v(1fr)
+#set text(size: 16pt)
+
+Supported by
+
+#box(image("cf_blk.png", width: 25%)) #h(0.25em) Project Alexandria
+
 ]
 
 #slide[
