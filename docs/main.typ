@@ -33,10 +33,10 @@ Yifei Sun $arrow.l.r.double.long$ #link("https://ysun.co/")[`https://ysun.co/`]
 #v(1fr)
 #set text(size: 12pt)
 ```console
-  $ dig +short NS ysun.co
-  mom.ns.ysun.co.
-  dad.ns.ysun.co.
-  ```
+$ dig +short NS ysun.co
+mom.ysun.co.
+dad.ysun.co.
+```
 
 #v(1fr)
 #set text(size: 16pt)
@@ -120,7 +120,7 @@ Supported by
   - Setting up BGP session
     - Get routes from upstream
       - Default route (0.0.0.0/0, ::/0)
-      - Full table
+      - Full table (usually not necessary)
         - BIRD: 250MB+ for \~1M IPv4 routes + \~230K IPv6 routes)
         - May be smaller or larger depending on routing daemon
 
@@ -182,7 +182,7 @@ router.rpki.validators = [{
 == RPKI setup
 
 ```nix
-services.bird.config = ''
+services.bird.config = lib.mkOrder <int> ''
   ${lib.concatMapStringsSep
   "\n\n"
   (validator: ''
@@ -206,7 +206,7 @@ services.bird.config = ''
 - Have future improvements in mind
 
 ```nix
-services.bird.config = ''
+services.bird.config = lib.mkOrder <int> ''
   filter ${cfg.router.rpki.ipv4.filter} {
     if (roa_check(roa4, net, bgp_path.last) = ROA_INVALID) then {
       print "Ignore RPKI invalid ", net, " for ASN ", bgp_path.last;
@@ -374,6 +374,27 @@ router.sessions = [{
 ]
 
 #slide[
+== Immediate benefit
+
+*Parametericity*
+
+#set text(size: 18pt)
+```nix
+config = lib.mkIf
+  (options?router
+  &&
+  lib.elem
+    config.a.b.c.bind.v4
+    config.services.router.local.ipv4.addresses
+  &&
+  lib.elem
+    config.a.b.c.bind.v6
+    config.services.router.local.ipv6.addresses)
+  { ... };
+```
+]
+
+#slide[
 == Multiple upstreams?
 
 #toolbox.side-by-side[
@@ -416,8 +437,8 @@ in
 - Example
   #set text(size: 15pt)
   - https://github.com/search?q=repo%3Astepbrobd%2Fdotfiles%20personal%20site%20anycast&type=code
-  - https://anycast.as10779.net
-  - `curl -6 -I https://anycast.as10779.net`
+  - https://ysun.co
+  - `curl -6 -I https://ysun.co`
 ]
 
 #slide[
@@ -441,7 +462,7 @@ in
 #slide[
 == Closing remarks
 
-- Possible to run your own RPKI validator (ROA based and IRR based)
+- Possible to run your own validator (ROA based and IRR based)
 
 - Plan to write a more generic module to replace `services.bird` and upstream it
   - Proof of concept: `github:stepbrobd/router#nixosModules.alpha`
