@@ -4,6 +4,40 @@
 // the code is kinda useless with all the explanation?
 // memory consumption of BIRD, maybe add why the global routing table is
 // needed and when default routes is necessary
+// figures?
+// more background on routing basica?
+// clarify how this talk is related to nix (very first slide?) up until p.10 its not like a nix talk
+// bring page 7 to the top? be clear on what we want to achive with nix
+// explain what bird is (background)
+// add motivation for the first slide or second?
+// comparison with ubuntu?
+// why use nix for managing config? bird is text only
+// add story, what is the debug chanllange, how i fixed it
+// after motivation add challnge
+// less implementation details?
+// mention that options added are close to 1-1 match with bird official docs
+//
+// for challenges e.g. why not exporting routes directly to kernel
+//
+// 1. motivation
+// 2. some info about networking (if necessary to introduce following challenges)
+// 3. challenges
+// 4. overview of solutions
+// 5. solution 1
+// 6. solution 2
+// 7. ...
+// 8. summary (can be the same as overview of solutions)
+// kazuki says:1. motivation
+// 2. some info about networking which are necessary to introduce challenges
+// 3. challenges <<<<<<
+// 4. some info about networking which are necessary to introduce solutions
+// 5. overview of solutions
+// 6. solution 1
+// 7. solution 2
+// 8. ...
+// last slide. summary (can be the same as overview of solutions)
+// motivation here is "want to use Nix as a templating engine for bird config"
+// do it more adhoc? instead of dump background beforehand
 
 #import "@preview/polylux:0.4.0": *
 
