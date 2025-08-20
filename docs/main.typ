@@ -57,41 +57,105 @@
 ])
 
 #slide[
-= #title
+  = #title
 
-#v(1em)
-#set text(size: 20pt)
+  #v(1em)
+  #set text(size: 20pt)
 
-Yifei Sun $arrow.l.r.double.long$ #link("https://ysun.co/")[`https://ysun.co/`]
+  Yifei Sun
 
-#v(1fr)
-#set text(size: 12pt)
-```console
-$ dig +short NS ysun.co
-mom.ysun.co.
-dad.ysun.co.
-```
+  Inria, ENS de Lyon, Université Grenoble Alpes
 
-#v(1fr)
-#set text(size: 16pt)
+  #v(1fr)
+  #set text(size: 16pt)
 
-Supported by
+  #box(image("cf_blk.png", width: 25%)) #h(0.25em) Project Alexandria
+]
 
-#box(image("cf_blk.png", width: 25%)) #h(0.25em) Project Alexandria
+#slide[
+  == Routing daemon
 
+  Software that implements *routing protocols* to *exchange routing information*
+  with other routers and *maintain routing tables*.
+
+  #v(2em)
+
+  *BIRD*: BIRD Internet Routing Daemon // recursive acronym
+]
+
+#slide[
+== Problem
+
+NixOS module option `services.bird.config` is text only
+
+#v(2em)
+
+#toolbox.side-by-side[
+  - Maintenance burden
+    - Hard to read
+    - Hard to write
+    - Hard to debug
+    - Hard to maintain
+  - Hard to compose and reuse
+][
+  #image("meme.png")
+]
+]
+
+#slide[
+  == Solution
+
+  #set text(size: 28pt)
+  #set align(center)
+  #v(4em)
+  *Parameteriziing BIRD configuration with NixOS options*
+]
+
+#slide[
+  == Prerequisites
+
+  - Nix and NixOS
+
+  #v(1em)
+
+  - Some netwoking knowledge
+    - systemd-networkd #footnote[NixOS's default networking backend]
+    - nftables #footnote[Linux Kernel packet classification framework]
+
+  #v(1em)
+
+  - BIRD
+  - Tailscale #footnote[Open source mesh VPN software]
+]
+
+#slide[
+  == Background
+
+  #set text(size: 28pt)
+  #set align(center)
+  #v(3em)
+  *How the internet works*
+
+  #set text(size: 22pt)
+  #v(2em)
+  Resource acquisition
+
+  Routing security
+
+  Finding an upstream
+
+  Pingable!
 ]
 
 #slide[
   == Acquisition
 
   #toolbox.side-by-side[
-    *ASN*:
-    - DN42/experimental networks (reserved)
+    *ASN*: // unique identifier for each autonomous system (simply put, an AS is a network or a group of networks under a unified routing policy)
     - RIR direct assignment or LIR sponsorship
   ][
-    *IP address*:
-    - DN42/experimental networks (reserved)
-    - ARDC 44NET (AR callsign required)
+    *IP address*: // identifier for each network interface
+    - Direct assignment
     - Lease/purchase from third-party
   ]
 
@@ -103,12 +167,13 @@ Supported by
   == Routing security
 
   #toolbox.side-by-side[
-    *RPKI*: cryptographically signed authorization objects based on chain of trust
-    hosted by registries
+    *RPKI*: signed authorization objects hosted by registries
+
+    #v(2em)
 
     *IRR*: database of routing policies, hosted by registries and other entities
 
-    #v(3.25em)
+    #v(2em)
     - Add object to new prefix
       - ROA (RPKI)
       - ROUTE/ROUTE6, AS-SET, etc. (IRR)
@@ -130,9 +195,9 @@ Supported by
 
   #toolbox.side-by-side[
     - Physical presence in datacenter
+      - Hurricane Electric
       - Cogent
       - Equinix
-      - Hurricane Electric
       - ...
   ][
     - Virtual presence at cloud provider that provide IP transit
@@ -142,8 +207,8 @@ Supported by
     #v(3em)
 
     - Any VPS + virtual IX or transit providers
+      - Cloudflare Magic Transit
       - https://bgp.exchange
-      - https://evix.org
       - https://route64.org
   ]
 ]
@@ -164,31 +229,6 @@ Supported by
     - ...
 
   - Add address within announced prefix to interface
-]
-
-#slide[
-  == Prerequisites
-
-  - The Nix templating engine ;) and NixOS
-
-  #v(1em)
-
-  - Some netwoking knowledge
-    - systemd-networkd
-    - nftables
-
-  #v(1em)
-
-  - BIRD Internet Routing Daemon
-  - Tailscale
-]
-
-#slide[
-== Wrapping `services.bird`
-
-- `services.bird.config` text config only
-- Solution:
-  - Use Nix as a templating engine
 ]
 
 #slide[
