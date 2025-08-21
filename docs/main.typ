@@ -39,6 +39,7 @@
 // motivation here is "want to use Nix as a templating engine for bird config"
 // do it more adhoc? instead of dump background beforehand
 
+#import "@preview/muchpdf:0.1.1": muchpdf
 #import "@preview/polylux:0.4.0": *
 
 #let title = "Internet scale routing with NixOS"
@@ -241,16 +242,42 @@ NixOS module option `services.bird.config` is text only
 ]
 
 #slide[
-== RPKI setup
+  == Implementation
+
+  #set text(size: 28pt)
+  #set align(center)
+  #v(3em)
+  *Parameterizing BIRD configuration*
+
+  #set text(size: 22pt)
+  #v(2em)
+  RPKI and filters
+
+  Export routes to kernel
+
+  Static routes and BGP sessions
+
+  Internal routing with Tailscale + bonus ;)
+]
+
+#slide[
+== RPKI and filters
 
 #toolbox.side-by-side[
-- Bird `rpki` protocol and `roa` table
-- Delcaritive filter
+*RPKI*
+- BIRD `rpki` protocol and `roa` table
 - Defining `options.router.rpki`
   - v4/v6 table and filter names
-  - retry, refresh, expire times
-  - validators
+  - retry, refresh, expiration times
+  - list of validators
 ][
+  *Pre-defined filters*
+  - Renamable ROA filters based on route RPIKI status
+  - Can be referred later in import/export filters
+  - Will support arbitrary filters in the future
+]
+
+#set align(center)
 ```nix
 router.rpki.validators = [{
   id = 0;
@@ -259,22 +286,21 @@ router.rpki.validators = [{
 }];
 ```
 ]
-]
 
 #slide[
-== RPKI setup
+== RPKI and filters
 
 ```nix
 services.bird.config = lib.mkOrder <int> ''
   ${lib.concatMapStringsSep
   "\n\n"
   (validator: ''
-    protocol rpki rpki${lib.toString validator.id} {
-      remote "${validator.remote}" port ${lib.toString validator.port};
+    protocol rpki rpki${toString validator.id} {
+      remote "${validator.remote}" port ${toString validator.port};
 
-      retry keep ${lib.toString cfg.router.rpki.retry};
-      refresh keep ${lib.toString cfg.router.rpki.refresh};
-      expire ${lib.toString cfg.router.rpki.expire};
+      retry keep ${toString cfg.router.rpki.retry};
+      refresh keep ${toString cfg.router.rpki.refresh};
+      expire ${toString cfg.router.rpki.expire};
     }'')
   cfg.router.rpki.validators}
 '';
@@ -282,22 +308,32 @@ services.bird.config = lib.mkOrder <int> ''
 ]
 
 #slide[
-== Predefined filters
+== RPKI and filters
 
-- Renamable ROA filters
-- Can be referred later in import/export filters
-- Have future improvements in mind
+#set text(size: 14pt)
 
-```nix
-services.bird.config = lib.mkOrder <int> ''
-  filter ${cfg.router.rpki.ipv4.filter} {
-    if (roa_check(roa4, net, bgp_path.last) = ROA_INVALID) then {
-      print "Ignore RPKI invalid ", net, " for ASN ", bgp_path.last;
-      reject;
-    }
-    accept;
+```bird
+roa6 table trpki6;
+
+protocol rpki rpki0 {
+  roa6 { table trpki6; };
+  remote "rtr.rpki.cloudflare.com" port 8282;
+  retry ...; refresh ...; expire ...;
+}
+
+protocol rpki rpki1 {
+  roa6 { table trpki6; };
+  remote "r3k.zrh2.v.rpki.daknob.net" port 3323;
+  retry ...; refresh ...; expire ...;
+}
+
+filter validated6 {
+  if (roa_check(trpki6, net, bgp_path.last) = ROA_INVALID) then {
+    print "Ignore RPKI invalid ", net, " for ASN ", bgp_path.last;
+    reject;
   }
-'';
+  accept;
+}
 ```
 ]
 
@@ -305,10 +341,10 @@ services.bird.config = lib.mkOrder <int> ''
 == Kernel protocol
 
 #toolbox.side-by-side[
-  - Export full table to kernel
-    - 250MB+ from Bird, and another copy in kernel
-  - Don't export but manually add routes
-    - Might break if upstream router have unusual configuration
+Export routes to kernel
+- Default route: most common
+- Full table: 250MB+ from Bird, and another copy in kernel
+- Manual: don't export routes but set `networking.*` options// can work but might break
 ][
 ```nix
 options.router.kernel = {
@@ -329,20 +365,9 @@ options.router.kernel = {
 == Static routes
 
 #toolbox.side-by-side[
-- Manually configured routes
+Manually configured routes
 
-#set text(size: 15pt)
-```nix
-router.static = {
-  ipv4.routes = [
-    { prefix = "0.0.0.0/0"; option = "via 198.51.100.130"; }
-    { prefix = "203.0.113.0/24"; option = "blackhole"; }
-  ];
-  ipv6.routes = [{ prefix = "2001:db8::/32"; option = "reject"; }];
-};
-```
-][
-#set text(size: 15pt)
+#set text(size: 14pt)
 ```nix
 options.router.static.ipv4.routes = lib.mkOption {
   type = lib.types.listOf (lib.types.submodule {
@@ -351,6 +376,17 @@ options.router.static.ipv4.routes = lib.mkOption {
       option = ...;
     };
   });
+};
+```
+][
+#set text(size: 15pt)
+```nix
+router.static = {
+  ipv4.routes = [
+    { prefix = "0.0.0.0/0"; option = "via 198.51.100.130"; }
+    { prefix = "203.0.113.0/24"; option = "blackhole"; }
+  ];
+  ipv6.routes = [{ prefix = "2001:db8::/32"; option = "reject"; }];
 };
 
 # config.services.bird.config
@@ -415,7 +451,7 @@ router.sessions = [{
 - Enable forwarding
 - Use `dummy` interface (or use the main interface or whatever)
 - Disable `ManageForeignRoutes` in systemd-networkd (will delete routes exported
-  by Bird)
+  by BIRD)
 ][
 #set text(size: 15pt)
 ```nix
@@ -481,8 +517,10 @@ config = lib.mkIf
 == Multiple upstreams?
 
 #toolbox.side-by-side[
+  #muchpdf(read("ir.pdf", encoding: none))
+  Solution:
   - Internal routing
-    - Usually with WireGuard, VxLAN, or other tunneling protocols
+    - Usually WireGuard, VxLAN, GRE, ...
   - Tailscale
 ][
 #set text(size: 15pt)
@@ -508,27 +546,20 @@ in
 ]
 
 #slide[
-== Anycast
+  == Anycast
 
-- Announce the same prefixes on multiple geographically distributed machines
-- Add the same address within the prefixes to multiple machines
-- Bind to the same address on multiple machines
-- Profit
+  #set align(center)
+  #muchpdf(read("anycast.pdf", encoding: none))
 
-- This is what GitHub Pages, Cloudflare, Google, and many other providers do
-
-- Example
-  #set text(size: 15pt)
-  - https://github.com/search?q=repo%3Astepbrobd%2Fdotfiles%20personal%20site%20anycast&type=code
-  - https://ysun.co
-  - `curl -6 -I https://ysun.co`
+  #set align(left)
+  Announcing the same prefixes, and use same address(es) on multiple machines.
+  This is what Cloudflare, GitHub Pages, and many other providers do.
 ]
 
 #slide[
 == Lessons learned
 
-- NAT is not your friend
-  - Use IPv6 if possible
+- NAT :( use IPv6 when possible
 
 - Debugging
   - All network operators should have public looking glass
@@ -539,7 +570,7 @@ in
     - They eat the entirety of CGNAT address space (100.64.0.0/10)
     - `nodeAttrs` -> `ipPool` is half-baked, outstanding issue since Feb 2021
       (tailscale\#1381)
-    - My workaround: set very specific priority in nftables
+    - My workaround: set rules with very specific priorities in nftables
 ]
 
 #slide[

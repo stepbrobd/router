@@ -41,7 +41,7 @@
                 (_: _: {
                   typst =
                     inputs'.nixpkgs.legacyPackages.typst.withPackages
-                      (ps: with ps; [ polylux ]);
+                      (ps: with ps; [ muchpdf polylux ]);
                 })
               ];
             };
