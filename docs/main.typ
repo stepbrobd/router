@@ -44,17 +44,25 @@
 #let title = "Internet scale routing with NixOS"
 #let author = "Yifei Sun"
 #let date = datetime(year: 2025, month: 9, day: 6)
+#let conference = "NixCon 2025"
 
 #set document(title: title, author: author, date: date)
 
 #set text(size: 20pt)
-#set page(paper: "presentation-16-9", margin: 2cm, footer: [
-  #set text(size: 12pt)
-  #set align(horizon)
-  #date.display("[month repr:short]. [day padding:none], [year]")
-  #h(1fr)
-  #toolbox.slide-number / #toolbox.last-slide-number
-])
+#set page(
+  paper: "presentation-16-9", margin: 2cm, footer: context[
+    #set text(size: 12pt)
+    #set align(horizon)
+    #if here().page() == 1 [
+      #conference $dot.c$ #date.display("[month repr:long] [day padding:none], [year]")
+    ] else if here().page() == counter(page).final().at(0) [
+    ] else [
+      #author $dot.c$ #conference $dot.c$ #date.display("[month repr:short]. [day padding:none], [year]")
+      #h(1fr)
+      #toolbox.slide-number / #toolbox.last-slide-number
+    ]
+  ],
+)
 
 #slide[
   = #title
@@ -66,10 +74,11 @@
 
   Inria, ENS de Lyon, Université Grenoble Alpes
 
-  #v(1fr)
-  #set text(size: 16pt)
-
-  #box(image("cf_blk.png", width: 25%)) #h(0.25em) Project Alexandria
+  #box(image("inria.png", height: 11%))
+  #h(1em)
+  #box(move(dx: 0pt, dy: 15pt, image("ensl.png", height: 12.5%)))
+  #h(1em)
+  #box(move(dx: 0pt, dy: 9pt, image("uga.png", height: 11.5%)))
 ]
 
 #slide[
@@ -552,4 +561,12 @@ in
   #v(2em)
 
   Special thanks to Nick Cao (github.com/NickCao)
+
+  #v(1fr)
+
+  #box(image("france2030.png", height: 15%))
+  #h(1em)
+  #box(image("numpex.png", height: 15%))
+
+  #box(image("cf_blk.png", width: 25%)) #h(0.25em) #text(size: 16pt, weight: "bold")[Project Alexandria]
 ]
