@@ -38,6 +38,18 @@
 // last slide. summary (can be the same as overview of solutions)
 // motivation here is "want to use Nix as a templating engine for bird config"
 // do it more adhoc? instead of dump background beforehand
+//
+// adrien:
+// give a little introduction about myself at the beginning
+// involvement in community, motivation for the project, etc.
+// missing main topic? what am i trying to do here
+// its too network oriented, some audience might not
+// slide 23 what's NAT
+// add my motivation in lessons learedn (like entirely possible to run router with nixos)
+// when introducing new terms at very beginning, add a small explanation when its mentioned down the line
+// slide 9 maybe give a recap on what bgp is
+// what's the exact contribution? make it clear (i made a new module to configure bird)
+// good outcode: bird module exist, current way hard to use, my module makes it easier, audience would want to try
 
 #import "@preview/muchpdf:0.1.1": muchpdf
 #import "@preview/polylux:0.4.0": *
@@ -118,7 +130,7 @@ NixOS module option `services.bird.config` is text only
   #set text(size: 28pt)
   #set align(center)
   #v(4em)
-  *Parameteriziing BIRD configuration with NixOS options*
+  *Parameterizing BIRD configuration with NixOS options*
 ]
 
 #slide[
@@ -343,7 +355,7 @@ filter validated6 {
 #toolbox.side-by-side[
 Export routes to kernel
 - Default route: most common
-- Full table: 250MB+ from Bird, and another copy in kernel
+- Full table: 250MB+ from BIRD, and another copy in kernel
 - Manual: don't export routes but set `networking.*` options// can work but might break
 ][
 ```nix
