@@ -10,7 +10,7 @@ Options:
 ## License
 
 <p>
-  This project is supported by
+  Sponsored under
   <a href="https://www.cloudflare.com/lp/project-alexandria/" style="display: inline-flex; align-items: center; gap: 0.5em; text-decoration: none;">
     <picture>
       <source media="(prefers-color-scheme: light)" srcset="https://github.com/stepbrobd/router/blob/master/docs/cf_blk.png">
