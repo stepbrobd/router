@@ -117,7 +117,7 @@ NixOS module option `services.bird.config` is text only
     - Hard to read
     - Hard to write
     - Hard to debug
-    - Hard to maintain
+
   - Hard to compose and reuse
 ][
   #image("meme.png")
@@ -141,7 +141,7 @@ NixOS module option `services.bird.config` is text only
   #v(1em)
 
   - Some netwoking knowledge
-    - systemd-networkd #footnote[NixOS's default networking backend]
+    - systemd-networkd
     - nftables #footnote[Linux Kernel packet classification framework]
 
   #v(1em)
@@ -170,7 +170,7 @@ NixOS module option `services.bird.config` is text only
 ]
 
 #slide[
-  == Acquisition
+  == Acquisition #footnote[Or dn42, ...]
 
   #toolbox.side-by-side[
     *ASN*: // unique identifier for each autonomous system (simply put, an AS is a network or a group of networks under a unified routing policy)
@@ -182,7 +182,7 @@ NixOS module option `services.bird.config` is text only
   ]
 
   #set align(center)
-  #image("rir.jpg", width: 60%)
+  #image("rir.jpg", width: 55%)
 ]
 
 #slide[
@@ -423,11 +423,12 @@ options.router.sessions = lib.mkOption {
   type = lib.types.listOf (lib.types.submodule {
     options = {
       name = ...;
+      password = ...; # null for don't validate
       type = ...; # disable, direct, multihop
       mp = ...; # null, v4 over v6, v6 over v4
       neighbor = ...; # ASN, IPv4, IPv6
-      import = ...#; IPv4/IPv6 import filter
-      export = ...#; IPv4/IPv6 export filter
+      import = ...; # IPv4/IPv6 import filter
+      export = ...; # IPv4/IPv6 export filter
       ...
     };
   });
@@ -548,10 +549,8 @@ let
 in
 [
   "--accept-routes"
-  "--advertise-exit-node"
   "--advertise-routes=${addresses}"
   "--snat-subnet-routes=false"
-  "--ssh"
 ];
 ```
 ]
@@ -571,18 +570,18 @@ in
 #slide[
 == Lessons learned
 
-- NAT :( use IPv6 when possible
+- Use IPv6 when possible
 
-- Debugging
-  - All network operators should have public looking glass
-    - `bird-lg` or other looking glass tools
-    - Feed full table to BGP.Tools or NLNOG
-  - `mtr`, `ping`, `traceroute`, `dig`, etc. are your friends
-  - Tailscale is buggy
-    - They eat the entirety of CGNAT address space (100.64.0.0/10)
-    - `nodeAttrs` -> `ipPool` is half-baked, outstanding issue since Feb 2021
-      (tailscale\#1381)
-    - My workaround: set rules with very specific priorities in nftables
+- Host a looking glass
+  - `bird-lg` or other looking glass tools
+  - Feed full table to BGP.Tools, NLNOG, etc.
+- `tcpdump`, `mtr`, `ping`, `traceroute`, `dig`, etc. #footnote[Also ping.sx is pretty cool] are your friends
+
+- Tailscale?
+  - They eat the entirety of CGNAT address space (100.64.0.0/10)
+  - `nodeAttrs` -> `ipPool` is half-baked, outstanding issue since Feb 2021
+    (tailscale\#1381)
+  - My workaround: set lookup rules with very specific priorities
 ]
 
 #slide[
