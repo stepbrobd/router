@@ -405,7 +405,7 @@ options.router.static.ipv4.routes = lib.mkOption {
 router.static = {
   ipv4.routes = [
     { prefix = "0.0.0.0/0";
-      option = "via 198.51.100.130"; }
+      option = "via 192.0.2.1"; }
     { prefix = "203.0.113.0/24";
       option = "blackhole"; }
   ];
@@ -451,15 +451,15 @@ options.router.sessions = lib.mkOption {
 ```nix
 # example
 router.sessions = [{
-  name = "bgptools";
+  name = "somebody";
   password = null;
   type.ipv4 = "disabled";
   type.ipv6 = "multihop";
   mp = "v4 over v6";
   neighbor = {
-    asn = 212232;
+    asn = 65536;
     ipv4 = null;
-    ipv6 = "2a0c:2f07:9459::b6";
+    ipv6 = "2001:db8::1";
   };
   import.ipv4 = "import none;";
   import.ipv6 = "import none;";
