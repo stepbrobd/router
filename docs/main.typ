@@ -95,6 +95,16 @@
 ]
 
 #slide[
+  == Why?
+
+  #v(1fr)
+  #set align(center)
+  // awesome use of free will
+  *(O\_O)*
+  #v(1fr)
+]
+
+#slide[
   == Routing daemon
 
   Software that implements *routing protocols* to *exchange routing information*
@@ -174,7 +184,7 @@ NixOS module option `services.bird.config` is text only
 
   #toolbox.side-by-side[
     *ASN*: // unique identifier for each autonomous system (simply put, an AS is a network or a group of networks under a unified routing policy)
-    - RIR direct assignment or LIR sponsorship
+    - RIR #footnote[nro.net/about/rirs] direct assignment or LIR sponsorship
   ][
     *IP address*: // identifier for each network interface
     - Direct assignment
@@ -182,7 +192,7 @@ NixOS module option `services.bird.config` is text only
   ]
 
   #set align(center)
-  #image("rir.jpg", width: 55%)
+  #image("rir.jpg", width: 49.90%)
 ]
 
 #slide[
@@ -191,25 +201,24 @@ NixOS module option `services.bird.config` is text only
   #toolbox.side-by-side[
     *RPKI*: signed authorization objects hosted by registries
 
-    #v(2em)
-
-    *IRR*: database of routing policies, hosted by registries and other entities
-
-    #v(2em)
-    - Add object to new prefix
-      - ROA (RPKI)
-      - ROUTE/ROUTE6, AS-SET, etc. (IRR)
-  ][
     *ROA*
     - Which AS can announce the prefix under some max length
     - Only registries can host ROAs
     - X.509 cert signed objects
+  ][
+    *IRR*: database of routing policies, hosted by registries and other entities
 
     *IRR objects*
     - Mostly who can announce the prefix, who is customer, who is provider, etc.
     - Queryable
     - Aside from registries, known entities can also host IRR (NTT, RADB, etc.)
   ]
+  #set align(center)
+  Add objects to for your ASN & prefix
+
+  ROA
+
+  ROUTE/ROUTE6, AS-SET, etc.
 ]
 
 #slide[
@@ -469,13 +478,15 @@ router.sessions = [{
 #set text(size: 15pt)
 ```nix
   boot.kernelModules = [ "dummy" ];
+
   boot.kernel.sysctl = {
-    "net.ipv4.conf.all.forwarding" = 1;
     "net.ipv4.conf.default.forwarding" = 1;
-    "net.ipv6.conf.all.forwarding" = 1;
     "net.ipv6.conf.default.forwarding" = 1;
   };
-  systemd.network.config.networkConfig.ManageForeignRoutes = false;
+
+  systemd.network.config = {
+    networkConfig.ManageForeignRoutes = false;
+  };
 ```
 ]
 ]
@@ -527,14 +538,19 @@ config = lib.mkIf
 ]
 
 #slide[
-== Multiple upstreams?
+  == Multiple upstreams?
+
+  #set align(center)
+  #muchpdf(read("ir.pdf", encoding: none), scale: 2.6)
+]
+
+#slide[
+== Internal routing with Tailscale #footnote[tailscale.com/blog/how-tailscale-works]
 
 #toolbox.side-by-side[
-  #muchpdf(read("ir.pdf", encoding: none))
-  Solution:
-  - Internal routing
-    - Usually WireGuard, VxLAN, GRE, ...
-  - Tailscale
+  #set align(center)
+  #muchpdf(read("ts1.pdf", encoding: none), scale: 0.205)
+  #muchpdf(read("ts2.pdf", encoding: none), scale: 0.255)
 ][
 #set text(size: 15pt)
 ```nix
@@ -547,12 +563,13 @@ let
     else if v6s == "" then v4s
     else v4s + "," + v6s;
 in
-[
-  "--accept-routes"
+[ "--accept-routes"
   "--advertise-routes=${addresses}"
-  "--snat-subnet-routes=false"
-];
+  "--snat-subnet-routes=false" ];
 ```
+
+#v(4em)
+\*Other tunneling protocols will also work
 ]
 ]
 
@@ -575,10 +592,11 @@ in
 - Host a looking glass
   - `bird-lg` or other looking glass tools
   - Feed full table to BGP.Tools, NLNOG, etc.
-- `tcpdump`, `mtr`, `ping`, `traceroute`, `dig`, etc. #footnote[Also ping.sx is pretty cool] are your friends
+- `tcpdump`, `mtr`, `ping`, `traceroute`, `dig`, etc. #footnote[Also ping.sx is pretty cool] are
+  your friends
 
-- Tailscale?
-  - They eat the entirety of CGNAT address space (100.64.0.0/10)
+- Tailscale is good but...
+  - Eat the entirety of CGNAT address space (100.64.0.0/10)
   - `nodeAttrs` -> `ipPool` is half-baked, outstanding issue since Feb 2021
     (tailscale\#1381)
   - My workaround: set lookup rules with very specific priorities
