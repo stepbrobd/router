@@ -404,10 +404,13 @@ options.router.static.ipv4.routes = lib.mkOption {
 ```nix
 router.static = {
   ipv4.routes = [
-    { prefix = "0.0.0.0/0"; option = "via 198.51.100.130"; }
-    { prefix = "203.0.113.0/24"; option = "blackhole"; }
+    { prefix = "0.0.0.0/0";
+      option = "via 198.51.100.130"; }
+    { prefix = "203.0.113.0/24";
+      option = "blackhole"; }
   ];
-  ipv6.routes = [{ prefix = "2001:db8::/32"; option = "reject"; }];
+  ipv6.routes = [{ prefix = "2001:db8::/32";
+                   option = "reject"; }];
 };
 
 # config.services.bird.config
@@ -450,7 +453,8 @@ options.router.sessions = lib.mkOption {
 router.sessions = [{
   name = "bgptools";
   password = null;
-  type = { ipv4 = "disabled"; ipv6 = "multihop"; };
+  type.ipv4 = "disabled";
+  type.ipv6 = "multihop";
   mp = "v4 over v6";
   neighbor = {
     asn = 212232;
@@ -502,15 +506,19 @@ router.sessions = [{
 ][
 #set text(size: 15pt)
 ```nix
-  systemd.network.netdevs."40-dummy0".netdevConfig = {
-    Kind = "dummy";
-    Name = "dummy0";
+  systemd.network.netdevs = {
+      "40-dummy0".netdevConfig = {
+      Kind = "dummy";
+      Name = "dummy0";
+    };
   };
 
-  systemd.network.networks."40-dummy0" = {
-    name = "dummy0";
-    address = ipv4.addresses ++ ipv6.addresses;
-    routingPolicyRules = ...;
+  systemd.network.networks = {
+      "40-dummy0" = {
+      name = "dummy0";
+      address = ipv4.addresses ++ ipv6.addresses;
+      routingPolicyRules = ...;
+    };
   };
 ```
 ]
