@@ -405,7 +405,7 @@ options.router.static.ipv4.routes = lib.mkOption {
 router.static = {
   ipv4.routes = [
     { prefix = "0.0.0.0/0";
-      option = "via 192.0.2.1"; }
+      option = "via 198.51.100.1"; }
     { prefix = "203.0.113.0/24";
       option = "blackhole"; }
   ];
@@ -623,18 +623,22 @@ in
 ]
 
 #slide[
-  #set align(center + horizon)
-  == Questions?
+#set align(center + horizon)
+== Questions?
 
-  #v(2em)
+#v(2em)
 
-  Special thanks to Nick Cao (github.com/NickCao)
+ysun\@hey.com $dot.c$ `github:stepbrobd/router`
 
-  #v(1fr)
+#v(2em)
 
-  #box(image("france2030.png", height: 15%))
-  #h(1em)
-  #box(image("numpex.png", height: 15%))
+Special thanks to Nick Cao (`github:NickCao`)
 
-  #box(image("cf_blk.png", width: 25%)) #h(0.25em) #text(size: 16pt, weight: "bold")[Project Alexandria]
+#v(1fr)
+
+#box(image("france2030.png", height: 15%))
+#h(1em)
+#box(image("numpex.png", height: 15%))
+
+#box(image("cf_blk.png", width: 25%)) #h(0.25em) #text(size: 16pt, weight: "bold")[Project Alexandria]
 ]
