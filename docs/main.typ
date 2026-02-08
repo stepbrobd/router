@@ -51,7 +51,7 @@
 // what's the exact contribution? make it clear (i made a new module to configure bird)
 // good outcode: bird module exist, current way hard to use, my module makes it easier, audience would want to try
 
-#import "@preview/muchpdf:0.1.1": muchpdf
+#import "@preview/muchpdf:0.1.2": muchpdf
 #import "@preview/polylux:0.4.0": *
 
 #let title = "Internet scale routing with NixOS"
