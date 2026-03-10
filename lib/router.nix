@@ -9,8 +9,8 @@ let
     std.types.mkOptionType {
       inherit name;
       description = "${name} (one of: ${std.concatStringsSep ", " validValues})";
-      check = v: v ? ${attrName} && builtins.elem v.${attrName} validValues;
-      merge = _loc: defs: let val = (builtins.head defs).value; in val;
+      check = v: builtins.isAttrs v && v ? ${attrName} && builtins.elem v.${attrName} validValues;
+      merge = std.options.mergeEqualOption;
     };
 
   constants = {
@@ -85,10 +85,11 @@ let
       name = "routeActionType";
       description = "route action (blackhole, unreachable, prohibit, or via with gateway)";
       check = v:
-        v ? action
+        builtins.isAttrs v
+        && v ? action
         && builtins.elem v.action [ "blackhole" "unreachable" "prohibit" "via" ]
         && (v.action != "via" || v ? gateway);
-      merge = _loc: defs: let val = (builtins.head defs).value; in val;
+      merge = std.options.mergeEqualOption;
     };
   };
 
