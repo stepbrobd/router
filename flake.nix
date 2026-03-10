@@ -23,37 +23,19 @@
 
       flake.nixosModules =
         let
-          moduleFrom = path: lib.modules.importApply path { inherit lib; };
-          moduleFromNew = path: lib.modules.importApply path {
+          moduleFrom = path: lib.modules.importApply path {
             std = lib;
             router = import ./lib/router.nix { std = lib; };
           };
         in
-        {
-          default = moduleFrom ./modules;
-          alpha = moduleFrom ./modules/alpha;
-          bird2 = moduleFromNew ./modules/providers/bird2;
-        };
+        { bird2 = moduleFrom ./modules/providers/bird2; };
 
       perSystem =
-        { pkgs, system, inputs', self', ... }:
+        { pkgs, system, inputs', ... }:
         {
           _module.args = {
             inherit lib;
-            pkgs = import inputs.nixpkgs {
-              inherit system;
-              overlays = [
-                (_: _: {
-                  typst =
-                    inputs'.nixpkgs.legacyPackages.typst.withPackages
-                      (ps: with ps; [ muchpdf polylux ]);
-                })
-              ];
-            };
-          };
-
-          devShells.default = pkgs.mkShell {
-            packages = with pkgs; [ typst ];
+            pkgs = import inputs.nixpkgs { inherit system; };
           };
 
           formatter = pkgs.writeShellScriptBin "formatter" ''
@@ -61,7 +43,6 @@
             shopt -s globstar
             ${lib.getExe pkgs.deno} fmt .
             ${lib.getExe pkgs.nixpkgs-fmt} .
-            ${lib.getExe pkgs.typstfmt} **/*.typ
           '';
 
           checks = {
@@ -83,27 +64,18 @@
                     urlPrefix = "https://github.com/stepbrobd/router/blob/master/";
                   };
                 mkSite = baseHref:
-                  pkgs.linkFarm "ghp" ((
+                  pkgs.linkFarm "ghp" (
                     lib.mapAttrsToList
                       (name: value: {
                         inherit name;
                         path = mkSearchForModule [ value ] "${baseHref}/${name}/";
                       })
                       inputs.self.nixosModules
-                  ) ++ [{ name = "slides.pdf"; path = self'.packages.slides; }]);
+                  );
               in
               (mkSite "/router").overrideAttrs (_: {
                 passthru = { inherit mkSearchForModule mkSite; };
               });
-
-            slides = pkgs.stdenvNoCC.mkDerivation {
-              name = "slides";
-              version = with inputs; self.shortRev or self.dirtyShortRev;
-              src = ./docs;
-              nativeBuildInputs = with pkgs; [ typst ];
-              buildPhase = "typst compile main.typ main.pdf";
-              installPhase = "mv main.pdf $out";
-            };
           };
         };
     };
