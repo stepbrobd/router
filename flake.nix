@@ -24,10 +24,15 @@
       flake.nixosModules =
         let
           moduleFrom = path: lib.modules.importApply path { inherit lib; };
+          moduleFromNew = path: lib.modules.importApply path {
+            std = lib;
+            router = import ./lib/router.nix { std = lib; };
+          };
         in
         {
           default = moduleFrom ./modules;
           alpha = moduleFrom ./modules/alpha;
+          bird2 = moduleFromNew ./modules/providers/bird2;
         };
 
       perSystem =
@@ -58,6 +63,15 @@
             ${lib.getExe pkgs.nixpkgs-fmt} .
             ${lib.getExe pkgs.typstfmt} **/*.typ
           '';
+
+          checks = {
+            bird2 = import ./modules/providers/bird2/tests {
+              self = inputs.self;
+              inherit pkgs;
+              std = lib;
+              router = import ./lib/router.nix { std = lib; };
+            };
+          };
 
           packages = {
             default =
