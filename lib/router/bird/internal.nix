@@ -158,6 +158,7 @@ let
     table = "tables";
     function = "functions";
     filter = "filters";
+    template = "templates";
     protocol = "protocols";
   };
   targets = attrNames collections;
@@ -191,6 +192,7 @@ let
         "table"
         "function"
         "filter"
+        "template"
         "protocol"
       ];
   byKey = builtins.listToAttrs (

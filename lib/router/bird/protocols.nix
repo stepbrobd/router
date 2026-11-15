@@ -10,13 +10,14 @@ let
       table = nullable (types.referenceTo "table");
       import = nullable types.policy;
       export = nullable types.policy;
-      addPaths = option
-        (t.enum [
+      addPaths = nullable (
+        t.enum [
           "off"
           "rx"
           "tx"
           "on"
-        ]) "off";
+        ]
+      );
       nextHopSelf = nullable (
         t.either t.bool (
           t.enum [
@@ -47,15 +48,16 @@ let
     };
   };
   channels = option (t.attrsOf channel) { };
-  endpoint =
-    requireAddress:
+  # templates may leave either endpoint to the declarations derived from them
+  endpoint = nullable (
     t.submodule {
       options = {
         asn = mkOption { type = types.asn; };
-        address = if requireAddress then mkOption { type = t.str; } else address;
+        address = address;
         port = nullable types.port;
       };
-    };
+    }
+  );
   destination = t.submodule {
     options = {
       type = mkOption {
@@ -75,8 +77,9 @@ let
 in
 {
   device.module = {
-    options.scanTime = option types.uint 10;
+    options.scanTime = nullable types.uint;
   };
+  device.defaults.scanTime = 10;
   direct.module = {
     options = {
       inherit channels;
@@ -98,11 +101,16 @@ in
     options = {
       inherit channels;
       kernelTable = nullable types.uint;
-      scanTime = option types.uint 10;
-      learn = option (t.either t.bool (t.enum [ "all" ])) false;
-      persist = option t.bool false;
+      scanTime = nullable types.uint;
+      learn = nullable (t.either t.bool (t.enum [ "all" ]));
+      persist = nullable t.bool;
       metric = nullable types.uint;
     };
+  };
+  kernel.defaults = {
+    scanTime = 10;
+    learn = false;
+    persist = false;
   };
   static.module = {
     options = {
@@ -122,13 +130,10 @@ in
   bgp.module = {
     options = {
       inherit channels;
-      local = mkOption { type = endpoint false; };
-      neighbor = mkOption { type = endpoint true; };
-      transport = mkOption {
-        default = {
-          type = "direct";
-        };
-        type = t.submodule {
+      local = endpoint;
+      neighbor = endpoint;
+      transport = nullable (
+        t.submodule {
           options = {
             type = mkOption {
               type = t.enum [
@@ -138,8 +143,8 @@ in
             };
             hops = nullable (t.ints.between 1 255);
           };
-        };
-      };
+        }
+      );
       sourceAddress = address;
       gracefulRestart = nullable (
         t.enum [
@@ -150,9 +155,17 @@ in
       );
       holdTime = nullable types.uint;
       keepaliveTime = nullable types.uint;
-      bfd = option t.bool false;
-      ttlSecurity = option t.bool false;
+      bfd = nullable t.bool;
+      ttlSecurity = nullable t.bool;
       password = nullable types.expression;
     };
+  };
+  bgp.defaults = {
+    transport = {
+      type = "direct";
+      hops = null;
+    };
+    bfd = false;
+    ttlSecurity = false;
   };
 }

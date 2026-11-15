@@ -956,10 +956,12 @@ let
           ) "a value-returning function needs a return or terminating branch on every structured path"
       else if target == "filter" then
         filter path null definition
-      else if target == "protocol" then
+      else if target == "protocol" || target == "template" then
         let
           protocolType = definition.type or null;
           registered = isString protocolType && builtins.hasAttr protocolType protocols;
+          from = definition.from or null;
+          parent = lookup from;
         in
         error "${path}.type" registered "unknown protocol type"
         ++ error "${path}.disabled" (isBool (definition.disabled or false)) "expected a boolean"
@@ -967,7 +969,16 @@ let
           string "${path}.description" definition.description
         )
         ++ native "${path}.extraConfig" (definition.extraConfig or "")
-        ++ lib.optionals registered (
+        ++ lib.optionals (from != null) (
+          reference "${path}.from" [ "template" ] from
+          ++ error "${path}.from" ((from.kind or null) == "reference") "templates must be declared, not external"
+          ++ error "${path}.from"
+            (
+              parent == null || (parent.type or null) == protocolType
+            ) "a ${target} can only derive from a template of the same protocol type"
+        )
+        # a template is checked through the protocols derived from it, since it may be incomplete on its own
+        ++ lib.optionals (registered && target == "protocol") (
           (
             protocols.${protocolType}.validate or (
               _: _: _:

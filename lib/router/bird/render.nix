@@ -1,4 +1,4 @@
-{ lib, protocols }:
+{ lib, protocols, resolve }:
 config:
 let
   inherit (lib)
@@ -144,8 +144,9 @@ let
       block "filter" (filterBody selected.inline)
     else
       "where ${expression selected.where}";
-  channel =
-    family: declaration:
+  # a derived block writes only what it sets, so an explicit default still overrides its template
+  channelFor =
+    derived: family: declaration:
     let
       option =
         key: label:
@@ -170,7 +171,10 @@ let
             "export"
           ]
         ++ [
-          (optionalString ((declaration.addPaths or "off") != "off") "add paths ${declaration.addPaths};")
+          (optionalString
+            (
+              (declaration.addPaths or null) != null && (derived || declaration.addPaths != "off")
+            ) "add paths ${declaration.addPaths};")
           (option "nextHopSelf" "next hop self")
           (option "nextHopKeep" "next hop keep")
           (optionalString
@@ -186,24 +190,32 @@ let
       );
     in
     "${block family contents};";
-  protocol =
-    name: declaration: contents:
-    block "protocol ${declaration.type} ${identifier name}" (join [
-      (optionalString (declaration.disabled or false) "disabled on;")
-      (optionalString
+  protocolFor =
+    keyword: derived: name: declaration: contents:
+    block
+      "${keyword} ${declaration.type} ${identifier name}${
+        optionalString derived " from ${identifier declaration.from.name}"
+      }"
+      (join [
         (
-          (declaration.description or null) != null
-        ) "description ${quote declaration.description};")
-      contents
-      (declaration.extraConfig or "")
-    ]);
-  ctx = {
+          if derived then
+            optionalString ((declaration.disabled or null) != null) "disabled ${switch declaration.disabled};"
+          else
+            optionalString (declaration.disabled or false) "disabled on;"
+        )
+        (optionalString
+          (
+            (declaration.description or null) != null
+          ) "description ${quote declaration.description};")
+        contents
+        (declaration.extraConfig or "")
+      ]);
+  ctxFor = keyword: derived: {
     inherit
       config
       value
       expression
       body
-      channel
       quote
       identifier
       switch
@@ -211,10 +223,14 @@ let
       join
       block
       address
-      protocol
+      derived
       ;
     inherit (internal) typeOf;
+    channel = channelFor derived;
+    protocol = protocolFor keyword derived;
   };
+  # root declarations render their effective configuration, which carries router's defaults
+  resolved = resolve config;
   declaration =
     item:
     let
@@ -232,7 +248,12 @@ let
     else if target == "filter" then
       block "filter ${identifier name}" (filterBody definition)
     else
-      protocols.${definition.type}.render ctx name definition;
+      let
+        derived = (definition.from or null) != null;
+      in
+      protocols.${definition.type}.render (ctxFor target derived) name (
+        if derived then definition else resolved.${internal.collections.${target}}.${name}
+      );
 in
 if internal.ordering.unresolved != [ ] then
   throw "cannot render BIRD declarations with a dependency cycle"

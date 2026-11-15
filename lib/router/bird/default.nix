@@ -21,16 +21,22 @@ let
         || !(entry ? render)
         || !(builtins.isFunction entry.render)
         || (entry ? validate && !(builtins.isFunction entry.validate))
+        || (entry ? defaults && !(extendedLib.isAttrs entry.defaults))
     )
     registry;
   checkedRegistry =
     if invalidEntries == { } then
       registry
     else
-      throw "lib.router.bird: protocol extensions require a module, a render function and an optional validate function: ${extendedLib.concatStringsSep ", " (builtins.attrNames invalidEntries)}";
+      throw "lib.router.bird: protocol extensions require a module, a render function, an optional validate function and optional defaults: ${extendedLib.concatStringsSep ", " (extendedLib.attrNames invalidEntries)}";
+  resolveConfig = import ./resolve.nix {
+    lib = extendedLib;
+    protocols = checkedRegistry;
+  };
   renderConfig = import ./render.nix {
     lib = extendedLib;
     protocols = checkedRegistry;
+    resolve = resolveConfig;
   };
   validateConfig = import ./validate.nix {
     lib = extendedLib;
@@ -50,7 +56,9 @@ let
       bird = self;
       protocols = checkedRegistry;
     };
-    validate = validateConfig;
+    # every template and protocol with its inheritance chain applied, for validation and data consumers
+    resolve = resolveConfig;
+    validate = config: validateConfig (resolveConfig config);
     render =
       config:
       let

@@ -184,7 +184,7 @@ in
   device = {
     render =
       ctx: name: cfg:
-      ctx.protocol name cfg "scan time ${toString cfg.scanTime};";
+      ctx.protocol name cfg (optionalString (cfg.scanTime != null) "scan time ${toString cfg.scanTime};");
     validate =
       ctx: name: cfg:
       ctx.uint "protocols.${name}.scanTime" 32 cfg.scanTime;
@@ -241,9 +241,9 @@ in
       ctx.protocol name cfg (
         ctx.join [
           (optionalString (cfg.kernelTable != null) "kernel table ${toString cfg.kernelTable};")
-          "scan time ${toString cfg.scanTime};"
-          "learn ${if builtins.isBool cfg.learn then ctx.switch cfg.learn else cfg.learn};"
-          "persist ${ctx.switch cfg.persist};"
+          (optionalString (cfg.scanTime != null) "scan time ${toString cfg.scanTime};")
+          (optionalString (cfg.learn != null) "learn ${if lib.isBool cfg.learn then ctx.switch cfg.learn else cfg.learn};")
+          (optionalString (cfg.persist != null) "persist ${ctx.switch cfg.persist};")
           (optionalString (cfg.metric != null) "metric ${toString cfg.metric};")
           (channels ctx cfg)
         ]
@@ -292,10 +292,12 @@ in
       ctx: name: cfg:
       ctx.protocol name cfg (
         ctx.join [
-          (endpointText ctx "local" cfg.local)
-          (endpointText ctx "neighbor" cfg.neighbor)
+          (optionalString (cfg.local != null) (endpointText ctx "local" cfg.local))
+          (optionalString (cfg.neighbor != null) (endpointText ctx "neighbor" cfg.neighbor))
           (
-            if cfg.transport.type == "direct" then
+            if cfg.transport == null then
+              ""
+            else if cfg.transport.type == "direct" then
               "direct;"
             else
               "multihop${optionalString (cfg.transport.hops != null) " ${toString cfg.transport.hops}"};"
@@ -304,8 +306,8 @@ in
           (optionalString (cfg.gracefulRestart != null) "graceful restart ${cfg.gracefulRestart};")
           (optionalString (cfg.holdTime != null) "hold time ${toString cfg.holdTime};")
           (optionalString (cfg.keepaliveTime != null) "keepalive time ${toString cfg.keepaliveTime};")
-          "bfd ${ctx.switch cfg.bfd};"
-          "ttl security ${ctx.switch cfg.ttlSecurity};"
+          (optionalString (cfg.bfd != null) "bfd ${ctx.switch cfg.bfd};")
+          (optionalString (cfg.ttlSecurity != null) "ttl security ${ctx.switch cfg.ttlSecurity};")
           (optionalString (cfg.password != null) "password ${ctx.value cfg.password};")
           (channels ctx cfg)
         ]
@@ -314,8 +316,10 @@ in
       ctx: name: cfg:
       let
         path = "protocols.${name}";
-        localInfo = ctx.ipInfo cfg.local.address;
-        neighborInfo = ctx.ipInfo cfg.neighbor.address;
+        local = if cfg.local == null then { } else cfg.local;
+        neighbor = if cfg.neighbor == null then { } else cfg.neighbor;
+        localInfo = ctx.ipInfo (local.address or null);
+        neighborInfo = ctx.ipInfo (neighbor.address or null);
         sourceInfo = ctx.ipInfo cfg.sourceAddress;
         localSourceMatch =
           !localInfo.valid
@@ -323,8 +327,11 @@ in
           || (localInfo.family == sourceInfo.family && localInfo.words == sourceInfo.words);
         password = ctx.expression "${path}.password" (ctx.scopeFor "define") cfg.password;
       in
-      endpoint ctx "${path}.local" false cfg.local
-      ++ endpoint ctx "${path}.neighbor" true cfg.neighbor
+      # endpoints may come from a template, so only the effective declaration must have both
+      ctx.error "${path}.local" (cfg.local != null) "BGP requires a local ASN"
+      ++ ctx.error "${path}.neighbor" (cfg.neighbor != null) "BGP requires a neighbor"
+      ++ lib.optionals (cfg.local != null) (endpoint ctx "${path}.local" false local)
+      ++ lib.optionals (cfg.neighbor != null) (endpoint ctx "${path}.neighbor" true neighbor)
       ++ ctx.error "${path}.channels"
         (
           builtins.attrNames cfg.channels != [ ]

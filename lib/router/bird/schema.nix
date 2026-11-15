@@ -55,23 +55,25 @@ let
       );
     getSubOptions = defineModule.getSubOptions;
   };
+  # protocols and templates share one schema per protocol type
   protocolModule =
-    tag:
+    target: tag:
     submodule [
-      (declaration "protocol")
+      (declaration target)
       {
         options = {
           type = mkOption { type = t.enum [ tag ]; };
-          disabled = option t.bool false;
+          from = option (t.nullOr (bt.referenceTo "template")) null;
+          disabled = option (t.nullOr t.bool) null;
           description = option (t.nullOr t.str) null;
           extraConfig = option t.str "";
         };
       }
       protocols.${tag}.module
     ];
-  protocolType = t.mkOptionType {
-    name = "router-bird-protocol";
-    description = "BIRD protocol selected by its type discriminator";
+  protocolType = target: t.mkOptionType {
+    name = "router-bird-${target}";
+    description = "BIRD ${target} selected by its type discriminator";
     check = builtins.isAttrs;
     merge =
       location: definitions:
@@ -87,7 +89,7 @@ let
           definitions;
         tag =
           if discriminators == [ ] then
-            throw "${lib.showOption location}: a protocol requires a type discriminator"
+            throw "${lib.showOption location}: a ${target} requires a type discriminator"
           else
             (lib.modules.mergeDefinitions (location ++ [ "type" ])
               (t.enum (
@@ -95,7 +97,7 @@ let
               ))
               discriminators).mergedValue;
       in
-      (protocolModule tag).merge location definitions;
+      (protocolModule target tag).merge location definitions;
     getSubOptions = _: { };
   };
 in
@@ -158,6 +160,7 @@ in
         }
       ]))
       { };
-    protocols = option (t.attrsOf protocolType) { };
+    templates = option (t.attrsOf (protocolType "template")) { };
+    protocols = option (t.attrsOf (protocolType "protocol")) { };
   };
 }
