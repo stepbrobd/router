@@ -417,6 +417,45 @@ let
     protocols.device0.type = "device";
   };
   globals = evaluate [ globalDeclarations ];
+  filterLanguage = { config, ... }: {
+    attributes.learned_from.type = "int";
+    defines.PRIVATE_ASNS.value = expr.raw {
+      text = "[ 64512..65534 ]";
+      type = "int set";
+    };
+    filters.paths = {
+      default = "accept";
+      body = [
+        (stmt.when (expr.gt expr.pathLength 8) [ stmt.reject ])
+        (stmt.when (expr.eq expr.pathFirst 64496) [ (stmt.print [ "first hop" expr.pathLast ]) ])
+        (stmt.printn [ expr.pathLastNonaggregated ])
+        (stmt.deletePath [
+          64511
+          config.defines.PRIVATE_ASNS.ref
+        ])
+        (stmt.filterPath config.defines.PRIVATE_ASNS.ref)
+        (stmt.set (expr.attribute "learned_from" "int") 2)
+        (stmt.set (expr.attribute "krt_prefsrc" "ip") (bird.ip "192.0.2.1"))
+      ];
+    };
+    protocols.originate = {
+      type = "static";
+      channels.ipv4 = { };
+      routes = [
+        {
+          prefix = "203.0.113.0/24";
+          destination.type = "unreachable";
+          body = [
+            (stmt.prependPath [
+              18932
+              18932
+            ])
+          ];
+        }
+      ];
+    };
+  };
+  filterCase = evaluate [ filterLanguage ];
   # protocols with nothing optional declared next to the same protocols with every off form spelled out
   declared = evaluate [
     ({ config, ... }: {
@@ -1124,6 +1163,68 @@ let
       globalDeclarations
       { defines.learned_from.value = 1; }
     ];
+    prependPathType = [
+      filterLanguage
+      {
+        filters.wrong = {
+          default = "accept";
+          body = [ (stmt.prependPath [ "18932" ]) ];
+        };
+      }
+    ];
+    prependPathEmpty = [
+      filterLanguage
+      {
+        filters.wrong = {
+          default = "accept";
+          body = [ (stmt.prependPath [ ]) ];
+        };
+      }
+    ];
+    filterPathType = [
+      filterLanguage
+      {
+        filters.wrong = {
+          default = "accept";
+          body = [ (stmt.filterPath 64511) ];
+        };
+      }
+    ];
+    printEmpty = [
+      filterLanguage
+      {
+        filters.wrong = {
+          default = "accept";
+          body = [ (stmt.print [ ]) ];
+        };
+      }
+    ];
+    pathPropertyUnknown = [
+      filterLanguage
+      {
+        filters.wrong = {
+          default = "accept";
+          body = [
+            (stmt.when
+              (expr.gt
+                {
+                  kind = "pathProperty";
+                  property = "width";
+                } 1)
+              [ stmt.reject ])
+          ];
+        };
+      }
+    ];
+    customAttributeWrongType = [
+      filterLanguage
+      {
+        filters.wrong = {
+          default = "accept";
+          body = [ (stmt.set (expr.attribute "learned_from" "string") "peer") ];
+        };
+      }
+    ];
     addPathsOutsideBgp = [
       {
         protocols.originate = {
@@ -1268,6 +1369,19 @@ let
         && !(lib.hasInfix "debug protocols" merged.text)
         && !(lib.hasInfix "graceful restart wait" merged.text)
         && !(lib.hasInfix "attribute " merged.text);
+    filterLanguageRenders =
+      let
+        paths = section "filter paths {" filterCase.text;
+      in
+      lib.hasInfix "if (bgp_path.len > 8) then {" paths
+        && lib.hasInfix "if (bgp_path.first = 64496) then {" paths
+        && lib.hasInfix "print \"first hop\", bgp_path.last;" paths
+        && lib.hasInfix "printn bgp_path.last_nonaggregated;" paths
+        && lib.hasInfix "bgp_path.delete(64511);\n  bgp_path.delete(PRIVATE_ASNS);" paths
+        && lib.hasInfix "bgp_path.filter(PRIVATE_ASNS);" paths
+        && lib.hasInfix "learned_from = 2;" paths
+        && lib.hasInfix "krt_prefsrc = 192.0.2.1;" paths
+        && lib.hasInfix "route 203.0.113.0/24 unreachable {\n    bgp_path.prepend(18932);\n    bgp_path.prepend(18932);\n  };" filterCase.text;
     explicitOffRenders =
       let
         kernel = section "protocol kernel explicit_kernel {" declared.text;
@@ -1390,5 +1504,6 @@ in
     declared = declared.text;
     bfd = bfdCase.text;
     globals = globals.text;
+    filters = filterCase.text;
   };
 }
