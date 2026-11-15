@@ -78,6 +78,8 @@ let
         "(${expression node.value} ~ ${expression node.set})"
       else if kind == "fromProtocol" then
         "(proto = ${quote node.protocol.name})"
+      else if kind == "pathProperty" then
+        "bgp_path.${node.property}"
       else
         throw "unknown BIRD expression kind '${kind}'";
   value = expression;
@@ -119,6 +121,14 @@ let
           "${attribute}.${if kind == "addCommunities" then "add" else "delete"}(${expression community});"
         )
         node.values
+    else if kind == "prependPath" || kind == "deletePath" then
+      concatMapStringsSep "\n"
+        (value: "bgp_path.${if kind == "prependPath" then "prepend" else "delete"}(${expression value});")
+        node.values
+    else if kind == "filterPath" then
+      "bgp_path.filter(${expression node.set});"
+    else if kind == "print" then
+      "${if node.newline then "print" else "printn"} ${concatMapStringsSep ", " expression node.values};"
     else if kind == "rawStatement" then
       node.text
     else

@@ -458,6 +458,12 @@ let
               || !(lib.hasAttr node.name attributeTypes)
               || (node.type or null) == attributeTypes.${node.name}
             ) "built-in route attribute has the wrong declared type"
+          ++ error path
+            (
+              !(isString (node.name or null))
+              || !(lib.hasAttr node.name (config.attributes or { }))
+              || (node.type or null) == (config.attributes.${node.name}.type or null)
+            ) "custom route attribute has a different declared type"
         else if kind == "local" then
           shape path [ "name" ] [ ] node
           ++ identifier "${path}.name" (node.name or null)
@@ -577,6 +583,15 @@ let
         else if kind == "fromProtocol" then
           shape path [ "protocol" ] [ ] node
           ++ reference "${path}.protocol" [ "protocol" ] (node.protocol or null)
+        else if kind == "pathProperty" then
+          shape path [ "property" ] [ ] node
+          ++ error "${path}.property"
+            (lib.elem (node.property or null) [
+              "len"
+              "first"
+              "last"
+              "last_nonaggregated"
+            ]) "unknown bgp_path property"
         else
           [ "${path}: unknown expression kind" ];
     in
@@ -663,6 +678,48 @@ let
       )
     else if kind == "call" then
       call path scope true node
+    else if kind == "prependPath" || kind == "deletePath" then
+      shape path [ "values" ] [ ] node
+      ++ error "${path}.values"
+        (
+          isList (node.values or null) && node.values != [ ]
+        ) "expected a non-empty ordered list of path values"
+      ++ lib.optionals (isList (node.values or null)) (
+        concatMap (item: item) (
+          imap0
+            (
+              i: value:
+              let
+                p = "${path}.values[${toString i}]";
+                result = expression p scope value;
+              in
+              result.errors
+              ++ error p
+                (
+                  result.type == null || result.type == "int" || (kind == "deletePath" && result.type == "int set")
+                )
+                (if kind == "prependPath" then "bgp_path.prepend takes an ASN" else "bgp_path.delete takes an ASN or an int set")
+            )
+            node.values
+        )
+      )
+    else if kind == "filterPath" then
+      let
+        set = expression "${path}.set" scope (node.set or null);
+      in
+      shape path [ "set" ] [ ] node ++ set.errors ++ expectType "${path}.set" "int set" set
+    else if kind == "print" then
+      shape path [ "values" "newline" ] [ ] node
+      ++ error "${path}.newline" (isBool (node.newline or null)) "expected a boolean"
+      ++ error "${path}.values"
+        (
+          isList (node.values or null) && node.values != [ ]
+        ) "expected a non-empty ordered list of values"
+      ++ lib.optionals (isList (node.values or null)) (
+        concatMap (item: item) (
+          imap0 (i: value: (expression "${path}.values[${toString i}]" scope value).errors) node.values
+        )
+      )
     else if kind == "addCommunities" || kind == "deleteCommunities" then
       shape path [ "values" ] [ ] node
       ++ error "${path}.values" (isList (node.values or null)) "expected an ordered list of communities"

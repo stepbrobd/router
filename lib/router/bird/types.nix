@@ -18,6 +18,7 @@ let
     "inSet"
     "compare"
     "fromProtocol"
+    "pathProperty"
   ];
   statementKinds = [
     "accept"
@@ -29,6 +30,10 @@ let
     "call"
     "addCommunities"
     "deleteCommunities"
+    "prependPath"
+    "deletePath"
+    "filterPath"
+    "print"
     "rawStatement"
   ];
   tagged = kinds: value: lib.isAttrs value && value ? kind && lib.elem value.kind kinds;

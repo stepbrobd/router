@@ -397,6 +397,8 @@ let
         ]
       else if kind == "fromProtocol" then
         emptyInfo // { type = "bool"; }
+      else if kind == "pathProperty" then
+        emptyInfo // { type = "int"; }
       else
         emptyInfo;
   typeOf = value: (infer { } [ ] value).type;

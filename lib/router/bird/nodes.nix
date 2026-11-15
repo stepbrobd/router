@@ -7,6 +7,10 @@ let
       dependsOn = [ ];
     }
     // (if lib.isString value then { text = value; } else value);
+  pathProperty = property: {
+    kind = "pathProperty";
+    inherit property;
+  };
   attribute = name: type: {
     kind = "attribute";
     inherit name type;
@@ -75,8 +79,13 @@ in
   };
 
   expr = {
-    inherit call;
+    inherit attribute call;
     raw = raw "rawExpression";
+    # read-only properties of bgp_path
+    pathLength = pathProperty "len";
+    pathFirst = pathProperty "first";
+    pathLast = pathProperty "last";
+    pathLastNonaggregated = pathProperty "last_nonaggregated";
     local = name: {
       kind = "local";
       inherit name;
@@ -139,6 +148,29 @@ in
     };
     deleteCommunities = values: {
       kind = "deleteCommunities";
+      inherit values;
+    };
+    # bgp_path edits, one method call per value in order
+    prependPath = values: {
+      kind = "prependPath";
+      inherit values;
+    };
+    deletePath = values: {
+      kind = "deletePath";
+      inherit values;
+    };
+    filterPath = set: {
+      kind = "filterPath";
+      inherit set;
+    };
+    print = values: {
+      kind = "print";
+      newline = true;
+      inherit values;
+    };
+    printn = values: {
+      kind = "print";
+      newline = false;
       inherit values;
     };
     raw = raw "rawStatement";
