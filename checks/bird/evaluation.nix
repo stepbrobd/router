@@ -285,6 +285,75 @@ let
     };
   };
   templated = evaluate [ templateDeclarations ];
+  bfdDeclarations = {
+    protocols = {
+      bfd0 = {
+        type = "bfd";
+        accept = {
+          family = "ipv6";
+          transport = "direct";
+        };
+        strictBind = true;
+        interfaces = [
+          {
+            patterns = [
+              "eth*"
+              {
+                pattern = "eth9";
+                exclude = true;
+              }
+            ];
+            minRxInterval = 50;
+            minTxInterval = 100;
+            idleTxInterval = 1000;
+            multiplier = 3;
+            passive = false;
+          }
+          { patterns = [ "wg*" ]; }
+        ];
+        multihop.interval = 300;
+        neighbors = [
+          {
+            address = "192.0.2.2";
+            interface = "eth0";
+          }
+          {
+            address = "198.51.100.1";
+            local = "192.0.2.1";
+            multihop = true;
+          }
+        ];
+      };
+      peer = {
+        type = "bgp";
+        local.asn = 65000;
+        neighbor = {
+          asn = 65001;
+          address = "192.0.2.2";
+        };
+        bfd = true;
+        channels.ipv4 = {
+          import = "none";
+          export = "none";
+        };
+      };
+      originate = {
+        type = "static";
+        channels.ipv4 = { };
+        routes = [
+          {
+            prefix = "203.0.113.0/24";
+            destination = {
+              type = "via";
+              gateway = "192.0.2.2";
+              bfd = true;
+            };
+          }
+        ];
+      };
+    };
+  };
+  bfdCase = evaluate [ bfdDeclarations ];
   # protocols with nothing optional declared next to the same protocols with every off form spelled out
   declared = evaluate [
     ({ config, ... }: {
@@ -814,6 +883,98 @@ let
         };
       })
     ];
+    bgpBfdWithoutProtocol = [
+      bfdDeclarations
+      { protocols.bfd0.disabled = true; }
+    ];
+    staticBfdWithoutGateway = [
+      bfdDeclarations
+      {
+        protocols.originate.routes = lib.mkForce [
+          {
+            prefix = "203.0.113.0/24";
+            destination = {
+              type = "via";
+              interface = "eth0";
+              bfd = true;
+            };
+          }
+        ];
+      }
+    ];
+    staticBfdWithOnlink = [
+      bfdDeclarations
+      {
+        protocols.originate.routes = lib.mkForce [
+          {
+            prefix = "203.0.113.0/24";
+            destination = {
+              type = "via";
+              gateway = "192.0.2.2";
+              interface = "eth0";
+              onlink = true;
+              bfd = true;
+            };
+          }
+        ];
+      }
+    ];
+    bfdTemplate = [
+      {
+        templates.bfd_base.type = "bfd";
+        protocols.bfd0 = {
+          type = "bfd";
+          from = reference "template" "bfd_base";
+        };
+      }
+    ];
+    bfdMultiplierRange = [
+      bfdDeclarations
+      { protocols.bfd0.multihop.multiplier = 256; }
+    ];
+    bfdIntervalConflict = [
+      bfdDeclarations
+      { protocols.bfd0.multihop.minRxInterval = 10; }
+    ];
+    bfdEmptyInterfacePatterns = [
+      bfdDeclarations
+      { protocols.bfd0.interfaces = [{ patterns = [ ]; }]; }
+    ];
+    bfdMultihopNeighborInterface = [
+      bfdDeclarations
+      {
+        protocols.bfd0.neighbors = [
+          {
+            address = "198.51.100.2";
+            interface = "eth0";
+            local = "192.0.2.1";
+            multihop = true;
+          }
+        ];
+      }
+    ];
+    bfdMultihopNeighborWithoutLocal = [
+      bfdDeclarations
+      {
+        protocols.bfd0.neighbors = [
+          {
+            address = "198.51.100.2";
+            multihop = true;
+          }
+        ];
+      }
+    ];
+    bfdNeighborFamily = [
+      bfdDeclarations
+      {
+        protocols.bfd0.neighbors = [
+          {
+            address = "198.51.100.2";
+            local = "2001:db8::1";
+          }
+        ];
+      }
+    ];
     addPathsOutsideBgp = [
       {
         protocols.originate = {
@@ -918,6 +1079,24 @@ let
         && !(lib.hasInfix "bfd" peer)
         && !(lib.hasInfix "ttl security" peer)
         && !(lib.hasInfix "add paths" peer);
+    bfdRenders =
+      let
+        bfd = section "protocol bfd bfd0 {" bfdCase.text;
+      in
+      lib.hasInfix "accept ipv6 direct;" bfd
+        && lib.hasInfix "strict bind on;" bfd
+        && lib.hasInfix "interface \"eth*\", -\"eth9\" {" bfd
+        && lib.hasInfix "min rx interval 50 ms;" bfd
+        && lib.hasInfix "min tx interval 100 ms;" bfd
+        && lib.hasInfix "idle tx interval 1000 ms;" bfd
+        && lib.hasInfix "multiplier 3;" bfd
+        && lib.hasInfix "passive off;" bfd
+        && lib.hasInfix "interface \"wg*\";" bfd
+        && lib.hasInfix "multihop {\n    interval 300 ms;\n  };" bfd
+        && lib.hasInfix "neighbor 192.0.2.2 dev \"eth0\";" bfd
+        && lib.hasInfix "neighbor 198.51.100.1 local 192.0.2.1 multihop on;" bfd
+        && lib.hasInfix "bfd on;" (section "protocol bgp peer {" bfdCase.text)
+        && lib.hasInfix "route 203.0.113.0/24 via 192.0.2.2 bfd on;" bfdCase.text;
     explicitOffRenders =
       let
         kernel = section "protocol kernel explicit_kernel {" declared.text;
@@ -1038,5 +1217,6 @@ in
     recursive = recursive.text;
     templated = templated.text;
     declared = declared.text;
+    bfd = bfdCase.text;
   };
 }
