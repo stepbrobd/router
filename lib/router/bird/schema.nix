@@ -35,7 +35,7 @@ let
     name = "router-bird-definition";
     description = "BIRD constant or a value declaration";
     check =
-      value: bt.expression.check value || (builtins.isAttrs value && value ? value && !(value ? kind));
+      value: bt.expression.check value || (lib.isAttrs value && value ? value && !(value ? kind));
     merge =
       location: definitions:
       defineModule.merge location (
@@ -45,7 +45,7 @@ let
             definition
             // {
               value =
-                if builtins.isAttrs definition.value && definition.value ? value && !(definition.value ? kind) then
+                if lib.isAttrs definition.value && definition.value ? value && !(definition.value ? kind) then
                   definition.value
                 else
                   { value = definition.value; };
@@ -74,7 +74,7 @@ let
   protocolType = target: t.mkOptionType {
     name = "router-bird-${target}";
     description = "BIRD ${target} selected by its type discriminator";
-    check = builtins.isAttrs;
+    check = lib.isAttrs;
     merge =
       location: definitions:
       let
@@ -93,7 +93,7 @@ let
           else
             (lib.modules.mergeDefinitions (location ++ [ "type" ])
               (t.enum (
-                builtins.attrNames protocols
+                lib.attrNames protocols
               ))
               discriminators).mergedValue;
       in

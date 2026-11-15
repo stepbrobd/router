@@ -31,7 +31,7 @@ let
     "deleteCommunities"
     "rawStatement"
   ];
-  tagged = kinds: value: builtins.isAttrs value && value ? kind && builtins.elem value.kind kinds;
+  tagged = kinds: value: lib.isAttrs value && value ? kind && lib.elem value.kind kinds;
   atomic =
     name: check:
     mkOptionType {
@@ -39,14 +39,14 @@ let
       description = name;
       merge = mergeEqualOption;
     };
-  primitive = value: builtins.isString value || builtins.isInt value || builtins.isBool value;
+  primitive = value: lib.isString value || lib.isInt value || lib.isBool value;
   referenceCheck =
     value:
     tagged [ "reference" ] value
     && value ? target
-    && builtins.isString value.target
+    && lib.isString value.target
     && value ? name
-    && builtins.isString value.name;
+    && lib.isString value.name;
 in
 rec {
   expression = atomic "BIRD expression" (value: primitive value || tagged expressionKinds value);
@@ -84,16 +84,16 @@ rec {
   policy = atomic "BIRD channel policy" (
     value:
     (
-      builtins.isString value
-      && builtins.elem value [
+      lib.isString value
+      && lib.elem value [
         "all"
         "none"
       ]
     )
     || (referenceCheck value && value.target == "filter")
     || (
-      builtins.isAttrs value
-      && ((builtins.attrNames value == [ "inline" ]) || (builtins.attrNames value == [ "where" ]))
+      lib.isAttrs value
+      && ((lib.attrNames value == [ "inline" ]) || (lib.attrNames value == [ "where" ]))
     )
   );
 }

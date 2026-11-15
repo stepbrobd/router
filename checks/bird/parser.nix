@@ -9,7 +9,7 @@ let
     let
       original = pkgs.writeText "bird-${name}-emitted.conf" text;
       parseable = pkgs.writeText "bird-${name}-parser.conf" (
-        builtins.replaceStrings [ "/run/bird/example-credentials.conf" ] [ "${fixture}" ] text
+        lib.replaceStrings [ "/run/bird/example-credentials.conf" ] [ "${fixture}" ] text
       );
     in
     ''

@@ -1,7 +1,7 @@
 { lib }:
 config:
 let
-  inherit (builtins)
+  inherit (lib)
     isAttrs
     isString
     isInt
@@ -10,8 +10,10 @@ let
     attrNames
     elemAt
     length
+    concatMap
+    mapAttrsToList
+    splitString
     ;
-  inherit (lib) concatMap mapAttrsToList splitString;
   digits = {
     "0" = 0;
     "1" = 1;
@@ -32,19 +34,19 @@ let
   };
   number =
     base: text:
-    builtins.foldl' (n: c: n * base + digits.${lib.toLower c}) 0 (lib.stringToCharacters text);
-  matches = pattern: text: isString text && builtins.match pattern text != null;
-  pow2 = n: builtins.foldl' (value: _: value * 2) 1 (builtins.genList (x: x) n);
-  mod = a: b: a - builtins.div a b * b;
+    lib.foldl' (n: c: n * base + digits.${lib.toLower c}) 0 (lib.stringToCharacters text);
+  matches = pattern: text: isString text && lib.match pattern text != null;
+  pow2 = n: lib.foldl' (value: _: value * 2) 1 (lib.genList (x: x) n);
+  mod = a: b: a - lib.div a b * b;
   ipv4 =
     text:
     let
       parts = if isString text then splitString "." text else [ ];
-      validParts = length parts == 4 && builtins.all (part: matches "[0-9]{1,3}" part) parts;
+      validParts = length parts == 4 && lib.all (part: matches "[0-9]{1,3}" part) parts;
       words = if validParts then map (number 10) parts else [ ];
     in
     {
-      valid = validParts && builtins.all (n: n <= 255) words;
+      valid = validParts && lib.all (n: n <= 255) words;
       inherit words;
     };
   ipv6 =
@@ -75,17 +77,17 @@ let
       leftWords = concatMap wordsFor left;
       rightWords = concatMap wordsFor right;
       count = length leftWords + length rightWords;
-      v4Tokens = builtins.filter isV4 tokens;
+      v4Tokens = lib.filter isV4 tokens;
       valid =
         isString text
         && lib.hasInfix ":" text
         && length halves <= 2
-        && builtins.all validToken tokens
+        && lib.all validToken tokens
         && (if compressed then count < 8 else count == 8)
-        && (v4Tokens == [ ] || (length v4Tokens == 1 && lib.hasSuffix (builtins.head v4Tokens) text));
+        && (v4Tokens == [ ] || (length v4Tokens == 1 && lib.hasSuffix (lib.head v4Tokens) text));
       words =
         if valid then
-          leftWords ++ builtins.genList (_: 0) (if compressed then 8 - count else 0) ++ rightWords
+          leftWords ++ lib.genList (_: 0) (if compressed then 8 - count else 0) ++ rightWords
         else
           [ ];
     in
@@ -96,7 +98,7 @@ let
     text:
     let
       parts = if isString text then splitString "%" text else [ ];
-      address = if parts == [ ] then "" else builtins.head parts;
+      address = if parts == [ ] then "" else lib.head parts;
       scope = if length parts == 2 then elemAt parts 1 else null;
       v4 = ipv4 address;
       v6 = ipv6 address;
@@ -118,7 +120,7 @@ let
     text:
     let
       parts = if isString text then splitString "/" text else [ ];
-      address = if parts == [ ] then "" else builtins.head parts;
+      address = if parts == [ ] then "" else lib.head parts;
       ip = ipInfo address;
       lenText = if length parts == 2 then elemAt parts 1 else "";
       prefixLength = if matches "[0-9]{1,3}" lenText then number 10 lenText else null;
@@ -132,7 +134,7 @@ let
       wordBits = if ip.family == "ipv4" then 8 else 16;
       network =
         valid
-        && builtins.all
+        && lib.all
           (
             i:
             let
@@ -140,7 +142,7 @@ let
             in
             mod (elemAt ip.words i) (pow2 (wordBits - used)) == 0
           )
-          (builtins.genList (i: i) (length ip.words));
+          (lib.genList (i: i) (length ip.words));
     in
     {
       inherit
@@ -170,7 +172,7 @@ let
       || !(reference ? name)
       || !isString reference.target
       || !isString reference.name
-      || !(builtins.hasAttr reference.target collections)
+      || !(lib.hasAttr reference.target collections)
     then
       null
     else
@@ -195,7 +197,7 @@ let
         "template"
         "protocol"
       ];
-  byKey = builtins.listToAttrs (
+  byKey = lib.listToAttrs (
     map
       (declaration: {
         name = declaration.key;
@@ -228,8 +230,8 @@ let
       )
       ++ dependencies owner (data.arguments or [ ])
     else
-      concatMap (dependencies owner) (builtins.attrValues (builtins.removeAttrs data [ "ref" ]));
-  dependencyMap = builtins.mapAttrs
+      concatMap (dependencies owner) (lib.attrValues (lib.removeAttrs data [ "ref" ]));
+  dependencyMap = lib.mapAttrs
     (
       name: declaration: lib.unique (dependencies name declaration.definition)
     )
@@ -238,12 +240,12 @@ let
     remaining: ordered:
     let
       done = map (declaration: declaration.key) ordered;
-      ready = builtins.filter
+      ready = lib.filter
         (
           declaration:
-          builtins.all
+          lib.all
             (
-              dependency: !(builtins.hasAttr dependency byKey) || builtins.elem dependency done
+              dependency: !(lib.hasAttr dependency byKey) || lib.elem dependency done
             )
             dependencyMap.${declaration.key}
         )
@@ -257,9 +259,9 @@ let
       }
     else
       sortDeclarations
-        (builtins.filter
+        (lib.filter
           (
-            declaration: !(builtins.elem declaration.key readyKeys)
+            declaration: !(lib.elem declaration.key readyKeys)
           )
           remaining)
         (ordered ++ ready);
@@ -294,7 +296,7 @@ let
           children:
           (scalarInfo "bool")
           // {
-            constant = isList children && builtins.all (child: (info child).constant) children;
+            constant = isList children && lib.all (child: (info child).constant) children;
           };
         target = lookup value;
       in
@@ -311,7 +313,7 @@ let
             else
               (prefixInfo (
                 let
-                  p = builtins.head value.prefixes;
+                  p = lib.head value.prefixes;
                 in
                 if isString p then
                   p
@@ -331,7 +333,7 @@ let
             }.${if isString (value.type or null) then value.type else ""} or null
           )
       else if kind == "reference" && (value.target or null) == "define" && target != null then
-        if builtins.elem (key value) seen then
+        if lib.elem (key value) seen then
           emptyInfo
         else
           infer { } (seen ++ [ (key value) ]) target.value

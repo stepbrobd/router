@@ -14,13 +14,13 @@ let
     inherit target name;
   };
   evaluate = modules: bird.eval { modules = [ base ] ++ modules; };
-  fails = modules: !(builtins.tryEval (builtins.deepSeq (evaluate modules).text true)).success;
+  fails = modules: !(lib.tryEval (lib.deepSeq (evaluate modules).text true)).success;
   position =
     needle: text:
     let
-      prefix = builtins.head (lib.splitString needle text);
+      prefix = lib.head (lib.splitString needle text);
     in
-    if prefix == text then null else builtins.stringLength prefix;
+    if prefix == text then null else lib.stringLength prefix;
 
   declarations = { config, ... }: {
     id = lib.mkDefault "192.0.2.9";
@@ -329,8 +329,8 @@ let
     ];
   };
   extensionRejects =
-    !(builtins.tryEval (
-      builtins.deepSeq
+    !(lib.tryEval (
+      lib.deepSeq
         (extension.eval {
           modules = [
             base
@@ -372,11 +372,11 @@ let
   nixosAccepts =
     modules:
     let
-      attempt = builtins.tryEval (
+      attempt = lib.tryEval (
         let
           config = (nixos modules).config;
         in
-        builtins.deepSeq config.services.bird.config true
+        lib.deepSeq config.services.bird.config true
       );
     in
     attempt.success && attempt.value;
@@ -768,9 +768,9 @@ let
     mergeProtocolFields =
       cfg.protocols.peer.description == "merged peer" && cfg.protocols.peer.local.asn == 65000;
     mergeBodyOrder =
-      (builtins.head cfg.filters.export_owned.body).text == "print \"before\";"
+      (lib.head cfg.filters.export_owned.body).text == "print \"before\";"
         && (lib.last cfg.filters.export_owned.body).text == "print \"after\";"
-        && builtins.length cfg.filters.export_owned.body == 3;
+        && lib.length cfg.filters.export_owned.body == 3;
     derivedReferences =
       cfg.protocols.peer.ref == reference "protocol" "peer"
         && cfg.filters.export_owned.ref == reference "filter" "export_owned"
@@ -780,7 +780,7 @@ let
     normalizedDefinitions =
       cfg.defines.WRAPPED.value == 7 && cfg.defines.C_STANDARD.value.kind == "community";
     referencesArePlainData =
-      builtins.fromJSON (builtins.toJSON cfg.protocols.peer.ref) == reference "protocol" "peer";
+      lib.fromJSON (lib.toJSON cfg.protocols.peer.ref) == reference "protocol" "peer";
     rawDependencyOrdering = position "define Z_VALUE" merged.text < position "define A_RAW" merged.text;
     identityReferenceHasNoOrderCycle = lib.hasInfix "proto = \"peer\"" merged.text;
     literalPasswordIsQuoted = lib.hasInfix "password \"synthetic-literal-only\";" merged.text;
@@ -892,8 +892,8 @@ in
   derivation =
     pkgs.runCommand "bird-evaluation"
       {
-        results = builtins.toJSON verified;
-        normalized = builtins.toJSON example.config;
+        results = lib.toJSON verified;
+        normalized = lib.toJSON example.config;
         passAsFile = [
           "results"
           "normalized"

@@ -21,14 +21,14 @@ let
     ctx: name: cfg: expected:
     ctx.error "protocols.${name}.channels"
       (
-        builtins.length (builtins.attrNames (cfg.channels or { })) == expected
+        lib.length (lib.attrNames (cfg.channels or { })) == expected
       ) "${cfg.type} requires exactly ${toString expected} IPv4 or IPv6 channel";
   familyOf =
     cfg:
     let
-      names = builtins.attrNames (cfg.channels or { });
+      names = lib.attrNames (cfg.channels or { });
     in
-    if builtins.length names == 1 then builtins.head names else null;
+    if lib.length names == 1 then lib.head names else null;
   nullableUint =
     ctx: path: bits: value:
     lib.optionals (value != null) (ctx.uint path bits value);
@@ -37,7 +37,7 @@ let
     ctx.uint "${path}.asn" 32 (cfg.asn or null)
     ++ ctx.error "${path}.asn"
       (
-        !(builtins.isInt (cfg.asn or null)) || cfg.asn != 0
+        !(lib.isInt (cfg.asn or null)) || cfg.asn != 0
       ) "ASN must be nonzero"
     ++ ctx.error "${path}.address"
       (
@@ -47,7 +47,7 @@ let
     ++ nullableUint ctx "${path}.port" 16 (cfg.port or null)
     ++ ctx.error "${path}.port"
       (
-        (cfg.port or null) == null || !builtins.isInt cfg.port || cfg.port > 0
+        (cfg.port or null) == null || !lib.isInt cfg.port || cfg.port > 0
       ) "port must be in 1..65535";
   endpointText =
     ctx: label: cfg:
@@ -91,7 +91,7 @@ let
         !info.valid || family == null || info.family == family
       ) "static-route prefix does not match the protocol channel address family"
     ++ ctx.error "${path}.destination.type"
-      (builtins.elem destination.type [
+      (lib.elem destination.type [
         "via"
         "blackhole"
         "unreachable"
@@ -127,7 +127,7 @@ let
       ++ ctx.error "${path}.destination.interface" (interface != "") "interface name must not be empty"
     )
     ++ ctx.error "${path}.destination.onlink"
-      (builtins.isBool (
+      (lib.isBool (
         destination.onlink or false
       )) "expected a boolean"
     ++ ctx.error "${path}.destination.onlink"
@@ -139,7 +139,7 @@ let
       ctx.uint "${path}.destination.weight" 32 destination.weight
       ++ ctx.error "${path}.destination.weight"
         (
-          !builtins.isInt destination.weight || (destination.weight >= 1 && destination.weight <= 256)
+          !lib.isInt destination.weight || (destination.weight >= 1 && destination.weight <= 256)
         ) "next-hop weight must be in 1..256"
     )
     ++ ctx.statements "${path}.body" scope (route.body or [ ]);
@@ -198,7 +198,7 @@ in
             "interface ${
               concatMapStringsSep ", " (
                 interface:
-                if builtins.isString interface then
+                if lib.isString interface then
                   ctx.quote interface
                 else
                   "${optionalString interface.exclude "-"}${ctx.quote interface.pattern}"
@@ -218,18 +218,18 @@ in
             i: interface:
             let
               path = "protocols.${name}.interfaces[${toString i}]";
-              pattern = if builtins.isString interface then interface else interface.pattern;
+              pattern = if lib.isString interface then interface else interface.pattern;
             in
             ctx.string path pattern
             ++ ctx.error path (pattern != "") "interface patterns must not be empty"
-            ++ lib.optionals (builtins.isAttrs interface) (
-              ctx.error "${path}.exclude" (builtins.isBool interface.exclude) "expected a boolean"
+            ++ lib.optionals (lib.isAttrs interface) (
+              ctx.error "${path}.exclude" (lib.isBool interface.exclude) "expected a boolean"
             )
           )
           cfg.interfaces
       )
       ++ ctx.error "protocols.${name}.checkLink"
-        (builtins.elem cfg.checkLink [
+        (lib.elem cfg.checkLink [
           null
           true
           false
@@ -256,12 +256,12 @@ in
       ++ nullableUint ctx "protocols.${name}.kernelTable" 32 cfg.kernelTable
       ++ nullableUint ctx "protocols.${name}.metric" 32 cfg.metric
       ++ ctx.error "protocols.${name}.learn"
-        (builtins.elem cfg.learn [
+        (lib.elem cfg.learn [
           false
           true
           "all"
         ]) "learn must be a switch or all"
-      ++ ctx.error "protocols.${name}.persist" (builtins.isBool cfg.persist) "expected a boolean"
+      ++ ctx.error "protocols.${name}.persist" (lib.isBool cfg.persist) "expected a boolean"
       ++ kernelConflicts ctx name cfg;
   };
   static = {
@@ -334,7 +334,7 @@ in
       ++ lib.optionals (cfg.neighbor != null) (endpoint ctx "${path}.neighbor" true neighbor)
       ++ ctx.error "${path}.channels"
         (
-          builtins.attrNames cfg.channels != [ ]
+          lib.attrNames cfg.channels != [ ]
         ) "BGP requires at least one channel"
       ++ validateChannels ctx name cfg
       ++ ctx.error "${path}.local.address"
@@ -356,7 +356,7 @@ in
           "sourceAddress and local.address must identify the same address when both are set"
       )
       ++ ctx.error "${path}.transport.type"
-        (builtins.elem cfg.transport.type [
+        (lib.elem cfg.transport.type [
           "direct"
           "multihop"
         ]) "transport must be direct or multihop"
@@ -368,11 +368,11 @@ in
         ctx.uint "${path}.transport.hops" 8 cfg.transport.hops
         ++ ctx.error "${path}.transport.hops"
           (
-            !builtins.isInt cfg.transport.hops || cfg.transport.hops >= 1
+            !lib.isInt cfg.transport.hops || cfg.transport.hops >= 1
           ) "multihop limit must be in 1..255"
       )
       ++ ctx.error "${path}.gracefulRestart"
-        (builtins.elem cfg.gracefulRestart [
+        (lib.elem cfg.gracefulRestart [
           null
           "aware"
           "on"
@@ -382,18 +382,18 @@ in
         ctx.uint "${path}.holdTime" 16 cfg.holdTime
         ++ ctx.error "${path}.holdTime"
           (
-            !builtins.isInt cfg.holdTime || cfg.holdTime == 0 || cfg.holdTime >= 3
+            !lib.isInt cfg.holdTime || cfg.holdTime == 0 || cfg.holdTime >= 3
           ) "hold time must be zero or in 3..65535"
       )
       ++ lib.optionals (cfg.keepaliveTime != null) (
         ctx.uint "${path}.keepaliveTime" 16 cfg.keepaliveTime
         ++ ctx.error "${path}.keepaliveTime"
           (
-            !builtins.isInt cfg.keepaliveTime || cfg.keepaliveTime >= 1
+            !lib.isInt cfg.keepaliveTime || cfg.keepaliveTime >= 1
           ) "keepalive time must be in 1..65535"
       )
-      ++ ctx.error "${path}.bfd" (builtins.isBool cfg.bfd) "expected a boolean"
-      ++ ctx.error "${path}.ttlSecurity" (builtins.isBool cfg.ttlSecurity) "expected a boolean"
+      ++ ctx.error "${path}.bfd" (lib.isBool cfg.bfd) "expected a boolean"
+      ++ ctx.error "${path}.ttlSecurity" (lib.isBool cfg.ttlSecurity) "expected a boolean"
       ++ lib.optionals (cfg.password != null) (
         password.errors
         ++ ctx.error "${path}.password"

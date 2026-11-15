@@ -6,7 +6,7 @@ let
       inherit kind;
       dependsOn = [ ];
     }
-    // (if builtins.isString value then { text = value; } else value);
+    // (if lib.isString value then { text = value; } else value);
   attribute = name: type: {
     kind = "attribute";
     inherit name type;
@@ -35,7 +35,7 @@ in
   };
   external =
     specification:
-    (builtins.removeAttrs specification [ "kind" ])
+    (lib.removeAttrs specification [ "kind" ])
     // {
       kind = "external";
       target = specification.kind;

@@ -16,7 +16,7 @@ let
     concatStringsSep "\n" (
       map (line: if line == "" then "" else "  ${line}") (lib.splitString "\n" text)
     );
-  join = parts: concatStringsSep "\n" (builtins.filter (part: part != "") parts);
+  join = parts: concatStringsSep "\n" (lib.filter (part: part != "") parts);
   block = header: contents: "${header} {\n${indent contents}\n}";
   address =
     text:
@@ -26,7 +26,7 @@ let
     info.address + optionalString (info.scope != null) "%${identifier info.scope}";
   prefixPattern =
     entry:
-    if builtins.isString entry then
+    if lib.isString entry then
       entry
     else
       let
@@ -38,11 +38,11 @@ let
       entry.prefix + optionalString ranged "{${toString low},${toString high}}";
   expression =
     node:
-    if builtins.isBool node then
+    if lib.isBool node then
       (if node then "true" else "false")
-    else if builtins.isInt node then
+    else if lib.isInt node then
       toString node
-    else if builtins.isString node then
+    else if lib.isString node then
       quote node
     else
       let
@@ -95,7 +95,7 @@ let
       "${block "if ${expression node.condition} then" (body node.body)} else {\n${indent (body node.elseBody)}\n}"
     else if kind == "set" then
       "${
-        identifier (if builtins.isString node.attribute then node.attribute else node.attribute.name)
+        identifier (if lib.isString node.attribute then node.attribute else node.attribute.name)
       } = ${expression node.value};"
     else if kind == "return" then
       if node.value == null then
@@ -131,10 +131,10 @@ let
     ];
   policy =
     selected:
-    if builtins.isString selected then
+    if lib.isString selected then
       selected
     else if
-      builtins.elem (selected.kind or null) [
+      lib.elem (selected.kind or null) [
         "reference"
         "external"
       ]
@@ -154,7 +154,7 @@ let
           selected = declaration.${key} or null;
         in
         optionalString (selected != null)
-          "${label} ${if builtins.isBool selected then switch selected else toString selected};";
+          "${label} ${if lib.isBool selected then switch selected else toString selected};";
       contents = join (
         [
           (optionalString ((declaration.table or null) != null) "table ${identifier declaration.table.name};")

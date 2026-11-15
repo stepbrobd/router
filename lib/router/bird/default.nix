@@ -19,8 +19,8 @@ let
       _: entry:
         !(entry ? module)
         || !(entry ? render)
-        || !(builtins.isFunction entry.render)
-        || (entry ? validate && !(builtins.isFunction entry.validate))
+        || !(extendedLib.isFunction entry.render)
+        || (entry ? validate && !(extendedLib.isFunction entry.validate))
         || (entry ? defaults && !(extendedLib.isAttrs entry.defaults))
     )
     registry;
@@ -82,10 +82,10 @@ let
             lib = extendedLib;
           };
         };
-        config = builtins.removeAttrs evaluated.config [ "_module" ];
+        config = extendedLib.removeAttrs evaluated.config [ "_module" ];
         text = self.render config;
       in
-      builtins.seq text { inherit config text; };
+      extendedLib.seq text { inherit config text; };
     check =
       { pkgs
       , modules
@@ -106,7 +106,7 @@ let
         '';
     extend =
       extension:
-      if builtins.attrNames extension != [ "protocols" ] then
+      if extendedLib.attrNames extension != [ "protocols" ] then
         throw "lib.router.bird.extend expects a protocols registry"
       else
         import ./. {

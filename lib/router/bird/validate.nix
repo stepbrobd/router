@@ -1,7 +1,7 @@
 { lib, protocols }:
 config:
 let
-  inherit (builtins)
+  inherit (lib)
     isAttrs
     isString
     isInt
@@ -9,8 +9,6 @@ let
     isList
     attrNames
     length
-    ;
-  inherit (lib)
     concatMap
     concatStringsSep
     imap0
@@ -33,16 +31,16 @@ let
     if !isAttrs value then
       [ "${path}: expected a tagged attribute set" ]
     else
-      concatMap (name: error path (builtins.hasAttr name value) "missing field '${name}'") required
+      concatMap (name: error path (lib.hasAttr name value) "missing field '${name}'") required
       ++ concatMap
         (
           name:
-          error path (builtins.elem name (required ++ optional ++ [ "kind" ])) "unexpected field '${name}'"
+          error path (lib.elem name (required ++ optional ++ [ "kind" ])) "unexpected field '${name}'"
         )
         (attrNames value);
   identifier =
     path: value:
-    error path (matches "[A-Za-z0-9_.:-]+" value && builtins.stringLength value <= 64)
+    error path (matches "[A-Za-z0-9_.:-]+" value && lib.stringLength value <= 64)
       "expected a BIRD symbol of at most 64 bytes using letters, digits, underscores, dots, colons or hyphens";
   string =
     path: value:
@@ -52,7 +50,7 @@ let
         && !(lib.hasInfix "\"" value)
         && !(lib.hasInfix "\n" value)
         && !(lib.hasInfix "\r" value)
-        && builtins.stringLength value <= 4095
+        && lib.stringLength value <= 4095
       )
       "expected a BIRD string of at most 4095 bytes without double quotes or newlines (BIRD has no string escapes)";
   native = path: value: error path (isString value) "expected native BIRD text";
@@ -92,7 +90,7 @@ let
     "lclist"
     "enum"
   ];
-  type = path: value: error path (builtins.elem value birdTypes) "expected a supported BIRD type";
+  type = path: value: error path (lib.elem value birdTypes) "expected a supported BIRD type";
   expectType =
     path: expected: actual:
     error path (expected == null || actual.type == null || expected == actual.type)
@@ -170,7 +168,7 @@ let
     let
       valid =
         isAttrs node
-        && builtins.elem (node.kind or null) [
+        && lib.elem (node.kind or null) [
           "reference"
           "external"
         ];
@@ -195,12 +193,12 @@ let
         node
       ++ identifier "${path}.name" name
       ++
-      error "${path}.target" (builtins.elem target expected)
+      error "${path}.target" (lib.elem target expected)
         "expected reference target ${concatStringsSep "/" expected}"
       ++ (
         if external then
           error "${path}.target"
-            (builtins.elem target [
+            (lib.elem target [
               "value"
               "function"
               "filter"
@@ -261,7 +259,7 @@ let
             null
         );
       families = lib.unique (
-        builtins.filter (family: family != null) (map (entry: (info entry).family) entries)
+        lib.filter (family: family != null) (map (entry: (info entry).family) entries)
       );
     in
     error "${path}.prefixes" (isList prefixes) "expected a list of prefixes"
@@ -299,7 +297,7 @@ let
       kind = node.type or null;
     in
     error "${path}.type"
-      (builtins.elem kind [
+      (lib.elem kind [
         "standard"
         "large"
         "extended"
@@ -325,7 +323,7 @@ let
         in
         shape path [ "type" "communityType" "key" "value" ] [ ] node
         ++ error "${path}.communityType"
-          (builtins.elem (node.communityType or null) [
+          (lib.elem (node.communityType or null) [
             "rt"
             "ro"
           ]) "extended community kind must be rt or ro"
@@ -361,21 +359,21 @@ let
       functionKey = if localFunction then internal.key function else "";
       contextual =
         localFunction
-        && !(builtins.elem functionKey (scope.calls or [ ]))
+        && !(lib.elem functionKey (scope.calls or [ ]))
         && ((scope.family or null) != null || (scope.routeContext or scope.context) == "static");
       calleeScope = (scopeFor "function") // {
         family = scope.family or null;
         routeContext = scope.routeContext or scope.context;
         calls = (scope.calls or [ ]) ++ [ functionKey ];
         inherit returnType;
-        locals = builtins.listToAttrs (
+        locals = lib.listToAttrs (
           imap0
             (i: parameter: {
               name = if isAttrs parameter && isString (parameter.name or null) then parameter.name else "";
               value = {
                 type = if isAttrs parameter then parameter.type or null else null;
                 family =
-                  if isList args && i < length args then (infer scope [ ] (builtins.elemAt args i)).family else null;
+                  if isList args && i < length args then (infer scope [ ] (lib.elemAt args i)).family else null;
               };
             })
             params
@@ -401,7 +399,7 @@ let
             let
               p = "${path}.arguments[${toString i}]";
               result = expression p scope argument;
-              parameter = if i < length params then builtins.elemAt params i else { };
+              parameter = if i < length params then lib.elemAt params i else { };
             in
             result.errors ++ expectType p (if isAttrs parameter then parameter.type or null else null) result
           )
@@ -455,7 +453,7 @@ let
           ++ error path
             (
               !(isString (node.name or null))
-              || !(builtins.hasAttr node.name attributeTypes)
+              || !(lib.hasAttr node.name attributeTypes)
               || (node.type or null) == attributeTypes.${node.name}
             ) "built-in route attribute has the wrong declared type"
         else if kind == "local" then
@@ -463,7 +461,7 @@ let
           ++ identifier "${path}.name" (node.name or null)
           ++ error path
             (
-              isString (node.name or null) && builtins.hasAttr node.name (scope.locals or { })
+              isString (node.name or null) && lib.hasAttr node.name (scope.locals or { })
             ) "local does not identify a function parameter in this scope"
         else if kind == "rawExpression" then
           shape path [ "text" ] [ "type" "dependsOn" ] node
@@ -514,7 +512,7 @@ let
           in
           shape path [ "op" "left" "right" ] [ ] node
           ++ error "${path}.op"
-            (builtins.elem op [
+            (lib.elem op [
               "="
               "!="
               "<"
@@ -528,12 +526,12 @@ let
           ++ sameFamily path left right
           ++ error path
             (
-              builtins.elem op [
+              lib.elem op [
                 "="
                 "!="
               ]
               || left.type == null
-              || builtins.elem left.type ordered
+              || lib.elem left.type ordered
             ) "this type does not support ordered comparisons"
         else if kind == "inSet" then
           let
@@ -571,7 +569,7 @@ let
           ++ set.errors
           ++ error path
             (
-              set.type == null || value.type == null || builtins.elem value.type allowed
+              set.type == null || value.type == null || lib.elem value.type allowed
             ) "membership operands have incompatible types"
           ++ sameFamily path value set
         else if kind == "fromProtocol" then
@@ -600,7 +598,7 @@ let
       shape path [ ] [ ] node
       ++ error path
         (
-          builtins.elem scope.context [
+          lib.elem scope.context [
             "filter"
             "function"
           ]
@@ -635,7 +633,7 @@ let
       )
       ++ error "${path}.attribute"
         (
-          !(builtins.elem name [
+          !(lib.elem name [
             "net"
             "proto"
             "source"
@@ -684,7 +682,7 @@ let
                   )
                 ) "expected an individual community or a define reference"
               ++ error p
-                (builtins.elem result.type [
+                (lib.elem result.type [
                   "pair"
                   "ec"
                   "lc"
@@ -702,7 +700,7 @@ let
   filter =
     path: family: declaration:
     error "${path}.default"
-      (builtins.elem (declaration.default or null) [
+      (lib.elem (declaration.default or null) [
         "accept"
         "reject"
       ]) "a filter requires an explicit accept/reject default"
@@ -711,13 +709,13 @@ let
     path: family: value:
     if isString value then
       error path
-        (builtins.elem value [
+        (lib.elem value [
           "all"
           "none"
         ]) "policy strings must be all or none, use a filter reference for a named policy"
     else if
       isAttrs value
-      && builtins.elem (value.kind or null) [
+      && lib.elem (value.kind or null) [
         "reference"
         "external"
       ]
@@ -759,7 +757,7 @@ let
       ];
       mode =
         name:
-        builtins.elem (declaration.${name} or null) [
+        lib.elem (declaration.${name} or null) [
           null
           true
           false
@@ -768,7 +766,7 @@ let
         ];
     in
     error path
-      (builtins.elem family [
+      (lib.elem family [
         "ipv4"
         "ipv6"
       ]) "unsupported channel address family"
@@ -797,7 +795,7 @@ let
         "export"
       ]
     ++ error "${path}.addPaths"
-      (builtins.elem (declaration.addPaths or "off") [
+      (lib.elem (declaration.addPaths or "off") [
         "off"
         "on"
         "rx"
@@ -806,7 +804,7 @@ let
     ++ error "${path}.nextHopSelf" (mode "nextHopSelf") "expected a switch, ibgp or ebgp"
     ++ error "${path}.nextHopKeep" (mode "nextHopKeep") "expected a switch, ibgp or ebgp"
     ++ error "${path}.gateway"
-      (builtins.elem (declaration.gateway or null) [
+      (lib.elem (declaration.gateway or null) [
         null
         "direct"
         "recursive"
@@ -816,7 +814,7 @@ let
       (
         field:
         error "${path}.${field}"
-          (builtins.elem (declaration.${field} or null) [
+          (lib.elem (declaration.${field} or null) [
             null
             true
             false
@@ -878,12 +876,12 @@ let
   terminates =
     nodes:
     isList nodes
-    && builtins.any
+    && lib.any
       (
         node:
         isAttrs node
         && (
-          builtins.elem (node.kind or null) [
+          lib.elem (node.kind or null) [
             "return"
             "accept"
             "reject"
@@ -926,7 +924,7 @@ let
           "define values must be constant, not route attributes, locals or function calls"
       else if target == "table" then
         error "${path}.type"
-          (builtins.elem (definition.type or null) [
+          (lib.elem (definition.type or null) [
             "ipv4"
             "ipv6"
             "roa4"
@@ -935,7 +933,7 @@ let
       else if target == "function" then
         let
           params = if isList (definition.params or null) then definition.params else [ ];
-          locals = builtins.listToAttrs (
+          locals = lib.listToAttrs (
             map
               (parameter: {
                 name = if isAttrs parameter && isString (parameter.name or null) then parameter.name else "";
@@ -959,7 +957,7 @@ let
       else if target == "protocol" || target == "template" then
         let
           protocolType = definition.type or null;
-          registered = isString protocolType && builtins.hasAttr protocolType protocols;
+          registered = isString protocolType && lib.hasAttr protocolType protocols;
           from = definition.from or null;
           parent = lookup from;
         in
@@ -993,7 +991,7 @@ let
         [ ]
     );
   names = map (declaration: declaration.name) internal.declarations;
-  duplicates = builtins.filter (name: length (builtins.filter (other: other == name) names) > 1) (
+  duplicates = lib.filter (name: length (lib.filter (other: other == name) names) > 1) (
     lib.unique names
   );
   rootID = ipInfo (config.id or null);
