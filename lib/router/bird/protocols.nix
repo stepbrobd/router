@@ -204,6 +204,26 @@ in
       bfd = nullable t.bool;
       ttlSecurity = nullable t.bool;
       password = nullable types.expression;
+      # link-local sessions name their interface here or as the neighbor address scope
+      interface = address;
+      onlink = nullable t.bool;
+      passive = nullable t.bool;
+      localRole = nullable (
+        t.enum [
+          "peer"
+          "provider"
+          "customer"
+          "rs_server"
+          "rs_client"
+        ]
+      );
+      requireRoles = nullable t.bool;
+      # true accepts the local AS any number of times, a count limits it and 0 forbids it
+      allowLocalAs = nullable (t.either t.bool types.uint);
+      gracefulRestartTime = nullable types.uint;
+      enableRouteRefresh = nullable t.bool;
+      defaultBgpLocalPref = nullable types.uint;
+      enforceFirstAs = nullable t.bool;
     };
   };
 }

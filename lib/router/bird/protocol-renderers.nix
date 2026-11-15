@@ -491,7 +491,19 @@ in
               "multihop${optionalString (cfg.transport.hops != null) " ${toString cfg.transport.hops}"};"
           )
           (optionalString (cfg.sourceAddress != null) "source address ${ctx.address cfg.sourceAddress};")
+          (optionalString (cfg.interface != null) "interface ${ctx.quote cfg.interface};")
+          (optionalString (cfg.onlink != null) "onlink ${ctx.switch cfg.onlink};")
+          (optionalString (cfg.passive != null) "passive ${ctx.switch cfg.passive};")
+          (optionalString (cfg.localRole != null) "local role ${cfg.localRole};")
+          (optionalString (cfg.requireRoles != null) "require roles ${ctx.switch cfg.requireRoles};")
+          (optionalString (cfg.allowLocalAs != null) "allow local as${
+            optionalString (lib.isInt cfg.allowLocalAs) " ${toString cfg.allowLocalAs}"
+          };")
+          (optionalString (cfg.enforceFirstAs != null) "enforce first as ${ctx.switch cfg.enforceFirstAs};")
           (optionalString (cfg.gracefulRestart != null) "graceful restart ${cfg.gracefulRestart};")
+          (optionalString (cfg.gracefulRestartTime != null) "graceful restart time ${toString cfg.gracefulRestartTime};")
+          (optionalString (cfg.enableRouteRefresh != null) "enable route refresh ${ctx.switch cfg.enableRouteRefresh};")
+          (optionalString (cfg.defaultBgpLocalPref != null) "default bgp_local_pref ${toString cfg.defaultBgpLocalPref};")
           (optionalString (cfg.holdTime != null) "hold time ${toString cfg.holdTime};")
           (optionalString (cfg.keepaliveTime != null) "keepalive time ${toString cfg.keepaliveTime};")
           (optionalString (cfg.bfd != null) "bfd ${ctx.switch cfg.bfd};")
@@ -514,6 +526,11 @@ in
           || !sourceInfo.valid
           || (localInfo.family == sourceInfo.family && localInfo.words == sourceInfo.words);
         password = ctx.expression "${path}.password" (ctx.scopeFor "define") cfg.password;
+        internal = cfg.local != null && cfg.neighbor != null && local.asn == neighbor.asn;
+        # an unset transport is direct for eBGP and multihop for iBGP
+        multihop = if cfg.transport != null then cfg.transport.type == "multihop" else internal;
+        linkLocal = info: info.valid && info.family == "ipv6" && lib.bitAnd (lib.head info.words) 65472 == 65152;
+        interface = if cfg.interface != null then cfg.interface else neighborInfo.scope;
       in
       # endpoints may come from a template, so only the effective declaration must have both
       ctx.error "${path}.local" (cfg.local != null) "BGP requires a local ASN"
@@ -586,6 +603,61 @@ in
       ++ switchOf ctx "${path}.bfd" cfg.bfd
       ++ switchOf ctx "${path}.ttlSecurity" cfg.ttlSecurity
       ++ ctx.error "${path}.bfd" (cfg.bfd != true || bfdAvailable ctx) "bfd requires an enabled bfd protocol"
+      ++ ctx.error "${path}.bfd"
+        (
+          cfg.bfd != true || !multihop || (local.address or null) != null || cfg.sourceAddress != null
+        ) "multihop BGP with bfd requires a local or source address"
+      ++ lib.concatMap (field: switchOf ctx "${path}.${field}" cfg.${field}) [
+        "onlink"
+        "passive"
+        "requireRoles"
+        "enableRouteRefresh"
+        "enforceFirstAs"
+      ]
+      ++ lib.optionals (cfg.interface != null) (
+        ctx.string "${path}.interface" cfg.interface
+        ++ ctx.error "${path}.interface" (cfg.interface != "") "interface name must not be empty"
+        ++ ctx.error "${path}.interface"
+          (
+            neighborInfo.scope == null || neighborInfo.scope == cfg.interface
+          ) "interface and neighbor address scope disagree"
+      )
+      ++ ctx.error "${path}.interface"
+        (
+          interface != null || !(linkLocal localInfo || linkLocal neighborInfo || linkLocal sourceInfo)
+        ) "link-local addresses require an interface"
+      ++ ctx.error "${path}.transport"
+        (
+          !multihop || !(linkLocal localInfo || linkLocal neighborInfo || linkLocal sourceInfo)
+        ) "multihop BGP cannot use link-local addresses"
+      ++ ctx.error "${path}.interface" (!multihop || interface == null) "multihop BGP cannot be bound to an interface"
+      ++ ctx.error "${path}.onlink" (!multihop || cfg.onlink != true) "multihop BGP cannot be onlink"
+      ++ ctx.error "${path}.onlink"
+        (
+          cfg.onlink != true || interface != null || cfg.passive == true
+        ) "an active onlink session needs an interface"
+      ++ ctx.error "${path}.localRole" (!internal || cfg.localRole == null) "a local role cannot be set on an iBGP session"
+      ++ ctx.error "${path}.requireRoles"
+        (
+          cfg.requireRoles != true || cfg.localRole != null
+        ) "requiring roles needs a local role"
+      ++ ctx.error "${path}.enforceFirstAs"
+        (
+          !internal || cfg.enforceFirstAs != true
+        ) "enforcing the first AS needs an eBGP session"
+      ++ ctx.error "${path}.allowLocalAs"
+        (
+          cfg.allowLocalAs != false
+        ) "bird has no off form for allow local as, set 0 to forbid the local AS"
+      ++ lib.optionals (lib.isInt cfg.allowLocalAs) (nullableUint ctx "${path}.allowLocalAs" 32 cfg.allowLocalAs)
+      ++ lib.optionals (cfg.gracefulRestartTime != null) (
+        ctx.uint "${path}.gracefulRestartTime" 32 cfg.gracefulRestartTime
+        ++ ctx.error "${path}.gracefulRestartTime"
+          (
+            !lib.isInt cfg.gracefulRestartTime || cfg.gracefulRestartTime < 4096
+          ) "graceful restart time must be less than 4096"
+      )
+      ++ nullableUint ctx "${path}.defaultBgpLocalPref" 32 cfg.defaultBgpLocalPref
       ++ lib.optionals (cfg.password != null) (
         password.errors
         ++ ctx.error "${path}.password"
