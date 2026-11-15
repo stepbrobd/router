@@ -72,7 +72,26 @@ let
       interface = address;
       onlink = nullable t.bool;
       weight = nullable types.uint;
+      bfd = nullable t.bool;
     };
+  };
+  interfacePattern = t.either t.str (
+    t.submodule {
+      options = {
+        pattern = mkOption { type = t.str; };
+        exclude = option t.bool false;
+      };
+    }
+  );
+  # bfd timers are whole milliseconds
+  bfdOptions = {
+    interval = nullable types.uint;
+    minRxInterval = nullable types.uint;
+    minTxInterval = nullable types.uint;
+    idleTxInterval = nullable types.uint;
+    multiplier = nullable types.uint;
+    passive = nullable t.bool;
+    extraConfig = option t.str "";
   };
 in
 {
@@ -82,18 +101,51 @@ in
   direct.module = {
     options = {
       inherit channels;
+      interfaces = option (t.listOf interfacePattern) [ ];
+      checkLink = nullable t.bool;
+    };
+  };
+  bfd.module = {
+    options = {
+      accept = nullable (
+        t.submodule {
+          options = {
+            family = nullable (
+              t.enum [
+                "ipv4"
+                "ipv6"
+              ]
+            );
+            transport = nullable (
+              t.enum [
+                "direct"
+                "multihop"
+              ]
+            );
+          };
+        }
+      );
+      strictBind = nullable t.bool;
       interfaces = option
         (t.listOf (
-          t.either t.str (
-            t.submodule {
-              options = {
-                pattern = mkOption { type = t.str; };
-                exclude = option t.bool false;
-              };
-            }
-          )
+          t.submodule {
+            options = bfdOptions // {
+              patterns = mkOption { type = t.listOf interfacePattern; };
+            };
+          }
         )) [ ];
-      checkLink = nullable t.bool;
+      multihop = nullable (t.submodule { options = bfdOptions; });
+      neighbors = option
+        (t.listOf (
+          t.submodule {
+            options = {
+              address = mkOption { type = t.str; };
+              interface = address;
+              local = address;
+              multihop = nullable t.bool;
+            };
+          }
+        )) [ ];
     };
   };
   kernel.module = {

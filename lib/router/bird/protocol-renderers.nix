@@ -49,6 +49,146 @@ let
       (
         (cfg.port or null) == null || !lib.isInt cfg.port || cfg.port > 0
       ) "port must be in 1..65535";
+  interfaceList =
+    ctx: patterns:
+    concatMapStringsSep ", "
+      (
+        interface:
+        if lib.isString interface then
+          ctx.quote interface
+        else
+          "${optionalString interface.exclude "-"}${ctx.quote interface.pattern}"
+      )
+      patterns;
+  validatePatterns =
+    ctx: path: patterns:
+    concatMap (item: item) (
+      imap0
+        (
+          i: interface:
+          let
+            p = "${path}[${toString i}]";
+            pattern = if lib.isString interface then interface else interface.pattern;
+          in
+          ctx.string p pattern
+          ++ ctx.error p (pattern != "") "interface patterns must not be empty"
+          ++ lib.optionals (lib.isAttrs interface) (
+            ctx.error "${p}.exclude" (lib.isBool interface.exclude) "expected a boolean"
+          )
+        )
+        patterns
+    );
+  switchOf =
+    ctx: path: value:
+    ctx.error path
+      (lib.elem value [
+        null
+        true
+        false
+      ]) "expected a boolean";
+  # bfd sessions need a bfd protocol to exist, whichever protocol requests them
+  bfdAvailable =
+    ctx:
+    lib.any (protocol: (protocol.type or null) == "bfd" && (protocol.disabled or null) != true) (
+      lib.attrValues (ctx.config.protocols or { })
+    );
+  bfdTimers = [
+    {
+      field = "interval";
+      label = "interval";
+    }
+    {
+      field = "minRxInterval";
+      label = "min rx interval";
+    }
+    {
+      field = "minTxInterval";
+      label = "min tx interval";
+    }
+    {
+      field = "idleTxInterval";
+      label = "idle tx interval";
+    }
+  ];
+  bfdItems =
+    ctx: options:
+    ctx.join (
+      map
+        (
+          timer:
+          optionalString (options.${timer.field} != null) "${timer.label} ${toString options.${timer.field}} ms;"
+        )
+        bfdTimers
+      ++ [
+        (optionalString (options.multiplier != null) "multiplier ${toString options.multiplier};")
+        (optionalString (options.passive != null) "passive ${ctx.switch options.passive};")
+        options.extraConfig
+      ]
+    );
+  bfdBlock =
+    ctx: header: items:
+    if items == "" then "${header};" else "${ctx.block header items};";
+  validateBfdOptions =
+    ctx: path: options:
+    concatMap
+      (
+        timer:
+        let
+          value = options.${timer.field};
+        in
+        lib.optionals (value != null) (
+          ctx.uint "${path}.${timer.field}" 32 value
+          ++ ctx.error "${path}.${timer.field}"
+            (
+              !lib.isInt value || (value >= 1 && value <= 4294967)
+            ) "BFD intervals must be in 1..4294967 milliseconds"
+        )
+      )
+      bfdTimers
+    ++ ctx.error "${path}.interval"
+      (
+        options.interval == null || (options.minRxInterval == null && options.minTxInterval == null)
+      ) "interval sets both directions, so it cannot be combined with minRxInterval or minTxInterval"
+    ++ ctx.error "${path}.multiplier"
+      (
+        options.multiplier == null
+        || (lib.isInt options.multiplier && options.multiplier >= 1 && options.multiplier <= 255)
+      ) "BFD multiplier must be in 1..255"
+    ++ switchOf ctx "${path}.passive" options.passive
+    ++ ctx.native "${path}.extraConfig" options.extraConfig;
+  validateBfdNeighbor =
+    ctx: name: index: neighbor:
+    let
+      path = "protocols.${name}.neighbors[${toString index}]";
+      addressInfo = ctx.ipInfo neighbor.address;
+      localInfo = ctx.ipInfo neighbor.local;
+    in
+    ctx.ip "${path}.address" neighbor.address
+    ++ ctx.error "${path}.interface"
+      (
+        addressInfo.scope == null || neighbor.interface == null || addressInfo.scope == neighbor.interface
+      ) "address scope and interface disagree"
+    ++ lib.optionals (neighbor.interface != null) (
+      ctx.string "${path}.interface" neighbor.interface
+      ++ ctx.error "${path}.interface" (neighbor.interface != "") "interface name must not be empty"
+    )
+    ++ lib.optionals (neighbor.local != null) (
+      ctx.ip "${path}.local" neighbor.local
+      ++ ctx.error "${path}.local" (localInfo.scope == null) "local address cannot contain an interface scope"
+      ++ ctx.error "${path}.local"
+        (
+          !localInfo.valid || !addressInfo.valid || localInfo.family == addressInfo.family
+        ) "local and neighbor addresses must have the same address family"
+    )
+    ++ switchOf ctx "${path}.multihop" neighbor.multihop
+    ++ ctx.error "${path}.multihop"
+      (
+        neighbor.multihop != true || (neighbor.interface == null && addressInfo.scope == null)
+      ) "a multihop neighbor cannot name an interface"
+    ++ ctx.error "${path}.local"
+      (
+        neighbor.multihop != true || neighbor.local != null
+      ) "a multihop neighbor requires a local address";
   endpointText =
     ctx: label: cfg:
     "${label}${optionalString ((cfg.address or null) != null) " ${ctx.address cfg.address}"}${
@@ -70,7 +210,8 @@ let
           destination.gateway != null && destination.interface != null
         ) " dev ${ctx.quote destination.interface}"
       + optionalString (destination.onlink != null) " onlink ${ctx.switch destination.onlink}"
-      + optionalString (destination.weight != null) " weight ${toString destination.weight}";
+      + optionalString (destination.weight != null) " weight ${toString destination.weight}"
+      + optionalString (destination.bfd != null) " bfd ${ctx.switch destination.bfd}";
   validateRoute =
     ctx: protocolName: family: index: route:
     let
@@ -109,6 +250,7 @@ let
           && interface == null
           && (destination.onlink or null) == null
           && (destination.weight or null) == null
+          && (destination.bfd or null) == null
         )
       ) "special destinations cannot have next-hop options"
     ++ lib.optionals (gateway != null) (
@@ -137,6 +279,19 @@ let
         (destination.onlink or null) != true
         || (gateway != null && (interface != null || gatewayInfo.scope != null))
       ) "onlink requires a gateway and an explicit interface"
+    ++ switchOf ctx "${path}.destination.bfd" (destination.bfd or null)
+    ++ ctx.error "${path}.destination.bfd"
+      (
+        (destination.bfd or null) != true || gateway != null
+      ) "bfd requires a gateway"
+    ++ ctx.error "${path}.destination.bfd"
+      (
+        (destination.bfd or null) != true || (destination.onlink or null) != true
+      ) "bird cannot combine bfd and onlink on one next hop"
+    ++ ctx.error "${path}.destination.bfd"
+      (
+        (destination.bfd or null) != true || bfdAvailable ctx
+      ) "bfd requires an enabled bfd protocol"
     ++ lib.optionals ((destination.weight or null) != null) (
       ctx.uint "${path}.destination.weight" 32 destination.weight
       ++ ctx.error "${path}.destination.weight"
@@ -196,17 +351,7 @@ in
       ctx: name: cfg:
       ctx.protocol name cfg (
         ctx.join [
-          (optionalString (cfg.interfaces != [ ])
-            "interface ${
-              concatMapStringsSep ", " (
-                interface:
-                if lib.isString interface then
-                  ctx.quote interface
-                else
-                  "${optionalString interface.exclude "-"}${ctx.quote interface.pattern}"
-              ) cfg.interfaces
-            };"
-          )
+          (optionalString (cfg.interfaces != [ ]) "interface ${interfaceList ctx cfg.interfaces};")
           (optionalString (cfg.checkLink != null) "check link ${ctx.switch cfg.checkLink};")
           (channels ctx cfg)
         ]
@@ -214,28 +359,63 @@ in
     validate =
       ctx: name: cfg:
       validateChannels ctx name cfg
-      ++ concatMap (item: item) (
-        imap0
-          (
-            i: interface:
-            let
-              path = "protocols.${name}.interfaces[${toString i}]";
-              pattern = if lib.isString interface then interface else interface.pattern;
-            in
-            ctx.string path pattern
-            ++ ctx.error path (pattern != "") "interface patterns must not be empty"
-            ++ lib.optionals (lib.isAttrs interface) (
-              ctx.error "${path}.exclude" (lib.isBool interface.exclude) "expected a boolean"
-            )
-          )
-          cfg.interfaces
-      )
+      ++ validatePatterns ctx "protocols.${name}.interfaces" cfg.interfaces
       ++ ctx.error "protocols.${name}.checkLink"
         (lib.elem cfg.checkLink [
           null
           true
           false
         ]) "expected a boolean";
+  };
+  bfd = {
+    # bfd_copy_config drops the interfaces and neighbors of a template
+    inheritable = false;
+    render =
+      ctx: name: cfg:
+      ctx.protocol name cfg (
+        ctx.join (
+          [
+            (optionalString (cfg.accept != null) "accept${
+              optionalString (cfg.accept.family != null) " ${cfg.accept.family}"
+            }${optionalString (cfg.accept.transport != null) " ${cfg.accept.transport}"};")
+            (optionalString (cfg.strictBind != null) "strict bind ${ctx.switch cfg.strictBind};")
+          ]
+          ++ map
+            (
+              interface: bfdBlock ctx "interface ${interfaceList ctx interface.patterns}" (bfdItems ctx interface)
+            )
+            cfg.interfaces
+          ++ [ (optionalString (cfg.multihop != null) (bfdBlock ctx "multihop" (bfdItems ctx cfg.multihop))) ]
+          ++ map
+            (
+              neighbor:
+              "neighbor ${ctx.address neighbor.address}${
+                optionalString (neighbor.interface != null) " dev ${ctx.quote neighbor.interface}"
+              }${optionalString (neighbor.local != null) " local ${ctx.address neighbor.local}"}${
+                optionalString (neighbor.multihop != null) " multihop ${ctx.switch neighbor.multihop}"
+              };"
+            )
+            cfg.neighbors
+        )
+      );
+    validate =
+      ctx: name: cfg:
+      switchOf ctx "protocols.${name}.strictBind" cfg.strictBind
+      ++ concatMap (item: item) (
+        imap0
+          (
+            i: interface:
+            let
+              path = "protocols.${name}.interfaces[${toString i}]";
+            in
+            ctx.error "${path}.patterns" (interface.patterns != [ ]) "a BFD interface block needs at least one pattern"
+            ++ validatePatterns ctx "${path}.patterns" interface.patterns
+            ++ validateBfdOptions ctx path interface
+          )
+          cfg.interfaces
+      )
+      ++ lib.optionals (cfg.multihop != null) (validateBfdOptions ctx "protocols.${name}.multihop" cfg.multihop)
+      ++ concatMap (item: item) (imap0 (validateBfdNeighbor ctx name) cfg.neighbors);
   };
   kernel = {
     render =
@@ -403,20 +583,9 @@ in
             !lib.isInt cfg.keepaliveTime || cfg.keepaliveTime >= 1
           ) "keepalive time must be in 1..65535"
       )
-      ++ concatMap
-        (
-          field:
-          ctx.error "${path}.${field}"
-            (lib.elem cfg.${field} [
-              null
-              true
-              false
-            ]) "expected a boolean"
-        )
-        [
-          "bfd"
-          "ttlSecurity"
-        ]
+      ++ switchOf ctx "${path}.bfd" cfg.bfd
+      ++ switchOf ctx "${path}.ttlSecurity" cfg.ttlSecurity
+      ++ ctx.error "${path}.bfd" (cfg.bfd != true || bfdAvailable ctx) "bfd requires an enabled bfd protocol"
       ++ lib.optionals (cfg.password != null) (
         password.errors
         ++ ctx.error "${path}.password"

@@ -956,6 +956,7 @@ let
         let
           protocolType = definition.type or null;
           registered = isString protocolType && lib.hasAttr protocolType protocols;
+          inheritable = !registered || (protocols.${protocolType}.inheritable or true);
           from = definition.from or null;
           parent = lookup from;
         in
@@ -968,6 +969,10 @@ let
           string "${path}.description" definition.description
         )
         ++ native "${path}.extraConfig" (definition.extraConfig or "")
+        ++ error path
+          (
+            inheritable || (target == "protocol" && from == null)
+          ) "bird does not carry this protocol type's configuration through a template, so it cannot use templates"
         ++ lib.optionals (from != null) (
           reference "${path}.from" [ "template" ] from
           ++ error "${path}.from" ((from.kind or null) == "reference") "templates must be declared, not external"
