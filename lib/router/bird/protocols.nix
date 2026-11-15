@@ -171,6 +171,18 @@ in
         )) [ ];
     };
   };
+  pipe.module = {
+    options = {
+      table = nullable (types.referenceTo "table");
+      peerTable = nullable (types.referenceTo "table");
+      import = nullable types.policy;
+      export = nullable types.policy;
+      importLimit = limit;
+      receiveLimit = limit;
+      exportLimit = limit;
+      maxGeneration = nullable types.uint;
+    };
+  };
   kernel.module = {
     options = {
       inherit channels;

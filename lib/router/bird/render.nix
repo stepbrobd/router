@@ -155,8 +155,9 @@ let
     else
       "where ${expression selected.where}";
   # every field renders exactly when it is set, so a derived block overrides only what it names
-  channel =
-    family: declaration:
+  # a pipe writes these items inline, other protocols wrap them in a family block
+  channelContents =
+    declaration:
     let
       option =
         key: label:
@@ -165,68 +166,68 @@ let
         in
         optionalString (selected != null)
           "${label} ${if lib.isBool selected then switch selected else toString selected};";
-      contents = join (
+    in
+    join (
+      [
+        (optionalString ((declaration.table or null) != null) "table ${identifier declaration.table.name};")
+      ]
+      ++
+      map
+        (
+          direction:
+          optionalString ((declaration.${direction} or null) != null)
+            "${direction} ${policy declaration.${direction}};"
+        )
         [
-          (optionalString ((declaration.table or null) != null) "table ${identifier declaration.table.name};")
+          "import"
+          "export"
         ]
-        ++
-        map
-          (
-            direction:
-            optionalString ((declaration.${direction} or null) != null)
-              "${direction} ${policy declaration.${direction}};"
-          )
-          [
-            "import"
-            "export"
-          ]
-        ++
-        map
-          (
-            limit:
-            let
-              selected = declaration.${limit.field} or null;
-            in
-            optionalString (selected != null) "${limit.label} ${
+      ++
+      map
+        (
+          limit:
+          let
+            selected = declaration.${limit.field} or null;
+          in
+          optionalString (selected != null) "${limit.label} ${
               if lib.isString selected then
                 selected
               else
                 "${toString selected.count}${optionalString (selected.action != null) " action ${selected.action}"}"
             };"
-          )
-          [
-            {
-              field = "importLimit";
-              label = "import limit";
-            }
-            {
-              field = "receiveLimit";
-              label = "receive limit";
-            }
-            {
-              field = "exportLimit";
-              label = "export limit";
-            }
-          ]
-        ++ [
-          (option "importKeepFiltered" "import keep filtered")
-          (option "preference" "preference")
-          (optionalString ((declaration.addPaths or null) != null) "add paths ${declaration.addPaths};")
-          (option "nextHopSelf" "next hop self")
-          (option "nextHopKeep" "next hop keep")
-          (optionalString
-            (
-              (declaration.nextHopAddress or null) != null
-            ) "next hop address ${address declaration.nextHopAddress};")
-          (option "gateway" "gateway")
-          (option "extendedNextHop" "extended next hop")
-          (option "importTable" "import table")
-          (option "exportTable" "export table")
-          (declaration.extraConfig or "")
+        )
+        [
+          {
+            field = "importLimit";
+            label = "import limit";
+          }
+          {
+            field = "receiveLimit";
+            label = "receive limit";
+          }
+          {
+            field = "exportLimit";
+            label = "export limit";
+          }
         ]
-      );
-    in
-    "${block family contents};";
+      ++ [
+        (option "importKeepFiltered" "import keep filtered")
+        (option "preference" "preference")
+        (optionalString ((declaration.addPaths or null) != null) "add paths ${declaration.addPaths};")
+        (option "nextHopSelf" "next hop self")
+        (option "nextHopKeep" "next hop keep")
+        (optionalString
+          (
+            (declaration.nextHopAddress or null) != null
+          ) "next hop address ${address declaration.nextHopAddress};")
+        (option "gateway" "gateway")
+        (option "extendedNextHop" "extended next hop")
+        (option "importTable" "import table")
+        (option "exportTable" "export table")
+        (declaration.extraConfig or "")
+      ]
+    );
+  channel = family: declaration: "${block family (channelContents declaration)};";
   # the declaration kind decides the keyword, and only a derived declaration names its template
   protocolFor =
     keyword: name: declaration: contents:
@@ -257,6 +258,7 @@ let
       block
       address
       channel
+      channelContents
       ;
     inherit (internal) typeOf;
     protocol = protocolFor keyword;

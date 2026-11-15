@@ -417,6 +417,75 @@ in
       ++ lib.optionals (cfg.multihop != null) (validateBfdOptions ctx "protocols.${name}.multihop" cfg.multihop)
       ++ concatMap (item: item) (imap0 (validateBfdNeighbor ctx name) cfg.neighbors);
   };
+  pipe = {
+    # pipe_postconfig requires both tables on templates too
+    completeTemplates = true;
+    render =
+      ctx: name: cfg:
+      let
+        channel = {
+          inherit (cfg)
+            table
+            import
+            export
+            importLimit
+            receiveLimit
+            exportLimit
+            ;
+        };
+      in
+      ctx.protocol name cfg (
+        ctx.join [
+          (ctx.channelContents channel)
+          (optionalString (cfg.peerTable != null) "peer table ${ctx.identifier cfg.peerTable.name};")
+          (optionalString (cfg.maxGeneration != null) "max generation ${toString cfg.maxGeneration};")
+        ]
+      );
+    validate =
+      ctx: name: cfg:
+      let
+        path = "protocols.${name}";
+        tableOf = reference: if reference == null then null else (ctx.config.tables or { }).${reference.name} or null;
+        primary = tableOf cfg.table;
+        peer = tableOf cfg.peerTable;
+        family = if primary == null then null else primary.type;
+      in
+      ctx.error "${path}.table" (cfg.table != null) "a pipe requires a primary table"
+      ++ ctx.error "${path}.peerTable" (cfg.peerTable != null) "a pipe requires a peer table"
+      ++ lib.optionals (cfg.peerTable != null) (ctx.reference "${path}.peerTable" [ "table" ] cfg.peerTable)
+      ++ ctx.error "${path}.peerTable"
+        (
+          cfg.table == null || cfg.peerTable == null || cfg.table.name != cfg.peerTable.name
+        ) "the primary and peer tables must differ"
+      ++ ctx.error "${path}.peerTable"
+        (
+          primary == null || peer == null || primary.type == peer.type
+        ) "the primary and peer tables must have the same type"
+      ++ ctx.error "${path}.table"
+        (lib.elem family [
+          null
+          "ipv4"
+          "ipv6"
+        ]) "router pipes connect ipv4 or ipv6 tables"
+      ++ lib.optionals (lib.elem family [ "ipv4" "ipv6" ]) (
+        ctx.channel path "pipe" family {
+          inherit (cfg)
+            table
+            import
+            export
+            importLimit
+            receiveLimit
+            exportLimit
+            ;
+        }
+      )
+      ++ lib.optionals (cfg.maxGeneration != null) (
+        ctx.error "${path}.maxGeneration"
+          (
+            lib.isInt cfg.maxGeneration && cfg.maxGeneration >= 1 && cfg.maxGeneration <= 254
+          ) "max generation must be in 1..254"
+      );
+  };
   kernel = {
     render =
       ctx: name: cfg:
