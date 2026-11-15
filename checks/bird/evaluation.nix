@@ -456,6 +456,70 @@ let
     };
   };
   filterCase = evaluate [ filterLanguage ];
+  sessionChannels.ipv6 = {
+    import = "none";
+    export = "none";
+  };
+  sessionDeclarations = { config, ... }: {
+    templates.transit = {
+      type = "bgp";
+      local.asn = 65000;
+      localRole = "customer";
+      requireRoles = true;
+      channels = sessionChannels;
+    };
+    protocols = {
+      linklocal = {
+        type = "bgp";
+        local.asn = 65000;
+        neighbor = {
+          asn = 65001;
+          address = "fe80::1";
+        };
+        interface = "eth0";
+        passive = false;
+        localRole = "peer";
+        enableRouteRefresh = true;
+        enforceFirstAs = true;
+        defaultBgpLocalPref = 100;
+        gracefulRestart = "on";
+        gracefulRestartTime = 120;
+        allowLocalAs = 2;
+        channels = sessionChannels;
+      };
+      scoped = {
+        type = "bgp";
+        local.asn = 65000;
+        neighbor = {
+          asn = 65002;
+          address = "fe80::2%eth1";
+        };
+        channels = sessionChannels;
+      };
+      onlink = {
+        type = "bgp";
+        local.asn = 65000;
+        neighbor = {
+          asn = 65003;
+          address = "2001:db8::3";
+        };
+        onlink = true;
+        passive = true;
+        allowLocalAs = true;
+        channels = sessionChannels;
+      };
+      upstream = {
+        type = "bgp";
+        from = config.templates.transit.ref;
+        neighbor = {
+          asn = 65004;
+          address = "2001:db8::4";
+        };
+        enforceFirstAs = false;
+      };
+    };
+  };
+  sessions = evaluate [ sessionDeclarations ];
   # protocols with nothing optional declared next to the same protocols with every off form spelled out
   declared = evaluate [
     ({ config, ... }: {
@@ -1225,6 +1289,69 @@ let
         };
       }
     ];
+    roleOnIbgp = [
+      sessionDeclarations
+      { protocols.scoped.localRole = "peer"; protocols.scoped.neighbor.asn = lib.mkForce 65000; }
+    ];
+    requireRolesWithoutRole = [
+      sessionDeclarations
+      { protocols.scoped.requireRoles = true; }
+    ];
+    linkLocalWithoutInterface = [
+      sessionDeclarations
+      { protocols.linklocal.interface = lib.mkForce null; }
+    ];
+    multihopInterface = [
+      sessionDeclarations
+      { protocols.linklocal.transport.type = "multihop"; }
+    ];
+    ibgpImplicitMultihopInterface = [
+      sessionDeclarations
+      {
+        protocols.linklocal = {
+          neighbor.asn = lib.mkForce 65000;
+          localRole = lib.mkForce null;
+          enforceFirstAs = lib.mkForce null;
+        };
+      }
+    ];
+    activeOnlinkWithoutInterface = [
+      sessionDeclarations
+      { protocols.onlink.passive = lib.mkForce false; }
+    ];
+    allowLocalAsFalse = [
+      sessionDeclarations
+      { protocols.onlink.allowLocalAs = lib.mkForce false; }
+    ];
+    gracefulRestartTimeRange = [
+      sessionDeclarations
+      { protocols.linklocal.gracefulRestartTime = lib.mkForce 4096; }
+    ];
+    enforceFirstAsIbgp = [
+      sessionDeclarations
+      {
+        protocols.onlink = {
+          neighbor.asn = lib.mkForce 65000;
+          enforceFirstAs = true;
+          transport.type = "direct";
+        };
+      }
+    ];
+    interfaceScopeConflict = [
+      sessionDeclarations
+      { protocols.scoped.interface = "eth2"; }
+    ];
+    multihopBfdWithoutLocal = [
+      sessionDeclarations
+      {
+        protocols.bfd0.type = "bfd";
+        protocols.onlink = {
+          onlink = lib.mkForce null;
+          transport.type = "multihop";
+          bfd = true;
+        };
+      }
+    ];
     addPathsOutsideBgp = [
       {
         protocols.originate = {
@@ -1382,6 +1509,32 @@ let
         && lib.hasInfix "learned_from = 2;" paths
         && lib.hasInfix "krt_prefsrc = 192.0.2.1;" paths
         && lib.hasInfix "route 203.0.113.0/24 unreachable {\n    bgp_path.prepend(18932);\n    bgp_path.prepend(18932);\n  };" filterCase.text;
+    sessionOptionsRender =
+      let
+        linklocal = section "protocol bgp linklocal {" sessions.text;
+        onlink = section "protocol bgp onlink {" sessions.text;
+        transit = section "template bgp transit {" sessions.text;
+        upstream = section "protocol bgp upstream from transit {" sessions.text;
+      in
+      lib.hasInfix "neighbor fe80::1 as 65001;" linklocal
+        && lib.hasInfix "interface \"eth0\";" linklocal
+        && lib.hasInfix "passive off;" linklocal
+        && lib.hasInfix "local role peer;" linklocal
+        && lib.hasInfix "enable route refresh on;" linklocal
+        && lib.hasInfix "enforce first as on;" linklocal
+        && lib.hasInfix "default bgp_local_pref 100;" linklocal
+        && lib.hasInfix "graceful restart on;" linklocal
+        && lib.hasInfix "graceful restart time 120;" linklocal
+        && lib.hasInfix "allow local as 2;" linklocal
+        && lib.hasInfix "neighbor fe80::2%eth1 as 65002;" sessions.text
+        && lib.hasInfix "onlink on;" onlink
+        && lib.hasInfix "passive on;" onlink
+        && lib.hasInfix "allow local as;" onlink
+        && lib.hasInfix "local role customer;" transit
+        && lib.hasInfix "require roles on;" transit
+        && lib.hasInfix "enforce first as off;" upstream
+        && !(lib.hasInfix "local role" upstream)
+        && !(lib.hasInfix "require roles" upstream);
     explicitOffRenders =
       let
         kernel = section "protocol kernel explicit_kernel {" declared.text;
@@ -1505,5 +1658,6 @@ in
     bfd = bfdCase.text;
     globals = globals.text;
     filters = filterCase.text;
+    sessions = sessions.text;
   };
 }
