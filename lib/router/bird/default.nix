@@ -21,22 +21,17 @@ let
         || !(entry ? render)
         || !(extendedLib.isFunction entry.render)
         || (entry ? validate && !(extendedLib.isFunction entry.validate))
-        || (entry ? defaults && !(extendedLib.isAttrs entry.defaults))
     )
     registry;
   checkedRegistry =
     if invalidEntries == { } then
       registry
     else
-      throw "lib.router.bird: protocol extensions require a module, a render function, an optional validate function and optional defaults: ${extendedLib.concatStringsSep ", " (extendedLib.attrNames invalidEntries)}";
-  resolveConfig = import ./resolve.nix {
-    lib = extendedLib;
-    protocols = checkedRegistry;
-  };
+      throw "lib.router.bird: protocol extensions require a module, a render function and an optional validate function: ${extendedLib.concatStringsSep ", " (extendedLib.attrNames invalidEntries)}";
+  resolveConfig = import ./resolve.nix { lib = extendedLib; };
   renderConfig = import ./render.nix {
     lib = extendedLib;
     protocols = checkedRegistry;
-    resolve = resolveConfig;
   };
   validateConfig = import ./validate.nix {
     lib = extendedLib;

@@ -1,4 +1,4 @@
-{ lib, protocols, resolve }:
+{ lib, protocols }:
 config:
 let
   inherit (lib)
@@ -17,7 +17,7 @@ let
       map (line: if line == "" then "" else "  ${line}") (lib.splitString "\n" text)
     );
   join = parts: concatStringsSep "\n" (lib.filter (part: part != "") parts);
-  block = header: contents: "${header} {\n${indent contents}\n}";
+  block = header: contents: if contents == "" then "${header} {\n}" else "${header} {\n${indent contents}\n}";
   address =
     text:
     let
@@ -144,9 +144,9 @@ let
       block "filter" (filterBody selected.inline)
     else
       "where ${expression selected.where}";
-  # a derived block writes only what it sets, so an explicit default still overrides its template
-  channelFor =
-    derived: family: declaration:
+  # every field renders exactly when it is set, so a derived block overrides only what it names
+  channel =
+    family: declaration:
     let
       option =
         key: label:
@@ -171,10 +171,7 @@ let
             "export"
           ]
         ++ [
-          (optionalString
-            (
-              (declaration.addPaths or null) != null && (derived || declaration.addPaths != "off")
-            ) "add paths ${declaration.addPaths};")
+          (optionalString ((declaration.addPaths or null) != null) "add paths ${declaration.addPaths};")
           (option "nextHopSelf" "next hop self")
           (option "nextHopKeep" "next hop keep")
           (optionalString
@@ -190,19 +187,15 @@ let
       );
     in
     "${block family contents};";
+  # the declaration kind decides the keyword, and only a derived declaration names its template
   protocolFor =
-    keyword: derived: name: declaration: contents:
+    keyword: name: declaration: contents:
     block
       "${keyword} ${declaration.type} ${identifier name}${
-        optionalString derived " from ${identifier declaration.from.name}"
+        optionalString ((declaration.from or null) != null) " from ${identifier declaration.from.name}"
       }"
       (join [
-        (
-          if derived then
-            optionalString ((declaration.disabled or null) != null) "disabled ${switch declaration.disabled};"
-          else
-            optionalString (declaration.disabled or false) "disabled on;"
-        )
+        (optionalString ((declaration.disabled or null) != null) "disabled ${switch declaration.disabled};")
         (optionalString
           (
             (declaration.description or null) != null
@@ -210,7 +203,7 @@ let
         contents
         (declaration.extraConfig or "")
       ]);
-  ctxFor = keyword: derived: {
+  ctxFor = keyword: {
     inherit
       config
       value
@@ -223,14 +216,11 @@ let
       join
       block
       address
-      derived
+      channel
       ;
     inherit (internal) typeOf;
-    channel = channelFor derived;
-    protocol = protocolFor keyword derived;
+    protocol = protocolFor keyword;
   };
-  # root declarations render their effective configuration, which carries router's defaults
-  resolved = resolve config;
   declaration =
     item:
     let
@@ -248,12 +238,7 @@ let
     else if target == "filter" then
       block "filter ${identifier name}" (filterBody definition)
     else
-      let
-        derived = (definition.from or null) != null;
-      in
-      protocols.${definition.type}.render (ctxFor target derived) name (
-        if derived then definition else resolved.${internal.collections.${target}}.${name}
-      );
+      protocols.${definition.type}.render (ctxFor target) name definition;
 in
 if internal.ordering.unresolved != [ ] then
   throw "cannot render BIRD declarations with a dependency cycle"

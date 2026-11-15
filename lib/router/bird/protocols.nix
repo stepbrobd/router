@@ -70,7 +70,7 @@ let
       };
       gateway = address;
       interface = address;
-      onlink = option t.bool false;
+      onlink = nullable t.bool;
       weight = nullable types.uint;
     };
   };
@@ -79,7 +79,6 @@ in
   device.module = {
     options.scanTime = nullable types.uint;
   };
-  device.defaults.scanTime = 10;
   direct.module = {
     options = {
       inherit channels;
@@ -106,11 +105,6 @@ in
       persist = nullable t.bool;
       metric = nullable types.uint;
     };
-  };
-  kernel.defaults = {
-    scanTime = 10;
-    learn = false;
-    persist = false;
   };
   static.module = {
     options = {
@@ -159,13 +153,5 @@ in
       ttlSecurity = nullable t.bool;
       password = nullable types.expression;
     };
-  };
-  bgp.defaults = {
-    transport = {
-      type = "direct";
-      hops = null;
-    };
-    bfd = false;
-    ttlSecurity = false;
   };
 }

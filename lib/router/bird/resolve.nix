@@ -1,11 +1,10 @@
-{ lib, protocols }:
+{ lib }:
 config:
 let
   inherit (lib)
     elem
     isAttrs
     isList
-    isString
     mapAttrs
     ;
 
@@ -14,6 +13,7 @@ let
 
   # bird copies a template and then applies the derived block on top
   # scalars set by the derived block win, lists gain its entries, channels and records merge per field
+  # null means unset all along the chain, so bird's own default applies
   value =
     name: base: own:
     if own == null then
@@ -47,9 +47,7 @@ let
       )
       (base // own);
 
-  # router's defaults sit below the root of every inheritance chain
-  defaults = type: { disabled = false; } // (if isString type then protocols.${type}.defaults or { } else { });
-  # missing, cyclic or mistyped templates fall back to the defaults and are reported by validation
+  # missing, cyclic or mistyped templates contribute nothing and are reported by validation
   resolveIn =
     seen: declaration:
     let
@@ -58,24 +56,14 @@ let
       template = if parent == null then null else (config.templates or { }).${parent} or null;
       base =
         if template == null || elem parent seen || (template.type or null) != (declaration.type or null) then
-          defaults (declaration.type or null)
+          { }
         else
           resolveIn (seen ++ [ parent ]) template;
     in
     merge base declaration;
-  finish =
-    declaration:
-    declaration
-    // lib.optionalAttrs (declaration ? channels) {
-      channels = mapAttrs
-        (
-          _: channel: channel // { addPaths = if (channel.addPaths or null) == null then "off" else channel.addPaths; }
-        )
-        declaration.channels;
-    };
 in
 config
   // {
-  templates = mapAttrs (name: template: finish (resolveIn [ name ] template)) (config.templates or { });
-  protocols = mapAttrs (_: protocol: finish (resolveIn [ ] protocol)) (config.protocols or { });
+  templates = mapAttrs (name: template: resolveIn [ name ] template) (config.templates or { });
+  protocols = mapAttrs (_: protocol: resolveIn [ ] protocol) (config.protocols or { });
 }

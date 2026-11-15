@@ -285,6 +285,76 @@ let
     };
   };
   templated = evaluate [ templateDeclarations ];
+  # protocols with nothing optional declared next to the same protocols with every off form spelled out
+  declared = evaluate [
+    ({ config, ... }: {
+      protocols = {
+        sparse_device.type = "device";
+        sparse_kernel = {
+          type = "kernel";
+          channels.ipv4 = {
+            import = "none";
+            export = "none";
+          };
+        };
+        sparse_peer = {
+          type = "bgp";
+          local.asn = 65000;
+          neighbor = {
+            asn = 65001;
+            address = "192.0.2.2";
+          };
+          channels.ipv4 = {
+            import = "none";
+            export = "none";
+          };
+        };
+        explicit_kernel = {
+          type = "kernel";
+          disabled = false;
+          kernelTable = 100;
+          scanTime = 10;
+          learn = false;
+          persist = false;
+          channels.ipv6 = {
+            import = "none";
+            export = "none";
+          };
+        };
+        explicit_peer = {
+          type = "bgp";
+          local.asn = 65000;
+          neighbor = {
+            asn = 65002;
+            address = "192.0.2.3";
+          };
+          transport.type = "direct";
+          bfd = false;
+          ttlSecurity = false;
+          channels.ipv4 = {
+            import = "none";
+            export = "none";
+            addPaths = "off";
+          };
+        };
+        explicit_static = {
+          type = "static";
+          channels.ipv4 = { };
+          routes = [
+            {
+              prefix = "198.51.100.0/24";
+              destination = {
+                type = "via";
+                gateway = "192.0.2.2";
+                interface = "eth0";
+                onlink = false;
+              };
+            }
+          ];
+        };
+      };
+    })
+  ];
   effective = bird.resolve templated.config;
   section =
     header: text:
@@ -744,6 +814,31 @@ let
         };
       })
     ];
+    addPathsOutsideBgp = [
+      {
+        protocols.originate = {
+          type = "static";
+          channels.ipv4.addPaths = "off";
+        };
+      }
+    ];
+    onlinkOnSpecialDestination = [
+      {
+        protocols.originate = {
+          type = "static";
+          channels.ipv4 = { };
+          routes = [
+            {
+              prefix = "198.51.100.0/24";
+              destination = {
+                type = "blackhole";
+                onlink = false;
+              };
+            }
+          ];
+        };
+      }
+    ];
     templateNameCollision = [
       templateDeclarations
       { protocols.base.type = "device"; }
@@ -797,15 +892,46 @@ let
         < position "protocol bgp peer4 from peers {" templated.text
         && position "template static routes {" templated.text
         < position "protocol static originate from routes {" templated.text;
-    templateRootCarriesDefaults =
+    templateRootRendersOnlyDeclared =
       let
         base = section "template bgp base {" templated.text;
       in
       lib.hasInfix "local as 65000;" base
-        && lib.hasInfix "direct;" base
-        && lib.hasInfix "bfd off;" base
         && lib.hasInfix "ttl security on;" base
-        && lib.hasInfix "add paths tx;" base;
+        && lib.hasInfix "add paths tx;" base
+        && !(lib.hasInfix "direct;" base)
+        && !(lib.hasInfix "bfd" base)
+        && !(lib.hasInfix "disabled" base);
+    undeclaredDefaultsAbsent =
+      let
+        device = section "protocol device sparse_device {" declared.text;
+        kernel = section "protocol kernel sparse_kernel {" declared.text;
+        peer = section "protocol bgp sparse_peer {" declared.text;
+      in
+      !(lib.hasInfix "scan time" device)
+        && !(lib.hasInfix "scan time" kernel)
+        && !(lib.hasInfix "learn" kernel)
+        && !(lib.hasInfix "persist" kernel)
+        && !(lib.hasInfix "disabled" kernel)
+        && !(lib.hasInfix "direct;" peer)
+        && !(lib.hasInfix "multihop" peer)
+        && !(lib.hasInfix "bfd" peer)
+        && !(lib.hasInfix "ttl security" peer)
+        && !(lib.hasInfix "add paths" peer);
+    explicitOffRenders =
+      let
+        kernel = section "protocol kernel explicit_kernel {" declared.text;
+        peer = section "protocol bgp explicit_peer {" declared.text;
+      in
+      lib.hasInfix "disabled off;" kernel
+        && lib.hasInfix "learn off;" kernel
+        && lib.hasInfix "persist off;" kernel
+        && lib.hasInfix "scan time 10;" kernel
+        && lib.hasInfix "direct;" peer
+        && lib.hasInfix "bfd off;" peer
+        && lib.hasInfix "ttl security off;" peer
+        && lib.hasInfix "add paths off;" peer
+        && lib.hasInfix "route 198.51.100.0/24 via 192.0.2.2 dev \"eth0\" onlink off;" declared.text;
     derivedRendersOnlyItsOwnFields =
       let
         peer4 = section "protocol bgp peer4 from peers {" templated.text;
@@ -834,8 +960,8 @@ let
         && peer4.holdTime == 30
         && peer4.keepaliveTime == 10
         && peer4.ttlSecurity == false
-        && peer4.bfd == false
-        && peer4.transport.type == "direct"
+        && peer4.bfd == null
+        && peer4.transport == null
         && peer4.extraConfig == "# base"
         && peer4.ref == reference "protocol" "peer4"
         && peer4.channels.ipv4.import == "all"
@@ -850,7 +976,7 @@ let
         && peer6.channels.ipv4.addPaths == "tx"
         && peer6.channels.ipv4.export == reference "filter" "allow"
         && peer6.channels.ipv6.export == "none"
-        && peer6.channels.ipv6.addPaths == "off"
+        && peer6.channels.ipv6.addPaths == null
         && peer6.ttlSecurity == true;
     templateListsAppend =
       map (route: route.prefix) effective.protocols.originate.routes == [
@@ -911,5 +1037,6 @@ in
     extended = extended.text;
     recursive = recursive.text;
     templated = templated.text;
+    declared = declared.text;
   };
 }

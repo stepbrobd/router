@@ -69,7 +69,7 @@ let
         (
           destination.gateway != null && destination.interface != null
         ) " dev ${ctx.quote destination.interface}"
-      + optionalString destination.onlink " onlink on"
+      + optionalString (destination.onlink != null) " onlink ${ctx.switch destination.onlink}"
       + optionalString (destination.weight != null) " weight ${toString destination.weight}";
   validateRoute =
     ctx: protocolName: family: index: route:
@@ -107,7 +107,7 @@ let
         || (
           gateway == null
           && interface == null
-          && !(destination.onlink or false)
+          && (destination.onlink or null) == null
           && (destination.weight or null) == null
         )
       ) "special destinations cannot have next-hop options"
@@ -127,12 +127,14 @@ let
       ++ ctx.error "${path}.destination.interface" (interface != "") "interface name must not be empty"
     )
     ++ ctx.error "${path}.destination.onlink"
-      (lib.isBool (
-        destination.onlink or false
-      )) "expected a boolean"
+      (lib.elem (destination.onlink or null) [
+        null
+        true
+        false
+      ]) "expected a boolean"
     ++ ctx.error "${path}.destination.onlink"
       (
-        !(destination.onlink or false)
+        (destination.onlink or null) != true
         || (gateway != null && (interface != null || gatewayInfo.scope != null))
       ) "onlink requires a gateway and an explicit interface"
     ++ lib.optionals ((destination.weight or null) != null) (
@@ -187,7 +189,7 @@ in
       ctx.protocol name cfg (optionalString (cfg.scanTime != null) "scan time ${toString cfg.scanTime};");
     validate =
       ctx: name: cfg:
-      ctx.uint "protocols.${name}.scanTime" 32 cfg.scanTime;
+      nullableUint ctx "protocols.${name}.scanTime" 32 cfg.scanTime;
   };
   direct = {
     render =
@@ -252,16 +254,22 @@ in
       ctx: name: cfg:
       channelCount ctx name cfg 1
       ++ validateChannels ctx name cfg
-      ++ ctx.uint "protocols.${name}.scanTime" 32 cfg.scanTime
+      ++ nullableUint ctx "protocols.${name}.scanTime" 32 cfg.scanTime
       ++ nullableUint ctx "protocols.${name}.kernelTable" 32 cfg.kernelTable
       ++ nullableUint ctx "protocols.${name}.metric" 32 cfg.metric
       ++ ctx.error "protocols.${name}.learn"
         (lib.elem cfg.learn [
+          null
           false
           true
           "all"
         ]) "learn must be a switch or all"
-      ++ ctx.error "protocols.${name}.persist" (lib.isBool cfg.persist) "expected a boolean"
+      ++ ctx.error "protocols.${name}.persist"
+        (lib.elem cfg.persist [
+          null
+          true
+          false
+        ]) "expected a boolean"
       ++ kernelConflicts ctx name cfg;
   };
   static = {
@@ -355,21 +363,24 @@ in
         ctx.error "${path}.sourceAddress" localSourceMatch
           "sourceAddress and local.address must identify the same address when both are set"
       )
-      ++ ctx.error "${path}.transport.type"
-        (lib.elem cfg.transport.type [
-          "direct"
-          "multihop"
-        ]) "transport must be direct or multihop"
-      ++ ctx.error "${path}.transport.hops"
-        (
-          cfg.transport.type == "multihop" || cfg.transport.hops == null
-        ) "direct transport cannot specify a multihop limit"
-      ++ lib.optionals (cfg.transport.hops != null) (
-        ctx.uint "${path}.transport.hops" 8 cfg.transport.hops
+      # an unset transport is bird's choice, direct for eBGP and multihop for iBGP
+      ++ lib.optionals (cfg.transport != null) (
+        ctx.error "${path}.transport.type"
+          (lib.elem cfg.transport.type [
+            "direct"
+            "multihop"
+          ]) "transport must be direct or multihop"
         ++ ctx.error "${path}.transport.hops"
           (
-            !lib.isInt cfg.transport.hops || cfg.transport.hops >= 1
-          ) "multihop limit must be in 1..255"
+            cfg.transport.type == "multihop" || cfg.transport.hops == null
+          ) "direct transport cannot specify a multihop limit"
+        ++ lib.optionals (cfg.transport.hops != null) (
+          ctx.uint "${path}.transport.hops" 8 cfg.transport.hops
+          ++ ctx.error "${path}.transport.hops"
+            (
+              !lib.isInt cfg.transport.hops || cfg.transport.hops >= 1
+            ) "multihop limit must be in 1..255"
+        )
       )
       ++ ctx.error "${path}.gracefulRestart"
         (lib.elem cfg.gracefulRestart [
@@ -392,8 +403,20 @@ in
             !lib.isInt cfg.keepaliveTime || cfg.keepaliveTime >= 1
           ) "keepalive time must be in 1..65535"
       )
-      ++ ctx.error "${path}.bfd" (lib.isBool cfg.bfd) "expected a boolean"
-      ++ ctx.error "${path}.ttlSecurity" (lib.isBool cfg.ttlSecurity) "expected a boolean"
+      ++ concatMap
+        (
+          field:
+          ctx.error "${path}.${field}"
+            (lib.elem cfg.${field} [
+              null
+              true
+              false
+            ]) "expected a boolean"
+        )
+        [
+          "bfd"
+          "ttlSecurity"
+        ]
       ++ lib.optionals (cfg.password != null) (
         password.errors
         ++ ctx.error "${path}.password"

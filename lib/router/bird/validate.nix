@@ -747,6 +747,7 @@ let
       nextHop = declaration.nextHopAddress or null;
       nextHopInfo = ipInfo nextHop;
       bgpFields = [
+        "addPaths"
         "nextHopSelf"
         "nextHopKeep"
         "nextHopAddress"
@@ -795,7 +796,8 @@ let
         "export"
       ]
     ++ error "${path}.addPaths"
-      (lib.elem (declaration.addPaths or "off") [
+      (lib.elem (declaration.addPaths or null) [
+        null
         "off"
         "on"
         "rx"
@@ -846,10 +848,6 @@ let
             ) "this channel option is only supported by BGP"
         )
         bgpFields
-      ++ error "${path}.addPaths"
-        (
-          (declaration.addPaths or "off") == "off"
-        ) "add paths is only supported by BGP"
     )
     ++ native "${path}.extraConfig" (declaration.extraConfig or "");
   ctx = {
@@ -962,7 +960,10 @@ let
           parent = lookup from;
         in
         error "${path}.type" registered "unknown protocol type"
-        ++ error "${path}.disabled" (isBool (definition.disabled or false)) "expected a boolean"
+        ++ error "${path}.disabled"
+          (
+            (definition.disabled or null) == null || isBool definition.disabled
+          ) "expected a boolean"
         ++ lib.optionals ((definition.description or null) != null) (
           string "${path}.description" definition.description
         )
