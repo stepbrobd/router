@@ -354,6 +354,69 @@ let
     };
   };
   bfdCase = evaluate [ bfdDeclarations ];
+  globalDeclarations = { config, ... }: {
+    log = [
+      {
+        target = "file";
+        path = "/var/log/bird.log";
+        size = 1048576;
+        backup = "/var/log/bird.log.old";
+        classes = [
+          "info"
+          "warning"
+          "error"
+        ];
+      }
+      {
+        target = "fixed";
+        path = "/var/log/bird.ring";
+        size = 65536;
+        classes = "all";
+      }
+      {
+        target = "syslog";
+        name = "bird";
+        classes = "all";
+      }
+      {
+        target = "stderr";
+        classes = [ "fatal" ];
+      }
+      {
+        target = "udp";
+        address = "192.0.2.50";
+        port = 1514;
+        classes = [
+          "warning"
+          "error"
+        ];
+      }
+      {
+        target = "udp";
+        address = "logs.example.net";
+        classes = [ "bug" ];
+      }
+    ];
+    debugProtocols = [
+      "states"
+      "events"
+    ];
+    gracefulRestartWait = 120;
+    extraConfig = "timeformat protocol iso long;";
+    attributes.learned_from.type = "int";
+    filters = {
+      mark = {
+        default = "accept";
+        body = [ (stmt.set config.attributes.learned_from.ref 1) ];
+      };
+      check = {
+        default = "reject";
+        body = [ (stmt.when (expr.eq config.attributes.learned_from.ref 1) [ stmt.accept ]) ];
+      };
+    };
+    protocols.device0.type = "device";
+  };
+  globals = evaluate [ globalDeclarations ];
   # protocols with nothing optional declared next to the same protocols with every off form spelled out
   declared = evaluate [
     ({ config, ... }: {
@@ -975,6 +1038,92 @@ let
         ];
       }
     ];
+    logRotationWithoutBackup = [
+      globalDeclarations
+      {
+        log = lib.mkForce [
+          {
+            target = "file";
+            path = "/var/log/bird.log";
+            size = 1048576;
+            classes = "all";
+          }
+        ];
+      }
+    ];
+    logRotationTooSmall = [
+      globalDeclarations
+      {
+        log = lib.mkForce [
+          {
+            target = "file";
+            path = "/var/log/bird.log";
+            size = 1024;
+            backup = "/var/log/bird.log.old";
+            classes = "all";
+          }
+        ];
+      }
+    ];
+    logUdpWithoutAddress = [
+      globalDeclarations
+      {
+        log = lib.mkForce [
+          {
+            target = "udp";
+            classes = "all";
+          }
+        ];
+      }
+    ];
+    logStderrWithPath = [
+      globalDeclarations
+      {
+        log = lib.mkForce [
+          {
+            target = "stderr";
+            path = "/var/log/bird.log";
+            classes = "all";
+          }
+        ];
+      }
+    ];
+    logEmptyClasses = [
+      globalDeclarations
+      {
+        log = lib.mkForce [
+          {
+            target = "stderr";
+            classes = [ ];
+          }
+        ];
+      }
+    ];
+    debugProtocolsEmpty = [
+      globalDeclarations
+      { debugProtocols = lib.mkForce [ ]; }
+    ];
+    attributeBuiltinName = [
+      globalDeclarations
+      { attributes.bgp_med.type = "int"; }
+    ];
+    attributeTypeMismatch = [
+      globalDeclarations
+      ({ config, ... }: {
+        filters.wrong = {
+          default = "reject";
+          body = [ (stmt.when (expr.eq config.attributes.learned_from.ref "peer") [ stmt.accept ]) ];
+        };
+      })
+    ];
+    attributeInDefine = [
+      globalDeclarations
+      ({ config, ... }: { defines.FROM_ATTRIBUTE.value = config.attributes.learned_from.ref; })
+    ];
+    attributeNameCollision = [
+      globalDeclarations
+      { defines.learned_from.value = 1; }
+    ];
     addPathsOutsideBgp = [
       {
         protocols.originate = {
@@ -1097,6 +1246,28 @@ let
         && lib.hasInfix "neighbor 198.51.100.1 local 192.0.2.1 multihop on;" bfd
         && lib.hasInfix "bfd on;" (section "protocol bgp peer {" bfdCase.text)
         && lib.hasInfix "route 203.0.113.0/24 via 192.0.2.2 bfd on;" bfdCase.text;
+    globalsRender =
+      lib.hasInfix "log \"/var/log/bird.log\" 1048576 \"/var/log/bird.log.old\" { info, warning, error };" globals.text
+        && lib.hasInfix "log fixed \"/var/log/bird.ring\" 65536 all;" globals.text
+        && lib.hasInfix "log syslog name \"bird\" all;" globals.text
+        && lib.hasInfix "log stderr { fatal };" globals.text
+        && lib.hasInfix "log udp 192.0.2.50 port 1514 { warning, error };" globals.text
+        && lib.hasInfix "log udp \"logs.example.net\" { bug };" globals.text
+        && lib.hasInfix "debug protocols { states, events };" globals.text
+        && lib.hasInfix "graceful restart wait 120;" globals.text
+        && lib.hasInfix "attribute int learned_from;" globals.text
+        && lib.hasInfix "learned_from = 1;" globals.text
+        && lib.hasInfix "if (learned_from = 1) then {" globals.text;
+    globalsPrecedeDeclarations =
+      position "graceful restart wait 120;" globals.text < position "timeformat protocol iso long;" globals.text
+        && position "timeformat protocol iso long;" globals.text < position "attribute int learned_from;" globals.text
+        && position "attribute int learned_from;" globals.text < position "filter mark" globals.text
+        && position "debug protocols" globals.text < position "protocol device device0" globals.text;
+    undeclaredGlobalsAbsent =
+      !(lib.hasInfix "log " merged.text)
+        && !(lib.hasInfix "debug protocols" merged.text)
+        && !(lib.hasInfix "graceful restart wait" merged.text)
+        && !(lib.hasInfix "attribute " merged.text);
     explicitOffRenders =
       let
         kernel = section "protocol kernel explicit_kernel {" declared.text;
@@ -1218,5 +1389,6 @@ in
     templated = templated.text;
     declared = declared.text;
     bfd = bfdCase.text;
+    globals = globals.text;
   };
 }
