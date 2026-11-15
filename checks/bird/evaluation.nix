@@ -520,6 +520,63 @@ let
     };
   };
   sessions = evaluate [ sessionDeclarations ];
+  channelDeclarations = { config, ... }: {
+    templates.limited = {
+      type = "bgp";
+      local.asn = 65000;
+      channels.ipv4 = {
+        import = "all";
+        export = "none";
+        importLimit = {
+          count = 100;
+          action = "warn";
+        };
+        preference = 90;
+      };
+    };
+    protocols = {
+      peer = {
+        type = "bgp";
+        local.asn = 65000;
+        neighbor = {
+          asn = 65001;
+          address = "192.0.2.2";
+        };
+        channels.ipv4 = {
+          import = "all";
+          export = "none";
+          importLimit = {
+            count = 1000;
+            action = "restart";
+          };
+          receiveLimit.count = 2000;
+          exportLimit = "off";
+          importKeepFiltered = true;
+          preference = 120;
+        };
+      };
+      derived = {
+        type = "bgp";
+        from = config.templates.limited.ref;
+        neighbor = {
+          asn = 65002;
+          address = "192.0.2.3";
+        };
+        channels.ipv4.importLimit.count = 500;
+      };
+      originate = {
+        type = "static";
+        channels.ipv4.preference = 200;
+        routes = [
+          {
+            prefix = "203.0.113.0/24";
+            destination.type = "blackhole";
+          }
+        ];
+      };
+    };
+  };
+  channelCase = evaluate [ channelDeclarations ];
   # protocols with nothing optional declared next to the same protocols with every off form spelled out
   declared = evaluate [
     ({ config, ... }: {
@@ -1352,6 +1409,19 @@ let
         };
       }
     ];
+    channelPreferenceRange = [
+      channelDeclarations
+      { protocols.originate.channels.ipv4.preference = lib.mkForce 65536; }
+    ];
+    keepFilteredOffWithImportTable = [
+      channelDeclarations
+      {
+        protocols.peer.channels.ipv4 = {
+          importKeepFiltered = lib.mkForce false;
+          importTable = true;
+        };
+      }
+    ];
     addPathsOutsideBgp = [
       {
         protocols.originate = {
@@ -1535,6 +1605,25 @@ let
         && lib.hasInfix "enforce first as off;" upstream
         && !(lib.hasInfix "local role" upstream)
         && !(lib.hasInfix "require roles" upstream);
+    channelOptionsRender =
+      let
+        peer = section "protocol bgp peer {" channelCase.text;
+        limited = section "template bgp limited {" channelCase.text;
+        derived = section "protocol bgp derived from limited {" channelCase.text;
+      in
+      lib.hasInfix "import limit 1000 action restart;" peer
+        && lib.hasInfix "receive limit 2000;" peer
+        && lib.hasInfix "export limit off;" peer
+        && lib.hasInfix "import keep filtered on;" peer
+        && lib.hasInfix "preference 120;" peer
+        && lib.hasInfix "import limit 100 action warn;" limited
+        && lib.hasInfix "ipv4 {\n    import limit 500;\n  };" derived
+        && lib.hasInfix "preference 200;" (section "protocol static originate {" channelCase.text);
+    derivedLimitReplacesAction =
+      let
+        derived = (bird.resolve channelCase.config).protocols.derived.channels.ipv4;
+      in
+      derived.importLimit.count == 500 && derived.importLimit.action == null && derived.preference == 90;
     explicitOffRenders =
       let
         kernel = section "protocol kernel explicit_kernel {" declared.text;
@@ -1659,5 +1748,6 @@ in
     globals = globals.text;
     filters = filterCase.text;
     sessions = sessions.text;
+    channels = channelCase.text;
   };
 }
