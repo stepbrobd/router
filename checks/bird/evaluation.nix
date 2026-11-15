@@ -1447,6 +1447,10 @@ let
         };
       }
     ];
+    staticTemplateWithoutChannel = [
+      templateDeclarations
+      { templates.routes.channels = lib.mkForce { }; }
+    ];
     templateNameCollision = [
       templateDeclarations
       { protocols.base.type = "device"; }

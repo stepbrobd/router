@@ -453,6 +453,8 @@ in
       ++ kernelConflicts ctx name cfg;
   };
   static = {
+    # static_postconfig requires a channel on templates too
+    completeTemplates = true;
     render =
       ctx: name: cfg:
       ctx.protocol name cfg (

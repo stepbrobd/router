@@ -1100,17 +1100,28 @@ let
               parent == null || (parent.type or null) == protocolType
             ) "a ${target} can only derive from a template of the same protocol type"
         )
-        # a template is checked through the protocols derived from it, since it may be incomplete on its own
-        ++ lib.optionals (registered && target == "protocol") (
-          (
-            protocols.${protocolType}.validate or (
-              _: _: _:
-              [ ]
+        # a template is checked through the protocols derived from it, since it may be incomplete on its own,
+        # unless bird's postconfig checks templates of its type like protocols
+        ++ lib.optionals (registered && (target == "protocol" || (protocols.${protocolType}.completeTemplates or false))) (
+          map
+            (
+              message:
+              if target == "template" && lib.hasPrefix "protocols.${name}" message then
+                "templates.${name}${lib.removePrefix "protocols.${name}" message}"
+              else
+                message
             )
-          )
-            ctx
-            name
-            definition
+            (
+              (
+                protocols.${protocolType}.validate or (
+                  _: _: _:
+                  [ ]
+                )
+              )
+                ctx
+                name
+                definition
+            )
         )
       else
         [ ]

@@ -22,13 +22,14 @@ let
         || !(extendedLib.isFunction entry.render)
         || (entry ? validate && !(extendedLib.isFunction entry.validate))
         || (entry ? inheritable && !(extendedLib.isBool entry.inheritable))
+        || (entry ? completeTemplates && !(extendedLib.isBool entry.completeTemplates))
     )
     registry;
   checkedRegistry =
     if invalidEntries == { } then
       registry
     else
-      throw "lib.router.bird: protocol extensions require a module, a render function, an optional validate function and an optional inheritable flag: ${extendedLib.concatStringsSep ", " (extendedLib.attrNames invalidEntries)}";
+      throw "lib.router.bird: protocol extensions require a module, a render function, an optional validate function and optional inheritable and completeTemplates flags: ${extendedLib.concatStringsSep ", " (extendedLib.attrNames invalidEntries)}";
   resolveConfig = import ./resolve.nix { lib = extendedLib; };
   renderConfig = import ./render.nix {
     lib = extendedLib;
