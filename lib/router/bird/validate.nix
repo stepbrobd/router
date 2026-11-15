@@ -856,6 +856,46 @@ let
         "import"
         "export"
       ]
+    ++ concatMap
+      (
+        field:
+        let
+          selected = declaration.${field} or null;
+        in
+        lib.optionals (selected != null && selected != "off") (
+          (
+            if isAttrs selected then
+              shape "${path}.${field}" [ "count" ] [ "action" ] (lib.filterAttrs (_: value: value != null) selected)
+              ++ uint "${path}.${field}.count" 32 (selected.count or null)
+              ++ error "${path}.${field}.action"
+                (lib.elem (selected.action or null) [
+                  null
+                  "warn"
+                  "block"
+                  "restart"
+                  "disable"
+                ]) "limit action must be warn, block, restart or disable"
+            else
+              [ "${path}.${field}: expected off or a route count with an optional action" ]
+          )
+        )
+      )
+      [
+        "importLimit"
+        "receiveLimit"
+        "exportLimit"
+      ]
+    ++ lib.optionals ((declaration.preference or null) != null) (uint "${path}.preference" 16 declaration.preference)
+    ++ error "${path}.importKeepFiltered"
+      (lib.elem (declaration.importKeepFiltered or null) [
+        null
+        true
+        false
+      ]) "expected a boolean"
+    ++ error "${path}.importKeepFiltered"
+      (
+        (declaration.importKeepFiltered or null) != false || (declaration.importTable or null) != true
+      ) "the import table implies import keep filtered, so it cannot be switched off"
     ++ error "${path}.addPaths"
       (lib.elem (declaration.addPaths or null) [
         null

@@ -5,11 +5,34 @@ let
   option = type: default: mkOption { inherit type default; };
   nullable = type: option (t.nullOr type) null;
   address = nullable t.str;
+  # a limit replaces its template's limit whole, so an unset action is bird's default even under a template
+  limit = nullable (
+    t.either (t.enum [ "off" ]) (
+      t.submodule {
+        options = {
+          count = mkOption { type = types.uint; };
+          action = nullable (
+            t.enum [
+              "warn"
+              "block"
+              "restart"
+              "disable"
+            ]
+          );
+        };
+      }
+    )
+  );
   channel = t.submodule {
     options = {
       table = nullable (types.referenceTo "table");
       import = nullable types.policy;
       export = nullable types.policy;
+      importLimit = limit;
+      receiveLimit = limit;
+      exportLimit = limit;
+      importKeepFiltered = nullable t.bool;
+      preference = nullable types.uint;
       addPaths = nullable (
         t.enum [
           "off"

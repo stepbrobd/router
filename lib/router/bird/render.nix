@@ -180,7 +180,37 @@ let
             "import"
             "export"
           ]
+        ++
+        map
+          (
+            limit:
+            let
+              selected = declaration.${limit.field} or null;
+            in
+            optionalString (selected != null) "${limit.label} ${
+              if lib.isString selected then
+                selected
+              else
+                "${toString selected.count}${optionalString (selected.action != null) " action ${selected.action}"}"
+            };"
+          )
+          [
+            {
+              field = "importLimit";
+              label = "import limit";
+            }
+            {
+              field = "receiveLimit";
+              label = "receive limit";
+            }
+            {
+              field = "exportLimit";
+              label = "export limit";
+            }
+          ]
         ++ [
+          (option "importKeepFiltered" "import keep filtered")
+          (option "preference" "preference")
           (optionalString ((declaration.addPaths or null) != null) "add paths ${declaration.addPaths};")
           (option "nextHopSelf" "next hop self")
           (option "nextHopKeep" "next hop keep")
