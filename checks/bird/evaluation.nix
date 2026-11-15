@@ -206,6 +206,90 @@ let
     })
   ];
 
+  templateDeclarations = { config, ... }: {
+    tables = {
+      main4.type = "ipv4";
+      main6.type = "ipv6";
+    };
+    filters.allow.default = "accept";
+    templates = {
+      base = {
+        type = "bgp";
+        local.asn = 65000;
+        holdTime = 30;
+        ttlSecurity = true;
+        extraConfig = "# base";
+        channels.ipv4 = {
+          table = config.tables.main4.ref;
+          import = "none";
+          export = config.filters.allow.ref;
+          addPaths = "tx";
+        };
+      };
+      peers = {
+        type = "bgp";
+        from = config.templates.base.ref;
+        keepaliveTime = 10;
+      };
+      routes = {
+        type = "static";
+        channels.ipv4.table = config.tables.main4.ref;
+        routes = [
+          {
+            prefix = "198.51.100.0/24";
+            destination.type = "blackhole";
+          }
+        ];
+      };
+    };
+    protocols = {
+      peer4 = {
+        type = "bgp";
+        from = config.templates.peers.ref;
+        neighbor = {
+          asn = 65001;
+          address = "192.0.2.2";
+        };
+        ttlSecurity = false;
+        channels.ipv4 = {
+          import = "all";
+          addPaths = "off";
+        };
+      };
+      peer6 = {
+        type = "bgp";
+        from = config.templates.base.ref;
+        neighbor = {
+          asn = 65002;
+          address = "2001:db8::2";
+        };
+        channels = {
+          ipv4.extendedNextHop = true;
+          ipv6 = {
+            table = config.tables.main6.ref;
+            import = "none";
+            export = "none";
+          };
+        };
+      };
+      originate = {
+        type = "static";
+        from = config.templates.routes.ref;
+        routes = [
+          {
+            prefix = "203.0.113.0/24";
+            destination.type = "blackhole";
+          }
+        ];
+      };
+    };
+  };
+  templated = evaluate [ templateDeclarations ];
+  effective = bird.resolve templated.config;
+  section =
+    header: text:
+    lib.head (lib.splitString "\n}" (lib.elemAt (lib.splitString header text) 1));
+
   extension = bird.extend {
     protocols.timerDevice = {
       module = { lib, ... }: {
@@ -635,6 +719,35 @@ let
         };
       })
     ];
+    templateMissing = [
+      templateDeclarations
+      { protocols.peer4.from = lib.mkForce (reference "template" "missing"); }
+    ];
+    templateTypeMismatch = [
+      templateDeclarations
+      ({ config, ... }: { protocols.originate.from = lib.mkForce config.templates.base.ref; })
+    ];
+    templateCycle = [
+      templateDeclarations
+      ({ config, ... }: { templates.base.from = config.templates.peers.ref; })
+    ];
+    templateFromProtocol = [
+      templateDeclarations
+      { protocols.peer4.from = lib.mkForce (reference "protocol" "peer6"); }
+    ];
+    templateIncomplete = [
+      templateDeclarations
+      ({ config, ... }: {
+        protocols.lonely = {
+          type = "bgp";
+          from = config.templates.base.ref;
+        };
+      })
+    ];
+    templateNameCollision = [
+      templateDeclarations
+      { protocols.base.type = "device"; }
+    ];
   };
 
   assertions = {
@@ -678,6 +791,72 @@ let
     includeBeforeDeclarations =
       position "include \"/run/bird/example-credentials.conf\";" example.text
         < position "define " example.text;
+    templatesPrecedeDerivations =
+      position "template bgp base {" templated.text < position "template bgp peers from base {" templated.text
+        && position "template bgp peers from base {" templated.text
+        < position "protocol bgp peer4 from peers {" templated.text
+        && position "template static routes {" templated.text
+        < position "protocol static originate from routes {" templated.text;
+    templateRootCarriesDefaults =
+      let
+        base = section "template bgp base {" templated.text;
+      in
+      lib.hasInfix "local as 65000;" base
+        && lib.hasInfix "direct;" base
+        && lib.hasInfix "bfd off;" base
+        && lib.hasInfix "ttl security on;" base
+        && lib.hasInfix "add paths tx;" base;
+    derivedRendersOnlyItsOwnFields =
+      let
+        peer4 = section "protocol bgp peer4 from peers {" templated.text;
+        peers = section "template bgp peers from base {" templated.text;
+      in
+      lib.hasInfix "neighbor 192.0.2.2 as 65001;" peer4
+        && lib.hasInfix "ttl security off;" peer4
+        && lib.hasInfix "import all;" peer4
+        && lib.hasInfix "add paths off;" peer4
+        && !(lib.hasInfix "local as" peer4)
+        && !(lib.hasInfix "hold time" peer4)
+        && !(lib.hasInfix "direct;" peer4)
+        && !(lib.hasInfix "export" peer4)
+        && !(lib.hasInfix "bfd" peer4)
+        && lib.hasInfix "keepalive time 10;" peers
+        && !(lib.hasInfix "hold time" peers);
+    rawTemplateDataStaysOwn =
+      templated.config.protocols.peer4.holdTime == null
+        && templated.config.protocols.peer4.local == null
+        && templated.config.templates.peers.ref == reference "template" "peers";
+    templateResolvesChain =
+      let
+        peer4 = effective.protocols.peer4;
+      in
+      peer4.local.asn == 65000
+        && peer4.holdTime == 30
+        && peer4.keepaliveTime == 10
+        && peer4.ttlSecurity == false
+        && peer4.bfd == false
+        && peer4.transport.type == "direct"
+        && peer4.extraConfig == "# base"
+        && peer4.ref == reference "protocol" "peer4"
+        && peer4.channels.ipv4.import == "all"
+        && peer4.channels.ipv4.export == reference "filter" "allow"
+        && peer4.channels.ipv4.table == reference "table" "main4"
+        && peer4.channels.ipv4.addPaths == "off";
+    templateChannelsMerge =
+      let
+        peer6 = effective.protocols.peer6;
+      in
+      peer6.channels.ipv4.extendedNextHop == true
+        && peer6.channels.ipv4.addPaths == "tx"
+        && peer6.channels.ipv4.export == reference "filter" "allow"
+        && peer6.channels.ipv6.export == "none"
+        && peer6.channels.ipv6.addPaths == "off"
+        && peer6.ttlSecurity == true;
+    templateListsAppend =
+      map (route: route.prefix) effective.protocols.originate.routes == [
+        "198.51.100.0/24"
+        "203.0.113.0/24"
+      ];
     extensionMergesAndRenders =
       extended.config.protocols.custom0.scanTime == 23
         && extended.config.protocols.custom0.ref == reference "protocol" "custom0"
@@ -731,5 +910,6 @@ in
     example = example.text;
     extended = extended.text;
     recursive = recursive.text;
+    templated = templated.text;
   };
 }
