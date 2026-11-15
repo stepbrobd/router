@@ -100,6 +100,47 @@ let
       (protocolModule target tag).merge location definitions;
     getSubOptions = _: { };
   };
+  logType = t.submodule {
+    options = {
+      target = mkOption {
+        type = t.enum [
+          "file"
+          "fixed"
+          "syslog"
+          "stderr"
+          "udp"
+        ];
+      };
+      # file and fixed
+      path = option (t.nullOr t.str) null;
+      # rotation limit of a file, ring size of a fixed log
+      size = option (t.nullOr bt.uint) null;
+      # the file a rotated log moves to
+      backup = option (t.nullOr t.str) null;
+      # syslog identity
+      name = option (t.nullOr t.str) null;
+      # udp host name or address and port
+      address = option (t.nullOr t.str) null;
+      port = option (t.nullOr bt.port) null;
+      classes = mkOption {
+        type = t.either (t.enum [ "all" ]) (
+          t.listOf (
+            t.enum [
+              "debug"
+              "trace"
+              "info"
+              "remote"
+              "warning"
+              "error"
+              "auth"
+              "fatal"
+              "bug"
+            ]
+          )
+        );
+      };
+    };
+  };
 in
 {
   options = {
@@ -108,6 +149,55 @@ in
       description = "BIRD router ID as an IPv4 address.";
     };
     includes = option (t.listOf t.str) [ ];
+    log = option (t.listOf logType) [ ];
+    debugProtocols = option
+      (t.nullOr (
+        t.either
+          (t.enum [
+            "all"
+            "off"
+          ])
+          (
+            t.listOf (
+              t.enum [
+                "states"
+                "routes"
+                "filters"
+                "interfaces"
+                "events"
+                "packets"
+              ]
+            )
+          )
+      ))
+      null;
+    gracefulRestartWait = option (t.nullOr bt.uint) null;
+    # native global options, rendered after the includes and before every declaration
+    extraConfig = option t.str "";
+    attributes = option
+      (t.attrsOf (submodule [
+        (declaration "attribute")
+        {
+          options.type = mkOption {
+            type = t.enum [
+              "bool"
+              "int"
+              "string"
+              "ip"
+              "prefix"
+              "pair"
+              "quad"
+              "ec"
+              "lc"
+              "bgppath"
+              "clist"
+              "eclist"
+              "lclist"
+            ];
+          };
+        }
+      ]))
+      { };
     defines = option (t.attrsOf defineType) { };
     tables = option
       (t.attrsOf (submodule [

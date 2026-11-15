@@ -156,6 +156,7 @@ let
     };
 
   collections = {
+    attribute = "attributes";
     define = "defines";
     table = "tables";
     function = "functions";
@@ -189,7 +190,9 @@ let
           })
           (config.${collections.${target}} or { })
       )
+      # custom attributes depend on nothing, so they always render ahead of their users
       [
+        "attribute"
         "define"
         "table"
         "function"
@@ -337,6 +340,8 @@ let
           emptyInfo
         else
           infer { } (seen ++ [ (key value) ]) target.value
+      else if kind == "reference" && (value.target or null) == "attribute" && target != null then
+        emptyInfo // { type = typeName (target.type or null); }
       else if kind == "external" && (value.target or null) == "value" then
         (scalarInfo (value.type or null))
       else if kind == "attribute" then

@@ -239,6 +239,8 @@ let
     node:
     if isString node then
       attributeTypes.${node} or null
+    else if isAttrs node && (node.kind or null) == "reference" then
+      (lookup node).type or null
     else if isAttrs node then
       node.type or null
     else
@@ -443,7 +445,7 @@ let
         else if kind == "community" then
           community path node
         else if kind == "reference" then
-          reference path [ "define" ] node
+          reference path [ "define" "attribute" ] node
         else if kind == "external" then
           reference path [ "value" ] node
         else if kind == "attribute" then
@@ -628,8 +630,10 @@ let
           identifier "${path}.attribute" attribute
         else if isAttrs attribute && (attribute.kind or null) == "attribute" then
           (expression "${path}.attribute" scope attribute).errors
+        else if isAttrs attribute && (attribute.kind or null) == "reference" then
+          reference "${path}.attribute" [ "attribute" ] attribute
         else
-          [ "${path}.attribute: expected an attribute node or native attribute name" ]
+          [ "${path}.attribute: expected an attribute node, a custom attribute reference or a native attribute name" ]
       )
       ++ error "${path}.attribute"
         (
@@ -912,7 +916,25 @@ let
     in
     common
     ++ (
-      if target == "define" then
+      if target == "attribute" then
+        error "${path}.type"
+          (lib.elem (definition.type or null) [
+            "bool"
+            "int"
+            "string"
+            "ip"
+            "prefix"
+            "pair"
+            "quad"
+            "ec"
+            "lc"
+            "bgppath"
+            "clist"
+            "eclist"
+            "lclist"
+          ]) "custom attributes take a scalar, path or community list type"
+        ++ error path (!(lib.hasAttr name attributeTypes)) "a custom attribute cannot reuse a built-in route attribute name"
+      else if target == "define" then
         let
           result = expression "${path}.value" (scopeFor "define") (definition.value or null);
         in
@@ -1001,6 +1023,84 @@ let
     lib.unique names
   );
   rootID = ipInfo (config.id or null);
+  logErrors =
+    i: entry:
+    let
+      path = "log[${toString i}]";
+      target = entry.target or null;
+      allowed = {
+        file = [
+          "path"
+          "size"
+          "backup"
+        ];
+        fixed = [
+          "path"
+          "size"
+        ];
+        syslog = [ "name" ];
+        stderr = [ ];
+        udp = [
+          "address"
+          "port"
+        ];
+      };
+      classes = entry.classes or null;
+    in
+    concatMap
+      (
+        field:
+        error "${path}.${field}"
+          (
+            (entry.${field} or null) == null || lib.elem field (allowed.${target} or [ ])
+          ) "a ${toString target} log does not take ${field}"
+      )
+      [
+        "path"
+        "size"
+        "backup"
+        "name"
+        "address"
+        "port"
+      ]
+    ++ lib.optionals (lib.elem target [ "file" "fixed" ]) (
+      error "${path}.path" ((entry.path or null) != null) "a ${target} log requires a path"
+      ++ lib.optionals ((entry.path or null) != null) (
+        string "${path}.path" entry.path ++ error "${path}.path" (entry.path != "") "log paths must not be empty"
+      )
+    )
+    ++ lib.optionals (target == "file") (
+      error "${path}.backup"
+        (
+          ((entry.size or null) == null) == ((entry.backup or null) == null)
+        ) "log rotation needs both a size limit and a backup file"
+      ++ lib.optionals ((entry.backup or null) != null) (string "${path}.backup" entry.backup)
+    )
+    ++ lib.optionals (target == "fixed") (
+      error "${path}.size" ((entry.size or null) != null) "a fixed log requires a size"
+    )
+    ++ lib.optionals (lib.elem target [ "file" "fixed" ] && (entry.size or null) != null) (
+      uint "${path}.size" 32 entry.size
+      ++ (
+        if target == "file" then
+          error "${path}.size" (!isInt entry.size || entry.size >= 16384) "bird requires a rotation limit of at least 16384 bytes"
+        else
+          error "${path}.size" (!isInt entry.size || entry.size > 0) "a fixed log needs a nonzero size"
+      )
+    )
+    ++ lib.optionals (target == "syslog" && (entry.name or null) != null) (string "${path}.name" entry.name)
+    ++ lib.optionals (target == "udp") (
+      error "${path}.address" ((entry.address or null) != null) "a udp log requires an address"
+      ++ lib.optionals ((entry.address or null) != null) (
+        string "${path}.address" entry.address
+        ++ error "${path}.address" (entry.address != "") "udp log addresses must not be empty"
+      )
+    )
+    ++ error "${path}.classes"
+      (
+        classes == "all" || (isList classes && classes != [ ] && length classes == length (lib.unique classes))
+      ) "log classes must be all or a non-empty list without repeats";
+  debugProtocols = config.debugProtocols or null;
 in
 error "id"
   (
@@ -1018,6 +1118,21 @@ error "id"
       (config.includes or [ ])
   )
 )
+++ error "log" (isList (config.log or [ ])) "expected a list of log destinations"
+++ lib.optionals (isList (config.log or [ ])) (concatMap (item: item) (imap0 logErrors (config.log or [ ])))
+++ error "debugProtocols"
+  (
+    debugProtocols == null
+    || lib.elem debugProtocols [
+      "all"
+      "off"
+    ]
+    || (isList debugProtocols && debugProtocols != [ ] && length debugProtocols == length (lib.unique debugProtocols))
+  ) "debug protocols must be all, off or a non-empty list of flags without repeats"
+++ lib.optionals ((config.gracefulRestartWait or null) != null) (
+  uint "gracefulRestartWait" 32 config.gracefulRestartWait
+)
+++ native "extraConfig" (config.extraConfig or "")
 ++ map
   (
     name:

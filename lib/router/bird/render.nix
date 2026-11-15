@@ -221,12 +221,33 @@ let
     inherit (internal) typeOf;
     protocol = protocolFor keyword;
   };
+  mask = selected: if lib.isString selected then selected else "{ ${concatStringsSep ", " selected} }";
+  log =
+    entry:
+    let
+      destination =
+        if entry.target == "file" then
+          "${quote entry.path}${optionalString (entry.size != null) " ${toString entry.size} ${quote entry.backup}"}"
+        else if entry.target == "fixed" then
+          "fixed ${quote entry.path} ${toString entry.size}"
+        else if entry.target == "syslog" then
+          "syslog${optionalString (entry.name != null) " name ${quote entry.name}"}"
+        else if entry.target == "stderr" then
+          "stderr"
+        else
+          "udp ${if (internal.ipInfo entry.address).valid then entry.address else quote entry.address}${
+            optionalString (entry.port != null) " port ${toString entry.port}"
+          }";
+    in
+    "log ${destination} ${mask entry.classes};";
   declaration =
     item:
     let
       inherit (item) target name definition;
     in
-    if target == "define" then
+    if target == "attribute" then
+      "attribute ${definition.type} ${identifier name};"
+    else if target == "define" then
       "define ${identifier name} = ${value definition.value};"
     else if target == "table" then
       "${definition.type} table ${identifier name};"
@@ -247,6 +268,14 @@ else
     (
       [ "router id ${config.id};" ]
       ++ map (path: "include ${quote path};") (config.includes or [ ])
+      # protocols copy the global debug default when they are declared, so globals precede every declaration
+      ++ map log (config.log or [ ])
+      ++ lib.optional ((config.debugProtocols or null) != null) "debug protocols ${mask config.debugProtocols};"
+      ++ lib.optional
+        (
+          (config.gracefulRestartWait or null) != null
+        ) "graceful restart wait ${toString config.gracefulRestartWait};"
+      ++ lib.optional ((config.extraConfig or "") != "") config.extraConfig
       ++ map declaration internal.ordering.result
     )
     + "\n"
