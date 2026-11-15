@@ -1,7 +1,6 @@
-{
-  pkgs,
-  lib,
-  cases,
+{ pkgs
+, lib
+, cases
 }:
 let
   fixture = ../../examples/bird/credentials.example.conf;

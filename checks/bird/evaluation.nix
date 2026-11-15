@@ -1,8 +1,7 @@
-{
-  pkgs,
-  lib,
-  router,
-  self,
+{ pkgs
+, lib
+, router
+, self
 }:
 let
   bird = router.bird;
@@ -322,7 +321,7 @@ let
   ];
 
   invalid = {
-    unknownProtocol = [ { protocols.bad.type = "notRegistered"; } ];
+    unknownProtocol = [{ protocols.bad.type = "notRegistered"; }];
     unknownExpressionKind = [
       {
         defines.BAD = {
@@ -334,7 +333,7 @@ let
       {
         filters.bad = {
           default = "reject";
-          body = [ { kind = "notAStatement"; } ];
+          body = [{ kind = "notAStatement"; }];
         };
       }
     ];
@@ -515,9 +514,9 @@ let
         };
       }
     ];
-    invalidRouterId = [ { id = lib.mkForce "300.0.0.1"; } ];
-    ipv6RouterId = [ { id = lib.mkForce "2001:db8::1"; } ];
-    invalidPrefixLength = [ { defines.BAD = bird.prefix "203.0.113.0/33"; } ];
+    invalidRouterId = [{ id = lib.mkForce "300.0.0.1"; }];
+    ipv6RouterId = [{ id = lib.mkForce "2001:db8::1"; }];
+    invalidPrefixLength = [{ defines.BAD = bird.prefix "203.0.113.0/33"; }];
     prefixSetTooLong = [
       {
         defines.BAD = bird.prefixSet [
@@ -548,11 +547,11 @@ let
         ];
       }
     ];
-    standardCommunityRange = [ { defines.BAD = bird.community.standard 65536 1; } ];
-    largeCommunityRange = [ { defines.BAD = bird.community.large 65000 4294967296 1; } ];
-    extendedCommunityRange = [ { defines.BAD = bird.community.extended "rt" 65000 4294967296; } ];
-    extendedAs4CommunityRange = [ { defines.BAD = bird.community.extended "rt" 65536 65536; } ];
-    extendedIpCommunityRange = [ { defines.BAD = bird.community.extended "rt" "192.0.2.1" 65536; } ];
+    standardCommunityRange = [{ defines.BAD = bird.community.standard 65536 1; }];
+    largeCommunityRange = [{ defines.BAD = bird.community.large 65000 4294967296 1; }];
+    extendedCommunityRange = [{ defines.BAD = bird.community.extended "rt" 65000 4294967296; }];
+    extendedAs4CommunityRange = [{ defines.BAD = bird.community.extended "rt" 65536 65536; }];
+    extendedIpCommunityRange = [{ defines.BAD = bird.community.extended "rt" "192.0.2.1" 65536; }];
     bgpAsnRange = [
       declarations
       { protocols.peer.local.asn = lib.mkForce 4294967296; }
@@ -657,14 +656,14 @@ let
       cfg.protocols.peer.description == "merged peer" && cfg.protocols.peer.local.asn == 65000;
     mergeBodyOrder =
       (builtins.head cfg.filters.export_owned.body).text == "print \"before\";"
-      && (lib.last cfg.filters.export_owned.body).text == "print \"after\";"
-      && builtins.length cfg.filters.export_owned.body == 3;
+        && (lib.last cfg.filters.export_owned.body).text == "print \"after\";"
+        && builtins.length cfg.filters.export_owned.body == 3;
     derivedReferences =
       cfg.protocols.peer.ref == reference "protocol" "peer"
-      && cfg.filters.export_owned.ref == reference "filter" "export_owned"
-      && cfg.functions.owned.ref == reference "function" "owned"
-      && cfg.tables.main4.ref == reference "table" "main4"
-      && cfg.defines.OWNED.ref == reference "define" "OWNED";
+        && cfg.filters.export_owned.ref == reference "filter" "export_owned"
+        && cfg.functions.owned.ref == reference "function" "owned"
+        && cfg.tables.main4.ref == reference "table" "main4"
+        && cfg.defines.OWNED.ref == reference "define" "OWNED";
     normalizedDefinitions =
       cfg.defines.WRAPPED.value == 7 && cfg.defines.C_STANDARD.value.kind == "community";
     referencesArePlainData =
@@ -674,24 +673,24 @@ let
     literalPasswordIsQuoted = lib.hasInfix "password \"synthetic-literal-only\";" merged.text;
     externalPasswordIsSymbolic =
       lib.hasInfix "password EXAMPLE_PEER_PASSWORD;" example.text
-      && !(lib.hasInfix "password \"EXAMPLE_PEER_PASSWORD\"" example.text)
-      && !(lib.hasInfix "synthetic-example-only" example.text);
+        && !(lib.hasInfix "password \"EXAMPLE_PEER_PASSWORD\"" example.text)
+        && !(lib.hasInfix "synthetic-example-only" example.text);
     includeBeforeDeclarations =
       position "include \"/run/bird/example-credentials.conf\";" example.text
-      < position "define " example.text;
+        < position "define " example.text;
     extensionMergesAndRenders =
       extended.config.protocols.custom0.scanTime == 23
-      && extended.config.protocols.custom0.ref == reference "protocol" "custom0"
-      && lib.hasInfix "scan time 23;" extended.text;
+        && extended.config.protocols.custom0.ref == reference "protocol" "custom0"
+        && lib.hasInfix "scan time 23;" extended.text;
     extensionValidates = extensionRejects;
     nixosSettingsRender =
       lib.hasInfix "protocol device device0" nixosComposed.config.services.bird.config
-      && nixosComposed.config.services.bird.settings.protocols.device0.scanTime == 4;
+        && nixosComposed.config.services.bird.settings.protocols.device0.scanTime == 4;
     nixosTypedReferenceComposition =
       nixosComposed.config.services.bird.settings.protocols.peer.channels.ipv4.export
-      == reference "filter" "allow";
+        == reference "filter" "allow";
     nixosRawOnlyPreserved =
-      (nixos [ { services.bird.config = rawText; } ]).config.services.bird.config == rawText;
+      (nixos [{ services.bird.config = rawText; }]).config.services.bird.config == rawText;
     nixosRawAndSettingsConflict =
       !(nixosAccepts [
         structured
@@ -704,9 +703,11 @@ let
       ]);
   }
   // lib.mapAttrs (_name: modules: fails modules) invalid;
-  verified = lib.mapAttrs (
-    name: passed: if passed then true else throw "BIRD evaluation assertion failed: ${name}"
-  ) assertions;
+  verified = lib.mapAttrs
+    (
+      name: passed: if passed then true else throw "BIRD evaluation assertion failed: ${name}"
+    )
+    assertions;
 in
 {
   derivation =

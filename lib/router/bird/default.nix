@@ -1,6 +1,5 @@
-{
-  lib,
-  protocolExtensions ? { },
+{ lib
+, protocolExtensions ? { }
 }:
 let
   extendedLib = lib.extend (_: prev: {
@@ -15,13 +14,15 @@ let
   implementations = import ./protocol-renderers.nix { lib = extendedLib; };
   defaults = extendedLib.mapAttrs (name: schema: schema // implementations.${name}) schemas;
   registry = defaults // protocolExtensions;
-  invalidEntries = extendedLib.filterAttrs (
-    _: entry:
-    !(entry ? module)
-    || !(entry ? render)
-    || !(builtins.isFunction entry.render)
-    || (entry ? validate && !(builtins.isFunction entry.validate))
-  ) registry;
+  invalidEntries = extendedLib.filterAttrs
+    (
+      _: entry:
+        !(entry ? module)
+        || !(entry ? render)
+        || !(builtins.isFunction entry.render)
+        || (entry ? validate && !(builtins.isFunction entry.validate))
+    )
+    registry;
   checkedRegistry =
     if invalidEntries == { } then
       registry
@@ -60,12 +61,11 @@ let
       else
         throw (
           "lib.router.bird: invalid configuration\n"
-          + extendedLib.concatMapStringsSep "\n" (error: "- ${error}") errors
+            + extendedLib.concatMapStringsSep "\n" (error: "- ${error}") errors
         );
     eval =
-      {
-        modules,
-        specialArgs ? { },
+      { modules
+      , specialArgs ? { }
       }:
       let
         evaluated = extendedLib.evalModules {
@@ -79,12 +79,11 @@ let
       in
       builtins.seq text { inherit config text; };
     check =
-      {
-        pkgs,
-        modules,
-        specialArgs ? { },
-        package ? pkgs.bird3,
-        name ? "bird-config",
+      { pkgs
+      , modules
+      , specialArgs ? { }
+      , package ? pkgs.bird3
+      , name ? "bird-config"
       }:
       let
         result = self.eval { inherit modules specialArgs; };

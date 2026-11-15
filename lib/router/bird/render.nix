@@ -105,19 +105,20 @@ let
     else if kind == "call" then
       "${expression node};"
     else if kind == "addCommunities" || kind == "deleteCommunities" then
-      concatMapStringsSep "\n" (
-        community:
-        let
-          attribute =
-            {
-              pair = "bgp_community";
-              ec = "bgp_ext_community";
-              lc = "bgp_large_community";
-            }
-            .${internal.typeOf community};
-        in
-        "${attribute}.${if kind == "addCommunities" then "add" else "delete"}(${expression community});"
-      ) node.values
+      concatMapStringsSep "\n"
+        (
+          community:
+          let
+            attribute =
+              {
+                pair = "bgp_community";
+                ec = "bgp_ext_community";
+                lc = "bgp_large_community";
+              }.${internal.typeOf community};
+          in
+          "${attribute}.${if kind == "addCommunities" then "add" else "delete"}(${expression community});"
+        )
+        node.values
     else if kind == "rawStatement" then
       node.text
     else
@@ -158,23 +159,24 @@ let
           (optionalString ((declaration.table or null) != null) "table ${identifier declaration.table.name};")
         ]
         ++
-          map
-            (
-              direction:
-              optionalString ((declaration.${direction} or null) != null)
-                "${direction} ${policy declaration.${direction}};"
-            )
-            [
-              "import"
-              "export"
-            ]
+        map
+          (
+            direction:
+            optionalString ((declaration.${direction} or null) != null)
+              "${direction} ${policy declaration.${direction}};"
+          )
+          [
+            "import"
+            "export"
+          ]
         ++ [
           (optionalString ((declaration.addPaths or "off") != "off") "add paths ${declaration.addPaths};")
           (option "nextHopSelf" "next hop self")
           (option "nextHopKeep" "next hop keep")
-          (optionalString (
-            (declaration.nextHopAddress or null) != null
-          ) "next hop address ${address declaration.nextHopAddress};")
+          (optionalString
+            (
+              (declaration.nextHopAddress or null) != null
+            ) "next hop address ${address declaration.nextHopAddress};")
           (option "gateway" "gateway")
           (option "extendedNextHop" "extended next hop")
           (option "importTable" "import table")
@@ -188,9 +190,10 @@ let
     name: declaration: contents:
     block "protocol ${declaration.type} ${identifier name}" (join [
       (optionalString (declaration.disabled or false) "disabled on;")
-      (optionalString (
-        (declaration.description or null) != null
-      ) "description ${quote declaration.description};")
+      (optionalString
+        (
+          (declaration.description or null) != null
+        ) "description ${quote declaration.description};")
       contents
       (declaration.extraConfig or "")
     ]);
@@ -222,9 +225,10 @@ let
     else if target == "table" then
       "${definition.type} table ${identifier name};"
     else if target == "function" then
-      block "function ${identifier name}(${concatMapStringsSep "; " (parameter: "${parameter.type} ${identifier parameter.name}") definition.params})${optionalString (definition.returnType != null) " -> ${definition.returnType}"}" (
-        body definition.body
-      )
+      block "function ${identifier name}(${concatMapStringsSep "; " (parameter: "${parameter.type} ${identifier parameter.name}") definition.params})${optionalString (definition.returnType != null) " -> ${definition.returnType}"}"
+        (
+          body definition.body
+        )
     else if target == "filter" then
       block "filter ${identifier name}" (filterBody definition)
     else
@@ -233,9 +237,10 @@ in
 if internal.ordering.unresolved != [ ] then
   throw "cannot render BIRD declarations with a dependency cycle"
 else
-  concatStringsSep "\n\n" (
-    [ "router id ${config.id};" ]
-    ++ map (path: "include ${quote path};") (config.includes or [ ])
-    ++ map declaration internal.ordering.result
-  )
-  + "\n"
+  concatStringsSep "\n\n"
+    (
+      [ "router id ${config.id};" ]
+      ++ map (path: "include ${quote path};") (config.includes or [ ])
+      ++ map declaration internal.ordering.result
+    )
+    + "\n"

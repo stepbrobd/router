@@ -1,9 +1,8 @@
-{
-  pkgs,
-  lib,
-  router,
-  self,
-  crossFamily,
+{ pkgs
+, lib
+, router
+, self
+, crossFamily
 }:
 let
   source1 = if crossFamily then "2001:db8:1::11" else "192.0.2.11";

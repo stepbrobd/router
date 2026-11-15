@@ -1,11 +1,10 @@
-{
-  lib,
-  router,
-  self,
-  crossFamily,
-  nodeId,
-  owned,
-  forbidden,
+{ lib
+, router
+, self
+, crossFamily
+, nodeId
+, owned
+, forbidden
 }:
 { config, pkgs, ... }:
 let

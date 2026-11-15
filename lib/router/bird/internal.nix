@@ -132,13 +132,15 @@ let
       wordBits = if ip.family == "ipv4" then 8 else 16;
       network =
         valid
-        && builtins.all (
-          i:
-          let
-            used = lib.max 0 (lib.min wordBits (prefixLength - i * wordBits));
-          in
-          mod (elemAt ip.words i) (pow2 (wordBits - used)) == 0
-        ) (builtins.genList (i: i) (length ip.words));
+        && builtins.all
+          (
+            i:
+            let
+              used = lib.max 0 (lib.min wordBits (prefixLength - i * wordBits));
+            in
+            mod (elemAt ip.words i) (pow2 (wordBits - used)) == 0
+          )
+          (builtins.genList (i: i) (length ip.words));
     in
     {
       inherit
@@ -177,10 +179,12 @@ let
     concatMap
       (
         target:
-        mapAttrsToList (name: definition: {
-          inherit target name definition;
-          key = "${target}:${name}";
-        }) (config.${collections.${target}} or { })
+        mapAttrsToList
+          (name: definition: {
+            inherit target name definition;
+            key = "${target}:${name}";
+          })
+          (config.${collections.${target}} or { })
       )
       [
         "define"
@@ -190,10 +194,12 @@ let
         "protocol"
       ];
   byKey = builtins.listToAttrs (
-    map (declaration: {
-      name = declaration.key;
-      value = declaration;
-    }) declarations
+    map
+      (declaration: {
+        name = declaration.key;
+        value = declaration;
+      })
+      declarations
   );
   dependencies =
     owner: data:
@@ -221,19 +227,25 @@ let
       ++ dependencies owner (data.arguments or [ ])
     else
       concatMap (dependencies owner) (builtins.attrValues (builtins.removeAttrs data [ "ref" ]));
-  dependencyMap = builtins.mapAttrs (
-    name: declaration: lib.unique (dependencies name declaration.definition)
-  ) byKey;
+  dependencyMap = builtins.mapAttrs
+    (
+      name: declaration: lib.unique (dependencies name declaration.definition)
+    )
+    byKey;
   sortDeclarations =
     remaining: ordered:
     let
       done = map (declaration: declaration.key) ordered;
-      ready = builtins.filter (
-        declaration:
-        builtins.all (
-          dependency: !(builtins.hasAttr dependency byKey) || builtins.elem dependency done
-        ) dependencyMap.${declaration.key}
-      ) remaining;
+      ready = builtins.filter
+        (
+          declaration:
+          builtins.all
+            (
+              dependency: !(builtins.hasAttr dependency byKey) || builtins.elem dependency done
+            )
+            dependencyMap.${declaration.key}
+        )
+        remaining;
       readyKeys = map (declaration: declaration.key) ready;
     in
     if remaining == [ ] || ready == [ ] then
@@ -242,9 +254,13 @@ let
         unresolved = remaining;
       }
     else
-      sortDeclarations (builtins.filter (
-        declaration: !(builtins.elem declaration.key readyKeys)
-      ) remaining) (ordered ++ ready);
+      sortDeclarations
+        (builtins.filter
+          (
+            declaration: !(builtins.elem declaration.key readyKeys)
+          )
+          remaining)
+        (ordered ++ ready);
   ordering = sortDeclarations declarations [ ];
 
   emptyInfo = {
@@ -304,14 +320,14 @@ let
               )).family;
         }
       else if kind == "community" then
-        scalarInfo (
-          {
-            standard = "pair";
-            extended = "ec";
-            large = "lc";
-          }
-          .${if isString (value.type or null) then value.type else ""} or null
-        )
+        scalarInfo
+          (
+            {
+              standard = "pair";
+              extended = "ec";
+              large = "lc";
+            }.${if isString (value.type or null) then value.type else ""} or null
+          )
       else if kind == "reference" && (value.target or null) == "define" && target != null then
         if builtins.elem (key value) seen then
           emptyInfo

@@ -34,10 +34,12 @@ let
       [ "${path}: expected a tagged attribute set" ]
     else
       concatMap (name: error path (builtins.hasAttr name value) "missing field '${name}'") required
-      ++ concatMap (
-        name:
-        error path (builtins.elem name (required ++ optional ++ [ "kind" ])) "unexpected field '${name}'"
-      ) (attrNames value);
+      ++ concatMap
+        (
+          name:
+          error path (builtins.elem name (required ++ optional ++ [ "kind" ])) "unexpected field '${name}'"
+        )
+        (attrNames value);
   identifier =
     path: value:
     error path (matches "[A-Za-z0-9_.:-]+" value && builtins.stringLength value <= 64)
@@ -56,9 +58,10 @@ let
   native = path: value: error path (isString value) "expected native BIRD text";
   uint =
     path: bits: value:
-    error path (
-      isInt value && value >= 0 && value < internal.pow2 bits
-    ) "expected an unsigned ${toString bits}-bit integer";
+    error path
+      (
+        isInt value && value >= 0 && value < internal.pow2 bits
+      ) "expected an unsigned ${toString bits}-bit integer";
   ip = path: value: error path (ipInfo value).valid "expected a valid IPv4 or IPv6 address";
   prefix =
     path: value:
@@ -98,9 +101,10 @@ let
       }";
   sameFamily =
     path: left: right:
-    error path (
-      left.family == null || right.family == null || left.family == right.family
-    ) "address families do not match";
+    error path
+      (
+        left.family == null || right.family == null || left.family == right.family
+      ) "address families do not match";
   scopeFor = context: {
     inherit context;
     locals = { };
@@ -121,38 +125,45 @@ let
       params = declaration.params or [ ];
       names =
         if isList params then
-          map (
-            parameter: if isAttrs parameter && isString (parameter.name or null) then parameter.name else ""
-          ) params
+          map
+            (
+              parameter: if isAttrs parameter && isString (parameter.name or null) then parameter.name else ""
+            )
+            params
         else
           [ ];
     in
     error "${path}.params" (isList params) "expected a list of typed parameters"
     ++ lib.optionals (isList params) (
       concatMap (item: item) (
-        imap0 (
-          i: parameter:
-          let
-            p = "${path}.params[${toString i}]";
-          in
-          shape p [ "name" "type" ] [ ] parameter
-          ++ identifier "${p}.name" (if isAttrs parameter then parameter.name or null else null)
-          ++ type "${p}.type" (if isAttrs parameter then parameter.type or null else null)
-          ++ error "${p}.type" (
-            !isAttrs parameter || (parameter.type or null) != "enum"
-          ) "function signatures require a concrete enum subtype, plain enum is only expression metadata"
-        ) params
+        imap0
+          (
+            i: parameter:
+            let
+              p = "${path}.params[${toString i}]";
+            in
+            shape p [ "name" "type" ] [ ] parameter
+            ++ identifier "${p}.name" (if isAttrs parameter then parameter.name or null else null)
+            ++ type "${p}.type" (if isAttrs parameter then parameter.type or null else null)
+            ++ error "${p}.type"
+              (
+                !isAttrs parameter || (parameter.type or null) != "enum"
+              ) "function signatures require a concrete enum subtype, plain enum is only expression metadata"
+          )
+          params
       )
     )
-    ++ error "${path}.params" (
-      length names == length (lib.unique names)
-    ) "parameter names must be unique"
+    ++ error "${path}.params"
+      (
+        length names == length (lib.unique names)
+      ) "parameter names must be unique"
     ++ error "${path}.params" (length names <= 255) "BIRD functions support at most 255 parameters"
     ++ lib.optionals ((declaration.returnType or null) != null) (
       type "${path}.returnType" declaration.returnType
-      ++ error "${path}.returnType" (
-        declaration.returnType != "enum"
-      ) "function signatures require a concrete enum subtype, plain enum is only expression metadata"
+      ++ error "${path}.returnType"
+        (
+          declaration.returnType != "enum"
+        ) "function signatures require a concrete enum subtype, plain enum is only expression metadata"
     );
   reference =
     path: expected: node:
@@ -170,32 +181,36 @@ let
     if !valid then
       [ "${path}: expected a ${concatStringsSep "/" expected} reference" ]
     else
-      shape path [ "target" "name" ] (
-        if external then
-          [
-            "type"
-            "params"
-            "returnType"
-          ]
-        else
-          [ ]
-      ) node
+      shape path [ "target" "name" ]
+        (
+          if external then
+            [
+              "type"
+              "params"
+              "returnType"
+            ]
+          else
+            [ ]
+        )
+        node
       ++ identifier "${path}.name" name
       ++
-        error "${path}.target" (builtins.elem target expected)
-          "expected reference target ${concatStringsSep "/" expected}"
+      error "${path}.target" (builtins.elem target expected)
+        "expected reference target ${concatStringsSep "/" expected}"
       ++ (
         if external then
-          error "${path}.target" (builtins.elem target [
-            "value"
-            "function"
-            "filter"
-          ]) "external symbols must be values, functions or filters"
+          error "${path}.target"
+            (builtins.elem target [
+              "value"
+              "function"
+              "filter"
+            ]) "external symbols must be values, functions or filters"
           ++ lib.optionals (target == "value") (type "${path}.type" (node.type or null))
           ++ lib.optionals (target == "function") (
-            error "${path}.params" (
-              node ? params
-            ) "an external function requires an explicit parameter signature"
+            error "${path}.params"
+              (
+                node ? params
+              ) "an external function requires an explicit parameter signature"
             ++ signature path node
           )
         else
@@ -252,40 +267,43 @@ let
     error "${path}.prefixes" (isList prefixes) "expected a list of prefixes"
     ++ error path (length families <= 1) "prefix sets must not mix IPv4 and IPv6"
     ++ concatMap (item: item) (
-      imap0 (
-        i: entry:
-        let
-          p = "${path}.prefixes[${toString i}]";
-          details = info entry;
-          ranged = isAttrs entry && ((entry.ge or null) != null || (entry.le or null) != null);
-          ge = if isAttrs entry && (entry.ge or null) != null then entry.ge else details.prefixLength;
-          le = if isAttrs entry && (entry.le or null) != null then entry.le else details.maxLength;
-          bound = n: isInt n && n >= 0 && n <= details.maxLength;
-        in
+      imap0
         (
-          if isString entry then
-            prefix p entry
-          else
-            shape p [ "prefix" ] [ "ge" "le" ] entry
-            ++ prefix "${p}.prefix" (if isAttrs entry then entry.prefix or null else null)
+          i: entry:
+          let
+            p = "${path}.prefixes[${toString i}]";
+            details = info entry;
+            ranged = isAttrs entry && ((entry.ge or null) != null || (entry.le or null) != null);
+            ge = if isAttrs entry && (entry.ge or null) != null then entry.ge else details.prefixLength;
+            le = if isAttrs entry && (entry.le or null) != null then entry.le else details.maxLength;
+            bound = n: isInt n && n >= 0 && n <= details.maxLength;
+          in
+          (
+            if isString entry then
+              prefix p entry
+            else
+              shape p [ "prefix" ] [ "ge" "le" ] entry
+              ++ prefix "${p}.prefix" (if isAttrs entry then entry.prefix or null else null)
+          )
+          ++ lib.optionals ranged (
+            error "${p}.ge" (bound ge) "prefix lower bound is outside its address family"
+            ++ error "${p}.le" (bound le) "prefix upper bound is outside its address family"
+            ++ error p (!(bound ge && bound le) || ge <= le) "prefix lower bound exceeds its upper bound"
+          )
         )
-        ++ lib.optionals ranged (
-          error "${p}.ge" (bound ge) "prefix lower bound is outside its address family"
-          ++ error "${p}.le" (bound le) "prefix upper bound is outside its address family"
-          ++ error p (!(bound ge && bound le) || ge <= le) "prefix lower bound exceeds its upper bound"
-        )
-      ) entries
+        entries
     );
   community =
     path: node:
     let
       kind = node.type or null;
     in
-    error "${path}.type" (builtins.elem kind [
-      "standard"
-      "large"
-      "extended"
-    ]) "unknown community type"
+    error "${path}.type"
+      (builtins.elem kind [
+        "standard"
+        "large"
+        "extended"
+      ]) "unknown community type"
     ++ (
       if kind == "standard" then
         shape path [ "type" "asn" "value" ] [ ] node
@@ -306,15 +324,17 @@ let
           shortValue = ipKey || (isInt key && key > 65535);
         in
         shape path [ "type" "communityType" "key" "value" ] [ ] node
-        ++ error "${path}.communityType" (builtins.elem (node.communityType or null) [
-          "rt"
-          "ro"
-        ]) "extended community kind must be rt or ro"
+        ++ error "${path}.communityType"
+          (builtins.elem (node.communityType or null) [
+            "rt"
+            "ro"
+          ]) "extended community kind must be rt or ro"
         ++ (
           if ipKey then
-            error "${path}.key" (
-              keyIP.valid && keyIP.family == "ipv4" && keyIP.scope == null
-            ) "extended community IP key must be an unscoped IPv4 address"
+            error "${path}.key"
+              (
+                keyIP.valid && keyIP.family == "ipv4" && keyIP.scope == null
+              ) "extended community IP key must be an unscoped IPv4 address"
           else
             uint "${path}.key" 32 key
         )
@@ -349,37 +369,43 @@ let
         calls = (scope.calls or [ ]) ++ [ functionKey ];
         inherit returnType;
         locals = builtins.listToAttrs (
-          imap0 (i: parameter: {
-            name = if isAttrs parameter && isString (parameter.name or null) then parameter.name else "";
-            value = {
-              type = if isAttrs parameter then parameter.type or null else null;
-              family =
-                if isList args && i < length args then (infer scope [ ] (builtins.elemAt args i)).family else null;
-            };
-          }) params
+          imap0
+            (i: parameter: {
+              name = if isAttrs parameter && isString (parameter.name or null) then parameter.name else "";
+              value = {
+                type = if isAttrs parameter then parameter.type or null else null;
+                family =
+                  if isList args && i < length args then (infer scope [ ] (builtins.elemAt args i)).family else null;
+              };
+            })
+            params
         );
       };
     in
     shape path [ "function" "arguments" ] [ ] node
     ++ reference "${path}.function" [ "function" ] function
     ++ error "${path}.arguments" (isList args) "expected an ordered argument list"
-    ++ error "${path}.arguments" (
-      declaration == null || !isList args || length args == length params
-    ) "argument count does not match the function signature"
-    ++ error path (
-      statement || declaration == null || returnType != null
-    ) "a void function cannot be used as an expression"
+    ++ error "${path}.arguments"
+      (
+        declaration == null || !isList args || length args == length params
+      ) "argument count does not match the function signature"
+    ++ error path
+      (
+        statement || declaration == null || returnType != null
+      ) "a void function cannot be used as an expression"
     ++ lib.optionals (isList args) (
       concatMap (item: item) (
-        imap0 (
-          i: argument:
-          let
-            p = "${path}.arguments[${toString i}]";
-            result = expression p scope argument;
-            parameter = if i < length params then builtins.elemAt params i else { };
-          in
-          result.errors ++ expectType p (if isAttrs parameter then parameter.type or null else null) result
-        ) args
+        imap0
+          (
+            i: argument:
+            let
+              p = "${path}.arguments[${toString i}]";
+              result = expression p scope argument;
+              parameter = if i < length params then builtins.elemAt params i else { };
+            in
+            result.errors ++ expectType p (if isAttrs parameter then parameter.type or null else null) result
+          )
+          args
       )
     )
     ++ lib.optionals contextual (
@@ -408,9 +434,10 @@ let
         else if kind == "ip" then
           shape path [ "value" ] [ ] node
           ++ ip "${path}.value" (node.value or null)
-          ++ error path (
-            (ipInfo (node.value or null)).scope == null
-          ) "IP expressions cannot contain an interface scope"
+          ++ error path
+            (
+              (ipInfo (node.value or null)).scope == null
+            ) "IP expressions cannot contain an interface scope"
         else if kind == "prefix" then
           shape path [ "value" ] [ ] node ++ prefix "${path}.value" (node.value or null)
         else if kind == "prefixSet" then
@@ -425,23 +452,26 @@ let
           shape path [ "name" "type" ] [ ] node
           ++ identifier "${path}.name" (node.name or null)
           ++ type "${path}.type" (node.type or null)
-          ++ error path (
-            !(isString (node.name or null))
-            || !(builtins.hasAttr node.name attributeTypes)
-            || (node.type or null) == attributeTypes.${node.name}
-          ) "built-in route attribute has the wrong declared type"
+          ++ error path
+            (
+              !(isString (node.name or null))
+              || !(builtins.hasAttr node.name attributeTypes)
+              || (node.type or null) == attributeTypes.${node.name}
+            ) "built-in route attribute has the wrong declared type"
         else if kind == "local" then
           shape path [ "name" ] [ ] node
           ++ identifier "${path}.name" (node.name or null)
-          ++ error path (
-            isString (node.name or null) && builtins.hasAttr node.name (scope.locals or { })
-          ) "local does not identify a function parameter in this scope"
+          ++ error path
+            (
+              isString (node.name or null) && builtins.hasAttr node.name (scope.locals or { })
+            ) "local does not identify a function parameter in this scope"
         else if kind == "rawExpression" then
           shape path [ "text" ] [ "type" "dependsOn" ] node
           ++ native "${path}.text" (node.text or null)
-          ++ error "${path}.text" (
-            !isString (node.text or null) || node.text != ""
-          ) "native expressions must not be empty"
+          ++ error "${path}.text"
+            (
+              !isString (node.text or null) || node.text != ""
+            ) "native expressions must not be empty"
           ++ dependencies "${path}.dependsOn" (node.dependsOn or [ ])
           ++ lib.optionals ((node.type or null) != null) (type "${path}.type" node.type)
         else if kind == "call" then
@@ -451,14 +481,16 @@ let
           ++ error "${path}.values" (isList (node.values or null)) "expected an ordered expression list"
           ++ lib.optionals (isList (node.values or null)) (
             concatMap (item: item) (
-              imap0 (
-                i: value:
-                let
-                  p = "${path}.values[${toString i}]";
-                  result = expression p scope value;
-                in
-                result.errors ++ expectType p "bool" result
-              ) node.values
+              imap0
+                (
+                  i: value:
+                    let
+                      p = "${path}.values[${toString i}]";
+                      result = expression p scope value;
+                    in
+                    result.errors ++ expectType p "bool" result
+                )
+                node.values
             )
           )
         else if kind == "not" then
@@ -481,26 +513,28 @@ let
             ];
           in
           shape path [ "op" "left" "right" ] [ ] node
-          ++ error "${path}.op" (builtins.elem op [
-            "="
-            "!="
-            "<"
-            "<="
-            ">"
-            ">="
-          ]) "unsupported comparison operator"
+          ++ error "${path}.op"
+            (builtins.elem op [
+              "="
+              "!="
+              "<"
+              "<="
+              ">"
+              ">="
+            ]) "unsupported comparison operator"
           ++ left.errors
           ++ right.errors
           ++ expectType path left.type right
           ++ sameFamily path left right
-          ++ error path (
-            builtins.elem op [
-              "="
-              "!="
-            ]
-            || left.type == null
-            || builtins.elem left.type ordered
-          ) "this type does not support ordered comparisons"
+          ++ error path
+            (
+              builtins.elem op [
+                "="
+                "!="
+              ]
+              || left.type == null
+              || builtins.elem left.type ordered
+            ) "this type does not support ordered comparisons"
         else if kind == "inSet" then
           let
             value = child "value";
@@ -535,9 +569,10 @@ let
           shape path [ "value" "set" ] [ ] node
           ++ value.errors
           ++ set.errors
-          ++ error path (
-            set.type == null || value.type == null || builtins.elem value.type allowed
-          ) "membership operands have incompatible types"
+          ++ error path
+            (
+              set.type == null || value.type == null || builtins.elem value.type allowed
+            ) "membership operands have incompatible types"
           ++ sameFamily path value set
         else if kind == "fromProtocol" then
           shape path [ "protocol" ] [ ] node
@@ -563,13 +598,14 @@ let
       [ "${path}: expected a tagged BIRD statement" ]
     else if kind == "accept" || kind == "reject" then
       shape path [ ] [ ] node
-      ++ error path (
-        builtins.elem scope.context [
-          "filter"
-          "function"
-        ]
-        && (scope.routeContext or scope.context) != "static"
-      ) "filter decisions are not allowed in static-route attribute bodies"
+      ++ error path
+        (
+          builtins.elem scope.context [
+            "filter"
+            "function"
+          ]
+          && (scope.routeContext or scope.context) != "static"
+        ) "filter decisions are not allowed in static-route attribute bodies"
     else if kind == "when" || kind == "ifElse" then
       shape path [ "condition" "body" ] (lib.optional (kind == "ifElse") "elseBody") node
       ++ error path (kind != "ifElse" || node ? elseBody) "ifElse requires an elseBody"
@@ -597,26 +633,29 @@ let
         else
           [ "${path}.attribute: expected an attribute node or native attribute name" ]
       )
-      ++ error "${path}.attribute" (
-        !(builtins.elem name [
-          "net"
-          "proto"
-          "source"
-          "ifname"
-          "ifindex"
-        ])
-      ) "route attribute is read-only"
+      ++ error "${path}.attribute"
+        (
+          !(builtins.elem name [
+            "net"
+            "proto"
+            "source"
+            "ifname"
+            "ifindex"
+          ])
+        ) "route attribute is read-only"
       ++ value.errors
       ++ expectType "${path}.value" (attributeType attribute) value
     else if kind == "return" then
       shape path [ "value" ] [ ] node
       ++ error path (scope.context == "function") "return is only allowed in a function"
-      ++ error path (
-        (node.value or null) != null
-      ) "BIRD 3.4 does not support bare return, void functions must fall through"
-      ++ error path (
-        (node.value or null) == null || scope.returnType != null
-      ) "a void function cannot return a value"
+      ++ error path
+        (
+          (node.value or null) != null
+        ) "BIRD 3.4 does not support bare return, void functions must fall through"
+      ++ error path
+        (
+          (node.value or null) == null || scope.returnType != null
+        ) "a void function cannot return a value"
       ++ lib.optionals ((node.value or null) != null) (
         value.errors ++ expectType "${path}.value" scope.returnType value
       )
@@ -627,27 +666,31 @@ let
       ++ error "${path}.values" (isList (node.values or null)) "expected an ordered list of communities"
       ++ lib.optionals (isList (node.values or null)) (
         concatMap (item: item) (
-          imap0 (
-            i: community:
-            let
-              p = "${path}.values[${toString i}]";
-              result = expression p scope community;
-            in
-            result.errors
-            ++ error p (
-              isAttrs community && (community.kind or null) == "community"
-              || (
-                isAttrs community
-                && (community.kind or null) == "reference"
-                && (community.target or null) == "define"
-              )
-            ) "expected an individual community or a define reference"
-            ++ error p (builtins.elem result.type [
-              "pair"
-              "ec"
-              "lc"
-            ]) "expected an individual standard, extended or large community"
-          ) node.values
+          imap0
+            (
+              i: community:
+              let
+                p = "${path}.values[${toString i}]";
+                result = expression p scope community;
+              in
+              result.errors
+              ++ error p
+                (
+                  isAttrs community && (community.kind or null) == "community"
+                  || (
+                    isAttrs community
+                    && (community.kind or null) == "reference"
+                    && (community.target or null) == "define"
+                  )
+                ) "expected an individual community or a define reference"
+              ++ error p
+                (builtins.elem result.type [
+                  "pair"
+                  "ec"
+                  "lc"
+                ]) "expected an individual standard, extended or large community"
+            )
+            node.values
         )
       )
     else if kind == "rawStatement" then
@@ -658,18 +701,20 @@ let
       [ "${path}: unknown statement kind" ];
   filter =
     path: family: declaration:
-    error "${path}.default" (builtins.elem (declaration.default or null) [
-      "accept"
-      "reject"
-    ]) "a filter requires an explicit accept/reject default"
+    error "${path}.default"
+      (builtins.elem (declaration.default or null) [
+        "accept"
+        "reject"
+      ]) "a filter requires an explicit accept/reject default"
     ++ statements "${path}.body" ((scopeFor "filter") // { inherit family; }) (declaration.body or [ ]);
   policy =
     path: family: value:
     if isString value then
-      error path (builtins.elem value [
-        "all"
-        "none"
-      ]) "policy strings must be all or none, use a filter reference for a named policy"
+      error path
+        (builtins.elem value [
+          "all"
+          "none"
+        ]) "policy strings must be all or none, use a filter reference for a named policy"
     else if
       isAttrs value
       && builtins.elem (value.kind or null) [
@@ -722,79 +767,91 @@ let
           "ebgp"
         ];
     in
-    error path (builtins.elem family [
-      "ipv4"
-      "ipv6"
-    ]) "unsupported channel address family"
+    error path
+      (builtins.elem family [
+        "ipv4"
+        "ipv6"
+      ]) "unsupported channel address family"
     ++ lib.optionals (table != null) (
       reference "${path}.table" [ "table" ] table
-      ++ error "${path}.table" (
-        target == null || (target.type or null) == family
-      ) "routing-table type does not match the channel address family"
+      ++ error "${path}.table"
+        (
+          target == null || (target.type or null) == family
+        ) "routing-table type does not match the channel address family"
     )
     ++
-      concatMap
-        (
-          direction:
-          let
-            selected = declaration.${direction} or null;
-          in
-          error "${path}.${direction}" (
+    concatMap
+      (
+        direction:
+        let
+          selected = declaration.${direction} or null;
+        in
+        error "${path}.${direction}"
+          (
             protocolType != "bgp" || selected != null
           ) "BGP channels require an explicit ${direction} policy"
-          ++ lib.optionals (selected != null) (policy "${path}.${direction}" family selected)
-        )
-        [
-          "import"
-          "export"
-        ]
-    ++ error "${path}.addPaths" (builtins.elem (declaration.addPaths or "off") [
-      "off"
-      "on"
-      "rx"
-      "tx"
-    ]) "invalid add-paths mode"
+        ++ lib.optionals (selected != null) (policy "${path}.${direction}" family selected)
+      )
+      [
+        "import"
+        "export"
+      ]
+    ++ error "${path}.addPaths"
+      (builtins.elem (declaration.addPaths or "off") [
+        "off"
+        "on"
+        "rx"
+        "tx"
+      ]) "invalid add-paths mode"
     ++ error "${path}.nextHopSelf" (mode "nextHopSelf") "expected a switch, ibgp or ebgp"
     ++ error "${path}.nextHopKeep" (mode "nextHopKeep") "expected a switch, ibgp or ebgp"
-    ++ error "${path}.gateway" (builtins.elem (declaration.gateway or null) [
-      null
-      "direct"
-      "recursive"
-    ]) "gateway mode must be direct or recursive"
+    ++ error "${path}.gateway"
+      (builtins.elem (declaration.gateway or null) [
+        null
+        "direct"
+        "recursive"
+      ]) "gateway mode must be direct or recursive"
     ++
-      concatMap
-        (
-          field:
-          error "${path}.${field}" (builtins.elem (declaration.${field} or null) [
+    concatMap
+      (
+        field:
+        error "${path}.${field}"
+          (builtins.elem (declaration.${field} or null) [
             null
             true
             false
           ]) "expected a boolean"
-        )
-        [
-          "extendedNextHop"
-          "importTable"
-          "exportTable"
-        ]
+      )
+      [
+        "extendedNextHop"
+        "importTable"
+        "exportTable"
+      ]
     ++ lib.optionals (nextHop != null) (
       ip "${path}.nextHopAddress" nextHop
-      ++ error "${path}.nextHopAddress" (
-        nextHopInfo.scope == null
-      ) "next-hop address cannot contain an interface scope"
-      ++ error "${path}.nextHopAddress" (
-        !nextHopInfo.valid || nextHopInfo.family == family || (declaration.extendedNextHop or null) == true
-      ) "a cross-family next hop requires extendedNextHop = true"
+      ++ error "${path}.nextHopAddress"
+        (
+          nextHopInfo.scope == null
+        ) "next-hop address cannot contain an interface scope"
+      ++ error "${path}.nextHopAddress"
+        (
+          !nextHopInfo.valid || nextHopInfo.family == family || (declaration.extendedNextHop or null) == true
+        ) "a cross-family next hop requires extendedNextHop = true"
     )
     ++ lib.optionals (protocolType != "bgp") (
-      concatMap (
-        field:
-        error "${path}.${field}" (
-          (declaration.${field} or null) == null
-        ) "this channel option is only supported by BGP"
-      ) bgpFields
-      ++ error "${path}.addPaths" (
-        (declaration.addPaths or "off") == "off"
-      ) "add paths is only supported by BGP"
+      concatMap
+        (
+          field:
+          error "${path}.${field}"
+            (
+              (declaration.${field} or null) == null
+            ) "this channel option is only supported by BGP"
+        )
+        bgpFields
+      ++ error "${path}.addPaths"
+        (
+          (declaration.addPaths or "off") == "off"
+        ) "add paths is only supported by BGP"
     )
     ++ native "${path}.extraConfig" (declaration.extraConfig or "");
   ctx = {
@@ -821,23 +878,25 @@ let
   terminates =
     nodes:
     isList nodes
-    && builtins.any (
-      node:
-      isAttrs node
-      && (
-        builtins.elem (node.kind or null) [
-          "return"
-          "accept"
-          "reject"
-          "rawStatement"
-        ]
-        || (
-          (node.kind or null) == "ifElse"
-          && terminates (node.body or [ ])
-          && terminates (node.elseBody or [ ])
+    && builtins.any
+      (
+        node:
+        isAttrs node
+        && (
+          builtins.elem (node.kind or null) [
+            "return"
+            "accept"
+            "reject"
+            "rawStatement"
+          ]
+          || (
+            (node.kind or null) == "ifElse"
+            && terminates (node.body or [ ])
+            && terminates (node.elseBody or [ ])
+          )
         )
       )
-    ) nodes;
+      nodes;
   declarationErrors =
     declaration:
     let
@@ -849,9 +908,10 @@ let
         ++ dependencies "${path}.dependsOn" (definition.dependsOn or [ ])
         ++ lib.optionals (ref != null) (
           reference "${path}.ref" [ target ] ref
-          ++ error "${path}.ref" (
-            isAttrs ref && (ref.name or null) == name && (ref.target or null) == target
-          ) "declaration reference has the wrong identity"
+          ++ error "${path}.ref"
+            (
+              isAttrs ref && (ref.name or null) == name && (ref.target or null) == target
+            ) "declaration reference has the wrong identity"
         );
     in
     common
@@ -862,23 +922,26 @@ let
         in
         result.errors
         ++
-          error "${path}.value" result.constant
-            "define values must be constant, not route attributes, locals or function calls"
+        error "${path}.value" result.constant
+          "define values must be constant, not route attributes, locals or function calls"
       else if target == "table" then
-        error "${path}.type" (builtins.elem (definition.type or null) [
-          "ipv4"
-          "ipv6"
-          "roa4"
-          "roa6"
-        ]) "unsupported routing-table type"
+        error "${path}.type"
+          (builtins.elem (definition.type or null) [
+            "ipv4"
+            "ipv6"
+            "roa4"
+            "roa6"
+          ]) "unsupported routing-table type"
       else if target == "function" then
         let
           params = if isList (definition.params or null) then definition.params else [ ];
           locals = builtins.listToAttrs (
-            map (parameter: {
-              name = if isAttrs parameter && isString (parameter.name or null) then parameter.name else "";
-              value = if isAttrs parameter then parameter.type or null else null;
-            }) params
+            map
+              (parameter: {
+                name = if isAttrs parameter && isString (parameter.name or null) then parameter.name else "";
+                value = if isAttrs parameter then parameter.type or null else null;
+              })
+              params
           );
           scope = (scopeFor "function") // {
             inherit locals;
@@ -887,9 +950,10 @@ let
         in
         signature path definition
         ++ statements "${path}.body" scope (definition.body or [ ])
-        ++ error "${path}.body" (
-          scope.returnType == null || terminates (definition.body or [ ])
-        ) "a value-returning function needs a return or terminating branch on every structured path"
+        ++ error "${path}.body"
+          (
+            scope.returnType == null || terminates (definition.body or [ ])
+          ) "a value-returning function needs a return or terminating branch on every structured path"
       else if target == "filter" then
         filter path null definition
       else if target == "protocol" then
@@ -904,10 +968,11 @@ let
         )
         ++ native "${path}.extraConfig" (definition.extraConfig or "")
         ++ lib.optionals registered (
-          (protocols.${protocolType}.validate or (
-            _: _: _:
-            [ ]
-          )
+          (
+            protocols.${protocolType}.validate or (
+              _: _: _:
+              [ ]
+            )
           )
             ctx
             name
@@ -922,23 +987,28 @@ let
   );
   rootID = ipInfo (config.id or null);
 in
-error "id" (
-  rootID.valid && rootID.family == "ipv4" && rootID.scope == null
-) "router ID must be an IPv4 address"
+error "id"
+  (
+    rootID.valid && rootID.family == "ipv4" && rootID.scope == null
+  ) "router ID must be an IPv4 address"
 ++ error "includes" (isList (config.includes or [ ])) "expected a list of runtime include paths"
 ++ lib.optionals (isList (config.includes or [ ])) (
   concatMap (item: item) (
-    imap0 (
-      i: path:
-      string "includes[${toString i}]" path
-      ++ error "includes[${toString i}]" (path != "") "include paths must not be empty"
-    ) (config.includes or [ ])
+    imap0
+      (
+        i: path:
+          string "includes[${toString i}]" path
+          ++ error "includes[${toString i}]" (path != "") "include paths must not be empty"
+      )
+      (config.includes or [ ])
   )
 )
-++ map (
-  name:
-  "declarations.${name}: BIRD declarations share one namespace, but this name is declared more than once"
-) duplicates
+++ map
+  (
+    name:
+    "declarations.${name}: BIRD declarations share one namespace, but this name is declared more than once"
+  )
+  duplicates
 ++ concatMap declarationErrors internal.declarations
 ++ lib.optional (internal.ordering.unresolved != [ ]) (
   "declarations: unsupported declaration dependency cycle prevents ordering: "

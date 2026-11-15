@@ -63,14 +63,20 @@
 
 #set text(size: 20pt)
 #set page(
-  paper: "presentation-16-9", margin: 2cm, footer: context[
+  paper: "presentation-16-9",
+  margin: 2cm,
+  footer: context [
     #set text(size: 12pt)
     #set align(horizon)
     #if here().page() == 1 [
-      #conference $dot.c$ #date.display("[month repr:long] [day padding:none], [year]")
+      #conference $dot.c$ #date.display(
+        "[month repr:long] [day padding:none], [year]",
+      )
     ] else if here().page() == counter(page).final().at(0) [
     ] else [
-      #author $dot.c$ #conference $dot.c$ #date.display("[month repr:short]. [day padding:none], [year]")
+      #author $dot.c$ #conference $dot.c$ #date.display(
+        "[month repr:short]. [day padding:none], [year]",
+      )
       #h(1fr)
       #toolbox.slide-number / #toolbox.last-slide-number
     ]
@@ -116,22 +122,22 @@
 ]
 
 #slide[
-== Problem
+  == Problem
 
-NixOS module option `services.bird.config` is text only
+  NixOS module option `services.bird.config` is text only
 
-#v(2em)
+  #v(2em)
 
-#toolbox.side-by-side[
-  - Maintenance burden
-    - Hard to read
-    - Hard to write
-    - Hard to debug
+  #toolbox.side-by-side[
+    - Maintenance burden
+      - Hard to read
+      - Hard to write
+      - Hard to debug
 
-  - Hard to compose and reuse
-][
-  #image("meme.png")
-]
+    - Hard to compose and reuse
+  ][
+    #image("meme.png")
+  ]
 ]
 
 #slide[
@@ -282,267 +288,267 @@ NixOS module option `services.bird.config` is text only
 ]
 
 #slide[
-== RPKI and filters
+  == RPKI and filters
 
-#toolbox.side-by-side[
-*RPKI*
-- BIRD `rpki` protocol and `roa` table
-- Defining `options.router.rpki`
-  - v4/v6 table and filter names
-  - retry, refresh, expiration times
-  - list of validators
-][
-  *Pre-defined filters*
-  - Renamable ROA filters based on route RPIKI status
-  - Can be referred later in import/export filters
-  - Will support arbitrary filters in the future
-]
+  #toolbox.side-by-side[
+    *RPKI*
+    - BIRD `rpki` protocol and `roa` table
+    - Defining `options.router.rpki`
+      - v4/v6 table and filter names
+      - retry, refresh, expiration times
+      - list of validators
+  ][
+    *Pre-defined filters*
+    - Renamable ROA filters based on route RPIKI status
+    - Can be referred later in import/export filters
+    - Will support arbitrary filters in the future
+  ]
 
-#set align(center)
-```nix
-router.rpki.validators = [{
-  id = 0;
-  remote = "rtr.rpki.cloudflare.com";
-  port = 8282;
-}];
-```
-]
-
-#slide[
-== RPKI and filters
-
-```nix
-services.bird.config = lib.mkOrder <int> ''
-  ${lib.concatMapStringsSep
-  "\n\n"
-  (validator: ''
-    protocol rpki rpki${toString validator.id} {
-      remote "${validator.remote}" port ${toString validator.port};
-
-      retry keep ${toString cfg.router.rpki.retry};
-      refresh keep ${toString cfg.router.rpki.refresh};
-      expire ${toString cfg.router.rpki.expire};
-    }'')
-  cfg.router.rpki.validators}
-'';
-```
+  #set align(center)
+  ```nix
+  router.rpki.validators = [{
+    id = 0;
+    remote = "rtr.rpki.cloudflare.com";
+    port = 8282;
+  }];
+  ```
 ]
 
 #slide[
-== RPKI and filters
+  == RPKI and filters
 
-#set text(size: 14pt)
+  ```nix
+  services.bird.config = lib.mkOrder <int> ''
+    ${lib.concatMapStringsSep
+    "\n\n"
+    (validator: ''
+      protocol rpki rpki${toString validator.id} {
+        remote "${validator.remote}" port ${toString validator.port};
 
-```bird
-roa6 table trpki6;
+        retry keep ${toString cfg.router.rpki.retry};
+        refresh keep ${toString cfg.router.rpki.refresh};
+        expire ${toString cfg.router.rpki.expire};
+      }'')
+    cfg.router.rpki.validators}
+  '';
+  ```
+]
 
-protocol rpki rpki0 {
-  roa6 { table trpki6; };
-  remote "rtr.rpki.cloudflare.com" port 8282;
-  retry ...; refresh ...; expire ...;
-}
+#slide[
+  == RPKI and filters
 
-protocol rpki rpki1 {
-  roa6 { table trpki6; };
-  remote "r3k.zrh2.v.rpki.daknob.net" port 3323;
-  retry ...; refresh ...; expire ...;
-}
+  #set text(size: 14pt)
 
-filter validated6 {
-  if (roa_check(trpki6, net, bgp_path.last) = ROA_INVALID) then {
-    print "Ignore RPKI invalid ", net, " for ASN ", bgp_path.last;
-    reject;
+  ```bird
+  roa6 table trpki6;
+
+  protocol rpki rpki0 {
+    roa6 { table trpki6; };
+    remote "rtr.rpki.cloudflare.com" port 8282;
+    retry ...; refresh ...; expire ...;
   }
-  accept;
-}
-```
+
+  protocol rpki rpki1 {
+    roa6 { table trpki6; };
+    remote "r3k.zrh2.v.rpki.daknob.net" port 3323;
+    retry ...; refresh ...; expire ...;
+  }
+
+  filter validated6 {
+    if (roa_check(trpki6, net, bgp_path.last) = ROA_INVALID) then {
+      print "Ignore RPKI invalid ", net, " for ASN ", bgp_path.last;
+      reject;
+    }
+    accept;
+  }
+  ```
 ]
 
 #slide[
-== Kernel protocol
+  == Kernel protocol
 
-#toolbox.side-by-side[
-Export routes to kernel
-- Default route: most common
-- Full table: 250MB+ from BIRD, and another copy in kernel
-- Manual: don't export routes but set `networking.*` options// can work but might break
-][
-```nix
-options.router.kernel = {
-  ipv4 = {
-    import = lib.mkOption { ... };
-    export = lib.mkOption { ... };
-  };
-  ipv6 = {
-    import = lib.mkOption { ... };
-    export = lib.mkOption { ... };
-  };
-};
-```
-]
-]
-
-#slide[
-== Static routes
-
-#toolbox.side-by-side[
-Manually configured routes
-
-#set text(size: 14pt)
-```nix
-options.router.static.ipv4.routes = lib.mkOption {
-  type = lib.types.listOf (lib.types.submodule {
-    options = {
-      prefix = ...;
-      option = ...;
+  #toolbox.side-by-side[
+    Export routes to kernel
+    - Default route: most common
+    - Full table: 250MB+ from BIRD, and another copy in kernel
+    - Manual: don't export routes but set `networking.*` options// can work but might break
+  ][
+    ```nix
+    options.router.kernel = {
+      ipv4 = {
+        import = lib.mkOption { ... };
+        export = lib.mkOption { ... };
+      };
+      ipv6 = {
+        import = lib.mkOption { ... };
+        export = lib.mkOption { ... };
+      };
     };
-  });
-};
-```
-][
-#set text(size: 15pt)
-```nix
-router.static = {
-  ipv4.routes = [
-    { prefix = "0.0.0.0/0";
-      option = "via 198.51.100.1"; }
-    { prefix = "203.0.113.0/24";
-      option = "blackhole"; }
-  ];
-  ipv6.routes = [{ prefix = "2001:db8::/32";
-                   option = "reject"; }];
-};
-
-# config.services.bird.config
-lib.concatMapStringsSep
-  "\n  "
-  (r: "route ${r.prefix} ${r.option};")
-  cfg.router.static.ipv4.routes
-```
-]
+    ```
+  ]
 ]
 
 #slide[
-== BPG sessions
+  == Static routes
 
-#toolbox.side-by-side[
-- The usual: 1 session per protocol
-- MP-BGP: 1 session for both v4 and v6
+  #toolbox.side-by-side[
+    Manually configured routes
 
-#set text(size: 15pt)
-```nix
-options.router.sessions = lib.mkOption {
-  type = lib.types.listOf (lib.types.submodule {
-    options = {
-      name = ...;
-      password = ...; # null for don't validate
-      type = ...; # disable, direct, multihop
-      mp = ...; # null, v4 over v6, v6 over v4
-      neighbor = ...; # ASN, IPv4, IPv6
-      import = ...; # IPv4/IPv6 import filter
-      export = ...; # IPv4/IPv6 export filter
-      ...
+    #set text(size: 14pt)
+    ```nix
+    options.router.static.ipv4.routes = lib.mkOption {
+      type = lib.types.listOf (lib.types.submodule {
+        options = {
+          prefix = ...;
+          option = ...;
+        };
+      });
     };
-  });
-};
-```
-][
-#set text(size: 15pt)
-```nix
-# example
-router.sessions = [{
-  name = "somebody";
-  password = null;
-  type.ipv4 = "disabled";
-  type.ipv6 = "multihop";
-  mp = "v4 over v6";
-  neighbor = {
-    asn = 65536;
-    ipv4 = null;
-    ipv6 = "2001:db8::1";
-  };
-  import.ipv4 = "import none;";
-  import.ipv6 = "import none;";
-  export.ipv4 = "export all;";
-  export.ipv6 = "export all;";
-}];
-```
-]
-]
-
-#slide[
-== Adding announced prefixes to interfaces
-
-#toolbox.side-by-side[
-- Enable forwarding
-- Use `dummy` interface (or use the main interface or whatever)
-- Disable `ManageForeignRoutes` in systemd-networkd (will delete routes exported
-  by BIRD)
-][
-#set text(size: 15pt)
-```nix
-  boot.kernelModules = [ "dummy" ];
-
-  boot.kernel.sysctl = {
-    "net.ipv4.conf.default.forwarding" = 1;
-    "net.ipv6.conf.default.forwarding" = 1;
-  };
-
-  systemd.network.config = {
-    networkConfig.ManageForeignRoutes = false;
-  };
-```
-]
-]
-
-#slide[
-== Adding announced prefixes to interfaces
-
-#toolbox.side-by-side[
-- Use `systemd.network.netdevs` to configure virtual interfaces
-- Use `systemd.network.networks` to configure addresses and routing policies
-  - `routingPolicyRules` is only needed when the outbound gateway of the announced
-    prefixes is different from the default gateway of the main interface
-][
-#set text(size: 15pt)
-```nix
-  systemd.network.netdevs = {
-      "40-dummy0".netdevConfig = {
-      Kind = "dummy";
-      Name = "dummy0";
+    ```
+  ][
+    #set text(size: 15pt)
+    ```nix
+    router.static = {
+      ipv4.routes = [
+        { prefix = "0.0.0.0/0";
+          option = "via 198.51.100.1"; }
+        { prefix = "203.0.113.0/24";
+          option = "blackhole"; }
+      ];
+      ipv6.routes = [{ prefix = "2001:db8::/32";
+                       option = "reject"; }];
     };
-  };
 
-  systemd.network.networks = {
-      "40-dummy0" = {
-      name = "dummy0";
-      address = ipv4.addresses ++ ipv6.addresses;
-      routingPolicyRules = ...;
-    };
-  };
-```
-]
+    # config.services.bird.config
+    lib.concatMapStringsSep
+      "\n  "
+      (r: "route ${r.prefix} ${r.option};")
+      cfg.router.static.ipv4.routes
+    ```
+  ]
 ]
 
 #slide[
-== Immediate benefit
+  == BPG sessions
 
-*Parametericity*
+  #toolbox.side-by-side[
+    - The usual: 1 session per protocol
+    - MP-BGP: 1 session for both v4 and v6
 
-#set text(size: 18pt)
-```nix
-config = lib.mkIf
-  (options?router
-  &&
-  lib.elem
-    config.a.b.c.bind.v4
-    config.services.router.local.ipv4.addresses
-  &&
-  lib.elem
-    config.a.b.c.bind.v6
-    config.services.router.local.ipv6.addresses)
-  { ... };
-```
+    #set text(size: 15pt)
+    ```nix
+    options.router.sessions = lib.mkOption {
+      type = lib.types.listOf (lib.types.submodule {
+        options = {
+          name = ...;
+          password = ...; # null for don't validate
+          type = ...; # disable, direct, multihop
+          mp = ...; # null, v4 over v6, v6 over v4
+          neighbor = ...; # ASN, IPv4, IPv6
+          import = ...; # IPv4/IPv6 import filter
+          export = ...; # IPv4/IPv6 export filter
+          ...
+        };
+      });
+    };
+    ```
+  ][
+    #set text(size: 15pt)
+    ```nix
+    # example
+    router.sessions = [{
+      name = "somebody";
+      password = null;
+      type.ipv4 = "disabled";
+      type.ipv6 = "multihop";
+      mp = "v4 over v6";
+      neighbor = {
+        asn = 65536;
+        ipv4 = null;
+        ipv6 = "2001:db8::1";
+      };
+      import.ipv4 = "import none;";
+      import.ipv6 = "import none;";
+      export.ipv4 = "export all;";
+      export.ipv6 = "export all;";
+    }];
+    ```
+  ]
+]
+
+#slide[
+  == Adding announced prefixes to interfaces
+
+  #toolbox.side-by-side[
+    - Enable forwarding
+    - Use `dummy` interface (or use the main interface or whatever)
+    - Disable `ManageForeignRoutes` in systemd-networkd (will delete routes exported
+      by BIRD)
+  ][
+    #set text(size: 15pt)
+    ```nix
+      boot.kernelModules = [ "dummy" ];
+
+      boot.kernel.sysctl = {
+        "net.ipv4.conf.default.forwarding" = 1;
+        "net.ipv6.conf.default.forwarding" = 1;
+      };
+
+      systemd.network.config = {
+        networkConfig.ManageForeignRoutes = false;
+      };
+    ```
+  ]
+]
+
+#slide[
+  == Adding announced prefixes to interfaces
+
+  #toolbox.side-by-side[
+    - Use `systemd.network.netdevs` to configure virtual interfaces
+    - Use `systemd.network.networks` to configure addresses and routing policies
+      - `routingPolicyRules` is only needed when the outbound gateway of the announced
+        prefixes is different from the default gateway of the main interface
+  ][
+    #set text(size: 15pt)
+    ```nix
+      systemd.network.netdevs = {
+          "40-dummy0".netdevConfig = {
+          Kind = "dummy";
+          Name = "dummy0";
+        };
+      };
+
+      systemd.network.networks = {
+          "40-dummy0" = {
+          name = "dummy0";
+          address = ipv4.addresses ++ ipv6.addresses;
+          routingPolicyRules = ...;
+        };
+      };
+    ```
+  ]
+]
+
+#slide[
+  == Immediate benefit
+
+  *Parametericity*
+
+  #set text(size: 18pt)
+  ```nix
+  config = lib.mkIf
+    (options?router
+    &&
+    lib.elem
+      config.a.b.c.bind.v4
+      config.services.router.local.ipv4.addresses
+    &&
+    lib.elem
+      config.a.b.c.bind.v6
+      config.services.router.local.ipv6.addresses)
+    { ... };
+  ```
 ]
 
 #slide[
@@ -553,32 +559,32 @@ config = lib.mkIf
 ]
 
 #slide[
-== Internal routing with Tailscale #footnote[tailscale.com/blog/how-tailscale-works]
+  == Internal routing with Tailscale #footnote[tailscale.com/blog/how-tailscale-works]
 
-#toolbox.side-by-side[
-  #set align(center)
-  #muchpdf(read("ts1.pdf", encoding: none), scale: 0.205)
-  #muchpdf(read("ts2.pdf", encoding: none), scale: 0.255)
-][
-#set text(size: 15pt)
-```nix
-services.tailscale.extraSetFlags =
-let
-  v4s = lib.concatStringsSep "," ipv4.addresses;
-  v6s = lib.concatStringsSep "," ipv6.addresses;
-  addresses =
-    if v4s == "" then v6s
-    else if v6s == "" then v4s
-    else v4s + "," + v6s;
-in
-[ "--accept-routes"
-  "--advertise-routes=${addresses}"
-  "--snat-subnet-routes=false" ];
-```
+  #toolbox.side-by-side[
+    #set align(center)
+    #muchpdf(read("ts1.pdf", encoding: none), scale: 0.205)
+    #muchpdf(read("ts2.pdf", encoding: none), scale: 0.255)
+  ][
+    #set text(size: 15pt)
+    ```nix
+    services.tailscale.extraSetFlags =
+    let
+      v4s = lib.concatStringsSep "," ipv4.addresses;
+      v6s = lib.concatStringsSep "," ipv6.addresses;
+      addresses =
+        if v4s == "" then v6s
+        else if v6s == "" then v4s
+        else v4s + "," + v6s;
+    in
+    [ "--accept-routes"
+      "--advertise-routes=${addresses}"
+      "--snat-subnet-routes=false" ];
+    ```
 
-#v(4em)
-\*Other tunneling protocols will also work
-]
+    #v(4em)
+    \*Other tunneling protocols will also work
+  ]
 ]
 
 #slide[
@@ -593,52 +599,55 @@ in
 ]
 
 #slide[
-== Lessons learned
+  == Lessons learned
 
-- Use IPv6 when possible
+  - Use IPv6 when possible
 
-- Host a looking glass
-  - `bird-lg` or other looking glass tools
-  - Feed full table to BGP.Tools, NLNOG, etc.
-- `tcpdump`, `mtr`, `ping`, `traceroute`, `dig`, etc. #footnote[Also ping.sx is pretty cool] are
-  your friends
+  - Host a looking glass
+    - `bird-lg` or other looking glass tools
+    - Feed full table to BGP.Tools, NLNOG, etc.
+  - `tcpdump`, `mtr`, `ping`, `traceroute`, `dig`, etc. #footnote[Also ping.sx is pretty cool] are
+    your friends
 
-- Tailscale is good but...
-  - Eat the entirety of CGNAT address space (100.64.0.0/10)
-  - `nodeAttrs` -> `ipPool` is half-baked, outstanding issue since Feb 2021
-    (tailscale\#1381)
-  - My workaround: set lookup rules with very specific priorities
+  - Tailscale is good but...
+    - Eat the entirety of CGNAT address space (100.64.0.0/10)
+    - `nodeAttrs` -> `ipPool` is half-baked, outstanding issue since Feb 2021
+      (tailscale\#1381)
+    - My workaround: set lookup rules with very specific priorities
 ]
 
 #slide[
-== Closing remarks
+  == Closing remarks
 
-- Possible to run your own validator (ROA based and IRR based)
+  - Possible to run your own validator (ROA based and IRR based)
 
-- Plan to write a more generic module to replace `services.bird` and upstream it
-  - Proof of concept: `github:stepbrobd/router#nixosModules.alpha`
-  - Idea from: `github:NuschtOS/bird.nix`
-  - Support all protocols
-  - Integrate flow exporter for better observability
+  - Plan to write a more generic module to replace `services.bird` and upstream it
+    - Proof of concept: `github:stepbrobd/router#nixosModules.alpha`
+    - Idea from: `github:NuschtOS/bird.nix`
+    - Support all protocols
+    - Integrate flow exporter for better observability
 ]
 
 #slide[
-#set align(center + horizon)
-== Questions?
+  #set align(center + horizon)
+  == Questions?
 
-#v(2em)
+  #v(2em)
 
-ysun\@hey.com $dot.c$ `github:stepbrobd/router`
+  ysun\@hey.com $dot.c$ `github:stepbrobd/router`
 
-#v(2em)
+  #v(2em)
 
-Special thanks to Nick Cao (`github:NickCao`)
+  Special thanks to Nick Cao (`github:NickCao`)
 
-#v(1fr)
+  #v(1fr)
 
-#box(image("france2030.png", height: 15%))
-#h(1em)
-#box(image("numpex.png", height: 15%))
+  #box(image("france2030.png", height: 15%))
+  #h(1em)
+  #box(image("numpex.png", height: 15%))
 
-#box(image("cf_blk.png", width: 25%)) #h(0.25em) #text(size: 16pt, weight: "bold")[Project Alexandria]
+  #box(image("cf_blk.png", width: 25%)) #h(0.25em) #text(
+    size: 16pt,
+    weight: "bold",
+  )[Project Alexandria]
 ]

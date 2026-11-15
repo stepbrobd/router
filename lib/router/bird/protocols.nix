@@ -10,12 +10,13 @@ let
       table = nullable (types.referenceTo "table");
       import = nullable types.policy;
       export = nullable types.policy;
-      addPaths = option (t.enum [
-        "off"
-        "rx"
-        "tx"
-        "on"
-      ]) "off";
+      addPaths = option
+        (t.enum [
+          "off"
+          "rx"
+          "tx"
+          "on"
+        ]) "off";
       nextHopSelf = nullable (
         t.either t.bool (
           t.enum [
@@ -79,16 +80,17 @@ in
   direct.module = {
     options = {
       inherit channels;
-      interfaces = option (t.listOf (
-        t.either t.str (
-          t.submodule {
-            options = {
-              pattern = mkOption { type = t.str; };
-              exclude = option t.bool false;
-            };
-          }
-        )
-      )) [ ];
+      interfaces = option
+        (t.listOf (
+          t.either t.str (
+            t.submodule {
+              options = {
+                pattern = mkOption { type = t.str; };
+                exclude = option t.bool false;
+              };
+            }
+          )
+        )) [ ];
       checkLink = nullable t.bool;
     };
   };
@@ -105,15 +107,16 @@ in
   static.module = {
     options = {
       inherit channels;
-      routes = option (t.listOf (
-        t.submodule {
-          options = {
-            prefix = mkOption { type = t.str; };
-            destination = mkOption { type = destination; };
-            body = option types.body [ ];
-          };
-        }
-      )) [ ];
+      routes = option
+        (t.listOf (
+          t.submodule {
+            options = {
+              prefix = mkOption { type = t.str; };
+              destination = mkOption { type = destination; };
+              body = option types.body [ ];
+            };
+          }
+        )) [ ];
     };
   };
   bgp.module = {

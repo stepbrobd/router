@@ -1,8 +1,7 @@
-{
-  pkgs,
-  lib,
-  router,
-  self,
+{ pkgs
+, lib
+, router
+, self
 }:
 let
   evaluation = import ./evaluation.nix {
