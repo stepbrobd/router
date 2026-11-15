@@ -577,6 +577,41 @@ let
     };
   };
   channelCase = evaluate [ channelDeclarations ];
+  pipeDeclarations = { config, ... }: {
+    tables = {
+      main4.type = "ipv4";
+      side4.type = "ipv4";
+      spare4.type = "ipv4";
+      main6.type = "ipv6";
+    };
+    filters.allow.default = "accept";
+    templates.mirror = {
+      type = "pipe";
+      table = config.tables.main4.ref;
+      peerTable = config.tables.side4.ref;
+      import = "all";
+    };
+    protocols = {
+      side = {
+        type = "pipe";
+        table = config.tables.main4.ref;
+        peerTable = config.tables.side4.ref;
+        import = "none";
+        export = config.filters.allow.ref;
+        importLimit = {
+          count = 10000;
+          action = "block";
+        };
+        maxGeneration = 8;
+      };
+      spare = {
+        type = "pipe";
+        from = config.templates.mirror.ref;
+        peerTable = config.tables.spare4.ref;
+      };
+    };
+  };
+  pipeCase = evaluate [ pipeDeclarations ];
   # protocols with nothing optional declared next to the same protocols with every off form spelled out
   declared = evaluate [
     ({ config, ... }: {
@@ -1422,6 +1457,30 @@ let
         };
       }
     ];
+    pipeSameTable = [
+      pipeDeclarations
+      ({ config, ... }: { protocols.side.peerTable = lib.mkForce config.tables.main4.ref; })
+    ];
+    pipeMixedTypes = [
+      pipeDeclarations
+      ({ config, ... }: { protocols.side.peerTable = lib.mkForce config.tables.main6.ref; })
+    ];
+    pipeWithoutPeer = [
+      pipeDeclarations
+      { protocols.side.peerTable = lib.mkForce null; }
+    ];
+    pipeTemplateWithoutPeer = [
+      pipeDeclarations
+      { templates.mirror.peerTable = lib.mkForce null; }
+    ];
+    pipeMaxGeneration = [
+      pipeDeclarations
+      { protocols.side.maxGeneration = lib.mkForce 255; }
+    ];
+    pipeUnknownFilter = [
+      pipeDeclarations
+      { protocols.side.export = lib.mkForce (reference "filter" "missing"); }
+    ];
     addPathsOutsideBgp = [
       {
         protocols.originate = {
@@ -1628,6 +1687,21 @@ let
         derived = (bird.resolve channelCase.config).protocols.derived.channels.ipv4;
       in
       derived.importLimit.count == 500 && derived.importLimit.action == null && derived.preference == 90;
+    pipeRenders =
+      let
+        side = section "protocol pipe side {" pipeCase.text;
+        spare = section "protocol pipe spare from mirror {" pipeCase.text;
+      in
+      lib.hasInfix "table main4;" side
+        && lib.hasInfix "peer table side4;" side
+        && lib.hasInfix "import none;" side
+        && lib.hasInfix "export filter allow;" side
+        && lib.hasInfix "import limit 10000 action block;" side
+        && lib.hasInfix "max generation 8;" side
+        && !(lib.hasInfix "{" side)
+        && lib.hasInfix "peer table spare4;" spare
+        && !(lib.hasInfix "table main4" spare)
+        && lib.hasInfix "template pipe mirror {\n  table main4;\n  import all;\n  peer table side4;\n}" pipeCase.text;
     explicitOffRenders =
       let
         kernel = section "protocol kernel explicit_kernel {" declared.text;
@@ -1753,5 +1827,6 @@ in
     filters = filterCase.text;
     sessions = sessions.text;
     channels = channelCase.text;
+    pipe = pipeCase.text;
   };
 }
