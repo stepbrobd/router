@@ -1,5 +1,31 @@
 {
   "nodes": {
+    "autopilot": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "parts": [
+          "parts"
+        ],
+        "systems": [
+          "systems"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794519101,
+        "narHash": "sha256-UapcduY9dTPqUlEexKVTe3MULKZ5gGgCiGvZWU2GMkg=",
+        "owner": "stepbrobd",
+        "repo": "autopilot",
+        "rev": "f9103c573a26f04d7ae17d026749cc4992260ad5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "stepbrobd",
+        "repo": "autopilot",
+        "type": "github"
+      }
+    },
     "ixx": {
       "inputs": {
         "flake-utils": [
@@ -82,6 +108,7 @@
     },
     "root": {
       "inputs": {
+        "autopilot": "autopilot",
         "ixx": "ixx",
         "nixpkgs": "nixpkgs",
         "parts": "parts",
@@ -119,16 +146,16 @@
     },
     "systems": {
       "locked": {
-        "lastModified": 1791244623,
-        "narHash": "sha256-uuanbkFk8a313Zfrxdcz8Us/yQtaxNnKJtX8v0ZPpd8=",
+        "lastModified": 1776166891,
+        "narHash": "sha256-bI8yrEGjrohR5hkQox7UrxDH7XqrYMwI8SL/LrJ1+S8=",
         "owner": "nix-systems",
-        "repo": "default",
-        "rev": "d36eeed142f88b5a636f2e3856a53c61654cf29b",
+        "repo": "triplet",
+        "rev": "6de7bc09397911ce03636afbcf6118745ab2cda0",
         "type": "github"
       },
       "original": {
         "owner": "nix-systems",
-        "repo": "default",
+        "repo": "triplet",
         "type": "github"
       }
     },
