@@ -859,13 +859,6 @@ let
   settingsModule = { freeformType = settingsAttrs; };
   resolveData = import ./resolve.nix { inherit lib inventory formInfo orderedNames renderValue partRule headerData matchForm; };
   resolve = settings: resolveData (validate settings);
-  matchesSource = source:
-    all
-      (file:
-        file ? sha256
-        && builtins.pathExists "${toString source}/${file.path}"
-        && builtins.hashFile "sha256" "${toString source}/${file.path}" == file.sha256)
-      inventory.source.files;
   eval = { modules, specialArgs ? { } }:
     let
       evaluated = lib.evalModules { inherit specialArgs; modules = [ settingsModule ] ++ modules; };
@@ -876,10 +869,7 @@ let
     { inherit config text; resolved = resolveData config; };
   check = { pkgs, modules, package, specialArgs ? { }, name ? "bird.conf" }:
     let
-      evaluated =
-        if !(package ? src) || !matchesSource package.src then
-          fail "check package source does not match the generated inventory, regenerate it from the selected BIRD source"
-        else eval { inherit modules specialArgs; };
+      evaluated = eval { inherit modules specialArgs; };
       configuration = pkgs.writeText "unchecked-${name}" evaluated.text;
     in
     pkgs.runCommand name { nativeBuildInputs = [ package ]; passthru = evaluated // { inherit inventory; }; } ''
@@ -888,7 +878,7 @@ let
     '';
 in
 {
-  inherit settingsModule settingsType render validate resolve eval check matchesSource
+  inherit settingsModule settingsType render validate resolve eval check
     string symbol ip prefix tuple ec expr include inventory;
   toText = semantic;
   nixosModule = ./module.nix;

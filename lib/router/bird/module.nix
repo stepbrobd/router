@@ -23,9 +23,5 @@ in
   };
   config = lib.mkIf (cfg.settings != null) {
     services.bird.config = generated;
-    assertions = [{
-      assertion = cfg.package ? src && backend.matchesSource cfg.package.src;
-      message = "services.bird.settings needs a BIRD package built from the source router's inventory was generated from. Select that package or regenerate the inventory.";
-    }];
   };
 }

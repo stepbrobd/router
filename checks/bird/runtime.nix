@@ -5,7 +5,6 @@ let
   selfReading = lib.evalModules {
     modules = [
       backend.nixosModule
-      { options.assertions = lib.mkOption { type = lib.types.listOf lib.types.attrs; default = [ ]; }; }
       ({ config, ... }: {
         services.bird.settings = {
           router-id = "192.0.2.1";
