@@ -1,0 +1,14 @@
+[package]
+name        = "router"
+version     = "2026.1115.0"
+edition     = "2024"
+license     = "MIT"
+description = "Compile BIRD source grammars into a mergeable Nix configuration backend"
+
+[dependencies]
+anyhow     = "1"
+clap       = { version = "4", features = ["derive"] }
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2       = "0.10"
+toml       = "0.8"

@@ -1,0 +1,682 @@
+version = 1
+header_field = "from"
+channel_kinds = [
+  "channel.kind",
+  "channel.neighbor-start",
+  "channel.bgp-kind",
+  "channel.mpls-start",
+]
+
+[declaration_order]
+first = ["define", "attribute"]
+last = ["function", "filter", "template", "protocol"]
+
+[roles]
+args = "args"
+return = "return"
+variables = "variables"
+body = "body"
+
+[storage]
+s = "symbol"
+r = "symbol"
+fl = "body"
+i = "semantic"
+i32 = "semantic"
+i64 = "semantic"
+a = "semantic"
+ip4 = "semantic"
+ip6 = "semantic"
+mac = "semantic"
+net = "semantic"
+net_ptr = "semantic"
+rd = "semantic"
+rt = "semantic"
+esi = "semantic"
+t = "text"
+bs = "semantic"
+v = "semantic"
+time = "semantic"
+settle = "semantic"
+cl = "semantic"
+tf = "semantic"
+tfp = "semantic"
+f = "semantic"
+e = "semantic"
+trie = "semantic"
+const_trie = "semantic"
+ad = "semantic"
+iface = "semantic"
+x = "program"
+xp = "program"
+fa = "program"
+fret = "semantic"
+ecs = "semantic"
+ea_class = "semantic"
+fsa = "semantic"
+fab = "semantic"
+flv = "semantic"
+px = "semantic"
+ai = "semantic"
+
+[lexical]
+i = "integer"
+i32 = "integer"
+i64 = "integer"
+ip4 = "ip-address"
+ip6 = "ip-address"
+s = "symbol"
+t = "string"
+mac = "expression"
+rd = "expression"
+bs = "expression"
+
+[families]
+ip4 = "ipv4"
+ip6 = "ipv6"
+
+[c_types]
+i = ["uint"]
+i32 = ["u32"]
+i64 = ["u64"]
+time = ["btime"]
+t = ["const char *"]
+a = ["ip_addr"]
+ip4 = ["ip4_addr"]
+ip6 = ["ip6_addr"]
+net = ["net_addr"]
+net_ptr = ["net_addr *"]
+s = ["struct symbol *"]
+r = ["struct rtable_config *"]
+cc = ["struct channel_config *"]
+iface = ["struct iface *"]
+x = ["struct f_inst *"]
+fl = ["struct f_line *"]
+fa = ["struct f_arg *"]
+f = ["const struct filter *"]
+ecs = ["enum ec_subtype"]
+cl = ["struct channel_limit"]
+v = ["struct f_val"]
+
+[[namespaces]]
+prefix = ["protocol"]
+
+[[namespaces]]
+prefix = ["template"]
+
+[[namespaces]]
+suffix = ["table"]
+
+[[bindings]]
+id = "number.expression"
+rules = ["expr"]
+file = "conf/confbase.Y"
+storage = "i"
+representation = "number-expression"
+label = "value"
+references = ["NUM", "conf_expr"]
+
+[[bindings]]
+id = "number.duration"
+rules = ["expr_us"]
+file = "conf/confbase.Y"
+storage = "time"
+representation = "duration"
+label = "value"
+references = ["expr", "S", "MS", "US"]
+
+[[bindings]]
+id = "switch"
+rules = ["bool"]
+file = "conf/confbase.Y"
+storage = "i"
+representation = "switch"
+label = "enabled"
+references = ["ON", "OFF", "NUM", "conf_expr"]
+values = { true = ["on"], false = ["off"] }
+
+[[bindings]]
+id = "string"
+rules = ["text"]
+file = "conf/confbase.Y"
+storage = "t"
+representation = "string"
+label = "text"
+
+[[bindings]]
+id = "ip-address"
+rules = ["ipa"]
+file = "conf/confbase.Y"
+storage = "a"
+representation = "ip-address"
+label = "address"
+
+[[bindings]]
+id = "prefix"
+rules = ["net_any"]
+file = "conf/confbase.Y"
+storage = "net_ptr"
+label = "prefix"
+
+[[bindings]]
+id = "prefix.ip"
+rules = ["net_ip"]
+file = "conf/confbase.Y"
+storage = "net"
+representation = "prefix"
+label = "prefix"
+
+[[bindings]]
+id = "prefix.internal"
+rules = ["net_ip_"]
+file = "conf/confbase.Y"
+storage = "net"
+representation = "prefix"
+label = "prefix"
+
+[[bindings]]
+id = "symbol"
+rules = ["symbol"]
+file = "conf/confbase.Y"
+storage = "s"
+representation = "symbol"
+label = "name"
+
+[[bindings]]
+id = "symbol.known"
+rules = ["symbol_known"]
+file = "conf/confbase.Y"
+storage = "s"
+representation = "symbol"
+label = "name"
+
+[[bindings]]
+id = "ip.scope"
+rules = ["ipa_scope"]
+file = "conf/confbase.Y"
+storage = "iface"
+expand = true
+label = "interface"
+
+[[bindings]]
+id = "constant.expression"
+rules = ["term"]
+file = "filter/config.Y"
+storage = "x"
+representation = "expression"
+label = "value"
+
+[[bindings]]
+id = "constant.constructor"
+rules = ["constructor"]
+file = "filter/config.Y"
+storage = "x"
+
+[[bindings]]
+id = "constant.ec-kind"
+rules = ["ec_kind"]
+file = "filter/config.Y"
+storage = "ecs"
+shape = "record"
+
+[[bindings]]
+id = "declaration.type"
+rules = ["type"]
+file = "filter/config.Y"
+storage = "i"
+representation = "type-name"
+
+[[bindings]]
+id = "protocol.header"
+rules = ["proto_name"]
+file = "nest/config.Y"
+label = "name"
+classes = ["SYM_TEMPLATE", "SYM_PROTO"]
+
+[[bindings]]
+id = "bgp.options"
+rules = ["bgp_proto"]
+file = "proto/bgp/config.Y"
+
+[[bindings]]
+id = "bgp.local-options"
+rules = ["bgp_loc_opts"]
+file = "proto/bgp/config.Y"
+
+[[bindings]]
+id = "bgp.neighbor-options"
+rules = ["bgp_nbr_opts"]
+file = "proto/bgp/config.Y"
+
+[[bindings]]
+id = "channel.policy"
+rules = ["imexport"]
+file = "nest/config.Y"
+storage = "f"
+shape = "record"
+label = "policy"
+
+[[bindings]]
+id = "filter.reference-or-body"
+rules = ["filter"]
+file = "filter/config.Y"
+storage = "f"
+shape = "record"
+
+[[bindings]]
+id = "filter.where"
+rules = ["where_filter"]
+file = "filter/config.Y"
+storage = "f"
+shape = "record"
+native_fields = ["constant.expression"]
+
+[[bindings]]
+id = "channel.limit"
+rules = ["limit_spec"]
+file = "nest/config.Y"
+storage = "cl"
+shape = "record"
+fields = { "number.expression" = "limit", "channel.limit-action" = "action" }
+
+[[bindings]]
+id = "channel.limit-action"
+rules = ["limit_action"]
+file = "nest/config.Y"
+storage = "i"
+label = "action"
+shape = "record"
+
+[[bindings]]
+id = "table.reference"
+rules = ["rtable"]
+file = "nest/config.Y"
+storage = "r"
+representation = "symbol"
+label = "table"
+
+[[bindings]]
+id = "table.sorted"
+rules = ["table_sorted"]
+file = "nest/config.Y"
+shape = "flag"
+atomic = true
+label = "sorted"
+references = ["SORTED"]
+
+[[bindings]]
+id = "interface.patterns"
+rules = ["iface_patt_list"]
+file = "nest/config.Y"
+shape = "list"
+atomic = true
+label = "patterns"
+
+[[bindings]]
+id = "interface.name-patterns"
+rules = ["iface_patt_list_nopx"]
+file = "nest/config.Y"
+shape = "list"
+atomic = true
+label = "patterns"
+
+[[bindings]]
+id = "interface.pattern"
+rules = ["iface_patt_node"]
+file = "nest/config.Y"
+shape = "record"
+fields = { "string" = "pattern", "TEXT" = "pattern", "IP4" = "address", "IP6" = "address" }
+
+[[bindings]]
+id = "interface.pattern-data"
+rules = ["iface_patt_node_body"]
+file = "nest/config.Y"
+shape = "record"
+expand = true
+fields = { "string" = "pattern", "TEXT" = "pattern", "IP4" = "address", "IP6" = "address", "prefix-or-address" = "prefix" }
+
+[[bindings]]
+id = "interface.exclude"
+rules = ["iface_negate"]
+file = "nest/config.Y"
+shape = "flag"
+label = "exclude"
+
+[[bindings]]
+id = "static.options"
+rules = ["static_proto"]
+file = "proto/static/config.Y"
+
+[[bindings]]
+id = "static.route-body"
+rules = ["stat_route_opt_list"]
+file = "proto/static/config.Y"
+shape = "body"
+atomic = true
+label = "body"
+
+[[bindings]]
+id = "constant.reference-expression"
+rules = ["conf_expr"]
+file = "conf/confbase.Y"
+storage = "v"
+representation = "expression"
+references = ["symbol_known", "term"]
+
+[[bindings]]
+id = "address-or-string"
+rules = ["text_or_ipa"]
+file = "conf/confbase.Y"
+storage = "v"
+shape = "record"
+label = "address"
+
+[[bindings]]
+id = "channel.kind"
+rules = ["net_type_base"]
+file = "nest/config.Y"
+storage = "i"
+
+[[bindings]]
+id = "channel.neighbor-start"
+rules = ["nbrs_channel_start"]
+file = "nest/config.Y"
+storage = "cc"
+
+[[bindings]]
+id = "channel.bgp-kind"
+rules = ["bgp_afi"]
+file = "proto/bgp/config.Y"
+storage = "i32"
+
+[[bindings]]
+id = "channel.mpls-start"
+rules = ["mpls_channel_start"]
+file = "nest/mpls.Y"
+storage = "cc"
+
+[[bindings]]
+id = "bfd.options"
+rules = ["bfd_proto_opts"]
+file = "proto/bfd/config.Y"
+
+[[bindings]]
+id = "bfd.neighbor-interface"
+rules = ["bfd_neigh_iface"]
+file = "proto/bfd/config.Y"
+storage = "iface"
+expand = true
+fields = { "symbol" = "interface-symbol", "string" = "interface" }
+
+[[bindings]]
+id = "bfd.neighbor-local"
+rules = ["bfd_neigh_local"]
+file = "proto/bfd/config.Y"
+storage = "a"
+expand = true
+label = "local"
+
+[[bindings]]
+id = "bfd.neighbor-multihop"
+rules = ["bfd_neigh_multihop"]
+file = "proto/bfd/config.Y"
+storage = "i"
+expand = true
+label = "multihop"
+
+[[bindings]]
+id = "bmp.options"
+rules = ["bmp_proto"]
+file = "proto/bmp/config.Y"
+
+[[bindings]]
+id = "bmp.station-options"
+rules = ["bmp_station_address"]
+file = "proto/bmp/config.Y"
+
+[[bindings]]
+id = "rpki.options"
+rules = ["rpki_proto_opts"]
+file = "proto/rpki/config.Y"
+
+[[bindings]]
+id = "native.function-body"
+rules = ["function_body"]
+file = "filter/config.Y"
+storage = "fl"
+shape = "body"
+label = "body"
+
+[[bindings]]
+id = "native.filter-body"
+rules = ["filter_body"]
+file = "filter/config.Y"
+storage = "fl"
+shape = "body"
+label = "body"
+
+[[bindings]]
+id = "native.arguments"
+rules = ["function_args"]
+file = "filter/config.Y"
+storage = "fa"
+
+[[bindings]]
+id = "native.return"
+rules = ["function_type"]
+file = "filter/config.Y"
+storage = "i"
+
+[[bindings]]
+id = "native.variables"
+rules = ["function_vars"]
+file = "filter/config.Y"
+storage = "i"
+
+[[bindings]]
+id = "prefix.ipv4"
+rules = ["net_ip4_"]
+file = "conf/confbase.Y"
+storage = "net"
+representation = "prefix"
+label = "prefix"
+
+[[bindings]]
+id = "prefix.ipv6"
+rules = ["net_ip6_"]
+file = "conf/confbase.Y"
+storage = "net"
+representation = "prefix"
+label = "prefix"
+
+[[bindings]]
+id = "prefix-or-address"
+rules = ["net_or_ipa"]
+file = "conf/confbase.Y"
+storage = "net"
+shape = "record"
+label = "prefix"
+
+[[bindings]]
+id = "log.classes"
+rules = ["log_mask"]
+file = "sysdep/unix/config.Y"
+storage = "i"
+label = "classes"
+
+[[bindings]]
+id = "log.syslog-name"
+rules = ["syslog_name"]
+file = "sysdep/unix/config.Y"
+storage = "t"
+expand = true
+
+[[bindings]]
+id = "kernel.merge-paths-limit"
+rules = ["kern_mp_limit"]
+file = "sysdep/unix/krt.Y"
+storage = "i"
+expand = true
+
+[[bindings]]
+id = "radv.sensitive"
+rules = ["radv_sensitive"]
+file = "proto/radv/config.Y"
+storage = "i"
+expand = true
+
+[[fields]]
+id = "bgp.local.as"
+scope = "bgp.local-options"
+selector = ["as"]
+path = ["as"]
+storage = "BGP_CFG->local_as"
+
+[[fields]]
+id = "bgp.local.port"
+scope = "bgp.local-options"
+selector = ["port"]
+path = ["port"]
+storage = "BGP_CFG->local_port"
+
+[[fields]]
+id = "bgp.neighbor.as"
+scope = "bgp.neighbor-options"
+selector = ["as"]
+path = ["as"]
+storage = "BGP_CFG->remote_as"
+
+[[fields]]
+id = "bgp.neighbor.port"
+scope = "bgp.neighbor-options"
+selector = ["port"]
+path = ["port"]
+storage = "BGP_CFG->remote_port"
+
+[[fields]]
+id = "bmp.station.address"
+scope = "bmp.station-options"
+selector = ["ip"]
+path = ["address"]
+storage = "BMP_CFG->station_ip"
+
+[[fields]]
+id = "bmp.station.port"
+scope = "bmp.station-options"
+selector = ["port"]
+path = ["port"]
+storage = "BMP_CFG->station_port"
+
+[[projections]]
+id = "bgp.local"
+scope = "bgp.options"
+selectors = [["local"]]
+merge = "fields"
+
+[[projections]]
+id = "bgp.neighbor"
+scope = "bgp.options"
+selectors = [["neighbor"], ["neighbor", "range"]]
+merge = "fields"
+
+[[projections]]
+id = "interface.block"
+selectors = [["interface"]]
+contains = ["interface.patterns", "interface.name-patterns"]
+merge = "replace"
+collection = true
+
+[[projections]]
+id = "static.route"
+scope = "static.options"
+selectors = [["route"]]
+merge = "replace"
+collection = true
+
+[[projections]]
+id = "bfd.neighbor"
+scope = "bfd.options"
+selectors = [["neighbor"]]
+merge = "replace"
+collection = true
+
+[[projections]]
+id = "bmp.station"
+scope = "bmp.options"
+selectors = [["station", "address"]]
+merge = "fields"
+
+[[projections]]
+id = "rpki.remote"
+scope = "rpki.options"
+selectors = [["remote"]]
+merge = "replace"
+fields = { "address-or-string" = "address" }
+
+[[effects]]
+scope = "bgp.options"
+selector = ["local"]
+path = ["local", "address"]
+target = ["source-address"]
+storage = "BGP_CFG->local_ip"
+
+[[effects]]
+scope = "bgp.options"
+selector = ["source", "address"]
+path = ["source-address"]
+target = ["source-address"]
+storage = "BGP_CFG->local_ip"
+
+[[effects]]
+scope = "bgp.options"
+selector = ["direct"]
+path = ["direct"]
+clears = [["multihop"]]
+storage = "BGP_CFG->multihop"
+
+[[effects]]
+scope = "bgp.options"
+selector = ["multihop"]
+path = ["multihop"]
+clears = [["direct"]]
+storage = "BGP_CFG->multihop"
+
+[[effects]]
+scope = "bgp.neighbor-options"
+selector = ["internal"]
+path = ["internal"]
+clears = [["external"]]
+storage = "BGP_CFG->peer_type"
+
+[[effects]]
+scope = "bgp.neighbor-options"
+selector = ["external"]
+path = ["external"]
+clears = [["internal"]]
+storage = "BGP_CFG->peer_type"
+
+[copy_fields.bfd]
+patt_list = ["interface"]
+neigh_list = ["neighbor"]
+
+[copy_fields.radv]
+patt_list = ["interface"]
+
+[[constructors]]
+id = "tuple"
+binding = "constant.constructor"
+arguments = ["constant.expression", "constant.expression"]
+
+[[constructors]]
+id = "tuple"
+binding = "constant.constructor"
+arguments = [
+  "constant.expression",
+  "constant.expression",
+  "constant.expression",
+]
+
+[[constructors]]
+id = "ec"
+binding = "constant.constructor"
+arguments = ["constant.ec-kind", "constant.expression", "constant.expression"]
