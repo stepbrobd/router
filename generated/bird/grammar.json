@@ -3,7 +3,7 @@
   "compiler_version": "2026.1115.0",
   "source": {
     "version": "3.4.0",
-    "fingerprint": "bbb5e4948022845f64fd058a64161ca5b2ee18ff2ecb0d5127f30424679eb442",
+    "fingerprint": "68a1774f2f694836db9a4fa09ded5a7a3edc6fc740d04a2900814559a3832642",
     "fingerprint_algorithm": "sha256",
     "target": "linux",
     "license": "GPL-2.0-or-later",
@@ -101,7 +101,7 @@
       },
       {
         "path": "configure.ac",
-        "sha256": "338b4ef06254e94904548865bcf844be45a1467ee1a3a99feb7c4773eafef8ca"
+        "sha256": "622eb6043fca6d5b10be863159687d167e1226b2d17b4873e2046124f0eaa45e"
       },
       {
         "path": "doc/Makefile",
@@ -121,7 +121,7 @@
       },
       {
         "path": "filter/f-inst.c",
-        "sha256": "53a1c2021574ceb772c2d7bcd31c8e90185a26f37b70b8d88439daa1743702cc"
+        "sha256": "44b34b66f2ee2d8459b4375ecfd1ef590dc06e00537fa9949db47e3c5ea36a16"
       },
       {
         "path": "filter/f-util.c",
@@ -145,7 +145,7 @@
       },
       {
         "path": "filter/trie.c",
-        "sha256": "6a4d6ce371bdb1d47cb5d770fb3d9f8b77a1579cdf7b35f0dc72c8755413579c"
+        "sha256": "c9ea4808381014bff43d4c0638ed7c3f0de3ff60eebc77ac6c77ed747e0cd6f7"
       },
       {
         "path": "filter/trie_test.c",
@@ -189,7 +189,7 @@
       },
       {
         "path": "nest/mpls.c",
-        "sha256": "9217f6b59f0154abc7c3e3e6605f9e48afcd2f384c60c46857a3f007e819ae5c"
+        "sha256": "ea5516a906877ccb76ed7127aafd0e1714f03a74ad7ce4aa858193652eb97c0e"
       },
       {
         "path": "nest/neighbor.c",
@@ -209,7 +209,7 @@
       },
       {
         "path": "nest/rt-attr.c",
-        "sha256": "3ccc889e0257235c72e551addbe725ebda09937a078fbbcd8b668c29244cfe9a"
+        "sha256": "482075424c192fa106e2dc77e0a8ab10b0eac3869d5b3de6ec6cf344ff5f3525"
       },
       {
         "path": "nest/rt-dev.c",
@@ -233,7 +233,7 @@
       },
       {
         "path": "nest/rt-table.c",
-        "sha256": "1e0dd198e130cc176e33573953ca34d1165b061a861eca972cc7d959c8c40425"
+        "sha256": "e22b4ead5f6fb941bf9bcbafb9926a07727d0d5dee0ad2ad1dff0b35cf7075b6"
       },
       {
         "path": "proto/aggregator/Makefile",
@@ -253,7 +253,7 @@
       },
       {
         "path": "proto/babel/babel.c",
-        "sha256": "008d40fa9d6bfb0f39b05e82e1e1433db85b600137fb7aa4b17988dc3880418f"
+        "sha256": "3a64fac0efdc55be9c92f53c517c507a4838d830ccd92681d9710af34899f913"
       },
       {
         "path": "proto/babel/config.Y",
@@ -261,7 +261,7 @@
       },
       {
         "path": "proto/babel/packets.c",
-        "sha256": "d5ac04ebe22f89e56f02b035c63cfad11c526871e101c2477811dd1684966dae"
+        "sha256": "04295fe08cc3f7f54ad1f931e5b5939fe46675f90d727e6d5a9a898c3c0beffa"
       },
       {
         "path": "proto/bfd/Makefile",
@@ -289,7 +289,7 @@
       },
       {
         "path": "proto/bgp/bgp.c",
-        "sha256": "d1e021b1f5a859fb978392c4b5fda7b57e2bf6a937629d1dd85efc8598933e1f"
+        "sha256": "6d0a6b4c7d006ccab94935125c9b28a8930271ac23cc15a8420fecd6f835334e"
       },
       {
         "path": "proto/bgp/config.Y",
@@ -297,7 +297,7 @@
       },
       {
         "path": "proto/bgp/packets.c",
-        "sha256": "d115868c9e030391ecaafadc0246c496840b8aa8402684e85d0858bf189f04ac"
+        "sha256": "adefbf33865bc10df4c758d902c866d8e2c75cbf649d4ebd3829432bf7d7e58c"
       },
       {
         "path": "proto/bmp/Makefile",
@@ -305,7 +305,7 @@
       },
       {
         "path": "proto/bmp/bmp.c",
-        "sha256": "624b268424a9ebfeb6893d6903c7234420fd6c95377b02152456b48935823a96"
+        "sha256": "b707019fd19a2dba2bc79c2d90a4e68197c7d912a5187d586684935cc4970ec7"
       },
       {
         "path": "proto/bmp/config.Y",
@@ -317,7 +317,7 @@
       },
       {
         "path": "proto/bridge/bridge.c",
-        "sha256": "0af685f2013c4ab56a160547285d2e85653bd2b4de7721a2a4429462dea47b2c"
+        "sha256": "914fd71665648d432e18e4ffcddb730756763cb963d29a96a435cb29792b307f"
       },
       {
         "path": "proto/bridge/config.Y",
@@ -333,7 +333,7 @@
       },
       {
         "path": "proto/evpn/evpn.c",
-        "sha256": "81e8947bd2711ed2304e7c278186af94dda83befba43c190ef6468a9e28f6cef"
+        "sha256": "83b170143ce9a70f1718a88ecd82d841ac78d201bba15daac8490a28a590e1e2"
       },
       {
         "path": "proto/l3vpn/Makefile",
@@ -345,7 +345,7 @@
       },
       {
         "path": "proto/l3vpn/l3vpn.c",
-        "sha256": "3d7f299914c28c46bb719faa4957c2f0251af5d967b5b83e25d701dd036028b8"
+        "sha256": "d1e69cc17107bd9206454074302f867c099f75bf7cc8a3a3d117df267304b5ad"
       },
       {
         "path": "proto/mrt/Makefile",
@@ -365,7 +365,7 @@
       },
       {
         "path": "proto/ospf/config.Y",
-        "sha256": "e3d1f02e35b631b26a6eed8999f7f1ac31c81f5dfc8659ab098db858411a28de"
+        "sha256": "03c526da85116ef84672415fc7a5f9fbcf5dd19160dd68859414eee9a248638b"
       },
       {
         "path": "proto/ospf/dbdes.c",
@@ -373,15 +373,15 @@
       },
       {
         "path": "proto/ospf/hello.c",
-        "sha256": "da9736639c0e1cf6e064c187ab723149e24f6165b3cc9ee2f2c5dbea47984ef8"
+        "sha256": "2508d38752c7551cffc55fcc8ba33128beb2a22ce3054851d9971a39cf3e1e01"
       },
       {
         "path": "proto/ospf/iface.c",
-        "sha256": "0e044297a626e55c354dca88185e6215196db09113b642d2c7bd687973341ede"
+        "sha256": "d238a5b9a560899b8ea862949544f4e9e92638037326e26656a172e139578e6d"
       },
       {
         "path": "proto/ospf/lsack.c",
-        "sha256": "867fdeb6466d155a46ebe347a4d7ea82a2d8b51b283b218b0d517367bd7c5c79"
+        "sha256": "a2d2cee01bf2e9b5494441ae803dfc6141faa1765e370214808796fe78cf1fd3"
       },
       {
         "path": "proto/ospf/lsalib.c",
@@ -393,27 +393,27 @@
       },
       {
         "path": "proto/ospf/lsupd.c",
-        "sha256": "9f7c3e548f02f4ee321f6af9106af0edd099781f57ec7653bb40e52c6a88802c"
+        "sha256": "67fd6845b695e5107f192d339c06f02c37d0922569dd96c555869816a6919f11"
       },
       {
         "path": "proto/ospf/neighbor.c",
-        "sha256": "82f218063f04155e27b3bc78be0e87a92825770a6fddd52f21e2fa123e054b59"
+        "sha256": "f6dae445e8e8086313678776245fb59d596211ee83ac01e1514a62c313b3217d"
       },
       {
         "path": "proto/ospf/ospf.c",
-        "sha256": "6cd8c422cccdca780b138c860b0a5ed21c75ef852db507770934206a6ff4a2f3"
+        "sha256": "37b9a0cd263238cbb01f41dc15aa428f3ef5177b1fceede2c5f36796bc1c7db0"
       },
       {
         "path": "proto/ospf/packet.c",
-        "sha256": "28a462b724fc82911d96532c4cf494be18836c8da613e817d00e4e7805f4930e"
+        "sha256": "20e8f74077b907e6152552dd84060def05a96d0cbae8cb07ae66adc8fcf261bc"
       },
       {
         "path": "proto/ospf/rt.c",
-        "sha256": "48e75e8248b0944f2f93560ecf138ee2b60bee8388ad68e9cb91a68d32ea82a8"
+        "sha256": "86dcd91b1b1d1ae957970fe73b0671fd0704a67efc6af0403a215ecdc7def603"
       },
       {
         "path": "proto/ospf/topology.c",
-        "sha256": "39ab1d4c62650adad4cff0b01e90f25389e5b41eeaaf0170f726f5a083ffa1fb"
+        "sha256": "b5995ed2222f0ef55694c32af38daac71f8e3d2460e455298be3178ca4992ea0"
       },
       {
         "path": "proto/pipe/Makefile",
@@ -441,7 +441,7 @@
       },
       {
         "path": "proto/radv/radv.c",
-        "sha256": "bca706f083eed8b6253d04f88769c433e72d58240f1a327985776830eb82c2b4"
+        "sha256": "b1e0e587145d367fe2e1e90ddaa487729f6c9857cb83c1f165e3290cc9e45498"
       },
       {
         "path": "proto/rip/Makefile",
@@ -449,7 +449,7 @@
       },
       {
         "path": "proto/rip/config.Y",
-        "sha256": "ec99c89af1b4f0cd691e5e4da88f6304ac7f44078fb8c03c26dce1349f592250"
+        "sha256": "2ae2815ca4f7a75f4ffbe30da63baa5ecf08ab6ad388546a350a23aade4f56aa"
       },
       {
         "path": "proto/rip/packets.c",
@@ -457,7 +457,7 @@
       },
       {
         "path": "proto/rip/rip.c",
-        "sha256": "380ef462d22bb05a60695a9a09d0c93d6a40b64b5a379300870de4c906c4b54a"
+        "sha256": "272ea50c2257485edc3432ee4ce8e9dfbe79c3e02186c638039753e5dc07057a"
       },
       {
         "path": "proto/rpki/Makefile",
@@ -469,7 +469,7 @@
       },
       {
         "path": "proto/rpki/packets.c",
-        "sha256": "b815aa345aff1256a99e0b17fb7c58e49600f160bfc22b73510f2a010f225049"
+        "sha256": "1efd7ffc7d8693ce05a0aa974e9242ce92159a771a578d0d9ed0e42fee186358"
       },
       {
         "path": "proto/rpki/rpki.c",
@@ -513,7 +513,7 @@
       },
       {
         "path": "sysdep/linux/netlink.c",
-        "sha256": "31b11c357536e1ca514719dd8b0a9ff0885086b04a8fd4f3ccb659f3f78dcedf"
+        "sha256": "a4fd6af6a1f1c4567caa89e89d7f1626b81751f149c5610c3f3f68acbfd6bf09"
       },
       {
         "path": "sysdep/unix/Makefile",
@@ -537,11 +537,11 @@
       },
       {
         "path": "sysdep/unix/io-loop.c",
-        "sha256": "7c994ebb6906708a5d94b05ce1ee6cbe1d0b7b6b28ca27a3bcebeafe039ad4b9"
+        "sha256": "aac8408ca537a9d9d6cf12a774d87c93248d4da0b731425784e38568241195a2"
       },
       {
         "path": "sysdep/unix/io.c",
-        "sha256": "2f229d848c8130f60f00830780e3b25689c5fbc144f0ad15c825cdfa000ea9db"
+        "sha256": "fa1068102b4087bc006b412a972241efdb2fd692fb375da182bf5cd7faceefe6"
       },
       {
         "path": "sysdep/unix/krt.Y",
@@ -549,7 +549,7 @@
       },
       {
         "path": "sysdep/unix/krt.c",
-        "sha256": "da3ab8eabc358b3bbd5e3b0839bcc8ff1e46cf67c8a0105cf71dbc9b788e130f"
+        "sha256": "c0a3128af9a23ee582210581ecca63f0251be27f9afd36ddc4ee6976afe90ad8"
       },
       {
         "path": "sysdep/unix/log.c",
@@ -6397,7 +6397,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 194
+              "line": 192
             }
           },
           {
@@ -6411,7 +6411,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 195
+              "line": 193
             }
           },
           {
@@ -6425,7 +6425,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 196
+              "line": 194
             }
           },
           {
@@ -6439,7 +6439,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 197
+              "line": 195
             }
           },
           {
@@ -6453,7 +6453,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 198
+              "line": 196
             }
           },
           {
@@ -6467,7 +6467,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 199
+              "line": 197
             }
           },
           {
@@ -6481,7 +6481,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 200
+              "line": 198
             }
           },
           {
@@ -6495,7 +6495,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 201
+              "line": 199
             }
           },
           {
@@ -6509,7 +6509,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 202
+              "line": 200
             }
           },
           {
@@ -6523,7 +6523,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 203
+              "line": 201
             }
           },
           {
@@ -6537,7 +6537,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 204
+              "line": 202
             }
           },
           {
@@ -6551,7 +6551,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 197
+              "line": 195
             }
           },
           {
@@ -6565,7 +6565,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 198
+              "line": 196
             }
           },
           {
@@ -6579,7 +6579,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 199
+              "line": 197
             }
           },
           {
@@ -6593,7 +6593,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 200
+              "line": 198
             }
           },
           {
@@ -6607,7 +6607,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 201
+              "line": 199
             }
           },
           {
@@ -6621,7 +6621,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 202
+              "line": 200
             }
           },
           {
@@ -6635,7 +6635,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 203
+              "line": 201
             }
           },
           {
@@ -6649,7 +6649,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 199
+              "line": 197
             }
           },
           {
@@ -6663,7 +6663,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 200
+              "line": 198
             }
           },
           {
@@ -6677,7 +6677,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 201
+              "line": 199
             }
           },
           {
@@ -6691,7 +6691,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 202
+              "line": 200
             }
           },
           {
@@ -6705,7 +6705,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 203
+              "line": 201
             }
           },
           {
@@ -6719,7 +6719,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 204
+              "line": 202
             }
           },
           {
@@ -6733,7 +6733,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 205
+              "line": 203
             }
           },
           {
@@ -6747,7 +6747,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 206
+              "line": 204
             }
           },
           {
@@ -6761,7 +6761,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 207
+              "line": 205
             }
           },
           {
@@ -6775,7 +6775,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 208
+              "line": 206
             }
           },
           {
@@ -6789,7 +6789,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 209
+              "line": 207
             }
           },
           {
@@ -6803,7 +6803,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 210
+              "line": 208
             }
           },
           {
@@ -6817,7 +6817,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 211
+              "line": 209
             }
           },
           {
@@ -6831,7 +6831,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 212
+              "line": 210
             }
           },
           {
@@ -6845,7 +6845,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 213
+              "line": 211
             }
           },
           {
@@ -6859,7 +6859,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 214
+              "line": 212
             }
           },
           {
@@ -6873,7 +6873,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 215
+              "line": 213
             }
           },
           {
@@ -6887,7 +6887,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 216
+              "line": 214
             }
           },
           {
@@ -6901,7 +6901,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 217
+              "line": 215
             }
           },
           {
@@ -6915,7 +6915,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 218
+              "line": 216
             }
           },
           {
@@ -6929,7 +6929,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 219
+              "line": 217
             }
           },
           {
@@ -6943,7 +6943,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 220
+              "line": 218
             }
           },
           {
@@ -6957,7 +6957,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 221
+              "line": 219
             }
           },
           {
@@ -6971,7 +6971,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 522
+              "line": 520
             }
           },
           {
@@ -6985,7 +6985,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 530
+              "line": 528
             }
           },
           {
@@ -6999,7 +6999,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 567
+              "line": 565
             }
           },
           {
@@ -35614,7 +35614,7 @@
                 "position": 0,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 450
+                  "line": 448
                 },
                 "storage": [
                   "$$"
@@ -35624,7 +35624,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 449
+              "line": 447
             }
           },
           {
@@ -35640,7 +35640,7 @@
                 "position": 1,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 451
+                  "line": 449
                 },
                 "storage": [
                   "$$"
@@ -35650,13 +35650,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 451
+              "line": 449
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 449
+          "line": 447
         }
       },
       "nbma_item": {
@@ -35683,7 +35683,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 455
+                  "line": 453
                 },
                 "storage": [
                   "this_nbma",
@@ -35695,13 +35695,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 454
+              "line": 452
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 454
+          "line": 452
         }
       },
       "nbma_list": {
@@ -35713,7 +35713,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 444
+              "line": 442
             }
           },
           {
@@ -35731,13 +35731,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 446
+              "line": 444
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 444
+          "line": 442
         }
       },
       "nbrs_channel": {
@@ -37849,7 +37849,7 @@
                 "position": 0,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 241
+                  "line": 239
                 },
                 "storage": [
                   "$$"
@@ -37859,7 +37859,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 240
+              "line": 238
             }
           },
           {
@@ -37875,7 +37875,7 @@
                 "position": 1,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 242
+                  "line": 240
                 },
                 "storage": [
                   "$$"
@@ -37885,13 +37885,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 242
+              "line": 240
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 240
+          "line": 238
         }
       },
       "ospf_area": {
@@ -37922,7 +37922,7 @@
                 "position": 4,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 290
+                  "line": 288
                 },
                 "storage": [],
                 "symbol_classes": []
@@ -37930,13 +37930,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 290
+              "line": 288
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 290
+          "line": 288
         }
       },
       "ospf_area_item": {
@@ -37959,7 +37959,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 299
+                  "line": 297
                 },
                 "storage": [
                   "this_area->type"
@@ -37969,7 +37969,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 298
+              "line": 296
             }
           },
           {
@@ -37985,7 +37985,7 @@
                 "position": 1,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 300
+                  "line": 298
                 },
                 "storage": [
                   "this_area->type"
@@ -37995,7 +37995,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 300
+              "line": 298
             }
           },
           {
@@ -38015,7 +38015,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 301
+                  "line": 299
                 },
                 "storage": [
                   "this_area->summary"
@@ -38025,7 +38025,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 301
+              "line": 299
             }
           },
           {
@@ -38049,10 +38049,78 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 302
+                  "line": 300
                 },
                 "storage": [
                   "this_area->default_nssa"
+                ],
+                "symbol_classes": []
+              }
+            ],
+            "source": {
+              "file": "proto/ospf/config.Y",
+              "line": 300
+            }
+          },
+          {
+            "symbols": [
+              {
+                "kind": "reference",
+                "value": "DEFAULT"
+              },
+              {
+                "kind": "reference",
+                "value": "COST"
+              },
+              {
+                "kind": "reference",
+                "value": "expr"
+              }
+            ],
+            "precedence": null,
+            "actions": [
+              {
+                "position": 3,
+                "source": {
+                  "file": "proto/ospf/config.Y",
+                  "line": 301
+                },
+                "storage": [
+                  "this_area->default_cost"
+                ],
+                "symbol_classes": []
+              }
+            ],
+            "source": {
+              "file": "proto/ospf/config.Y",
+              "line": 301
+            }
+          },
+          {
+            "symbols": [
+              {
+                "kind": "reference",
+                "value": "DEFAULT"
+              },
+              {
+                "kind": "reference",
+                "value": "COST2"
+              },
+              {
+                "kind": "reference",
+                "value": "expr"
+              }
+            ],
+            "precedence": null,
+            "actions": [
+              {
+                "position": 3,
+                "source": {
+                  "file": "proto/ospf/config.Y",
+                  "line": 302
+                },
+                "storage": [
+                  "this_area->default_cost"
                 ],
                 "symbol_classes": []
               }
@@ -38066,7 +38134,7 @@
             "symbols": [
               {
                 "kind": "reference",
-                "value": "DEFAULT"
+                "value": "STUB"
               },
               {
                 "kind": "reference",
@@ -38100,74 +38168,6 @@
             "symbols": [
               {
                 "kind": "reference",
-                "value": "DEFAULT"
-              },
-              {
-                "kind": "reference",
-                "value": "COST2"
-              },
-              {
-                "kind": "reference",
-                "value": "expr"
-              }
-            ],
-            "precedence": null,
-            "actions": [
-              {
-                "position": 3,
-                "source": {
-                  "file": "proto/ospf/config.Y",
-                  "line": 304
-                },
-                "storage": [
-                  "this_area->default_cost"
-                ],
-                "symbol_classes": []
-              }
-            ],
-            "source": {
-              "file": "proto/ospf/config.Y",
-              "line": 304
-            }
-          },
-          {
-            "symbols": [
-              {
-                "kind": "reference",
-                "value": "STUB"
-              },
-              {
-                "kind": "reference",
-                "value": "COST"
-              },
-              {
-                "kind": "reference",
-                "value": "expr"
-              }
-            ],
-            "precedence": null,
-            "actions": [
-              {
-                "position": 3,
-                "source": {
-                  "file": "proto/ospf/config.Y",
-                  "line": 305
-                },
-                "storage": [
-                  "this_area->default_cost"
-                ],
-                "symbol_classes": []
-              }
-            ],
-            "source": {
-              "file": "proto/ospf/config.Y",
-              "line": 305
-            }
-          },
-          {
-            "symbols": [
-              {
-                "kind": "reference",
                 "value": "TRANSLATOR"
               },
               {
@@ -38181,7 +38181,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 306
+                  "line": 304
                 },
                 "storage": [
                   "this_area->translator"
@@ -38191,7 +38191,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 306
+              "line": 304
             }
           },
           {
@@ -38215,7 +38215,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 307
+                  "line": 305
                 },
                 "storage": [
                   "this_area->transint"
@@ -38225,7 +38225,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 307
+              "line": 305
             }
           },
           {
@@ -38253,7 +38253,7 @@
                 "position": 1,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 308
+                  "line": 306
                 },
                 "storage": [
                   "this_nets"
@@ -38263,7 +38263,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 308
+              "line": 306
             }
           },
           {
@@ -38291,7 +38291,7 @@
                 "position": 1,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 309
+                  "line": 307
                 },
                 "storage": [
                   "this_nets"
@@ -38301,7 +38301,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 309
+              "line": 307
             }
           },
           {
@@ -38319,7 +38319,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 310
+              "line": 308
             }
           },
           {
@@ -38337,7 +38337,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 311
+              "line": 309
             }
           },
           {
@@ -38351,13 +38351,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 312
+              "line": 310
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 298
+          "line": 296
         }
       },
       "ospf_area_opts": {
@@ -38369,7 +38369,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 293
+              "line": 291
             }
           },
           {
@@ -38391,13 +38391,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 295
+              "line": 293
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 293
+          "line": 291
         }
       },
       "ospf_area_start": {
@@ -38420,7 +38420,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 275
+                  "line": 273
                 },
                 "storage": [
                   "this_area",
@@ -38434,13 +38434,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 275
+              "line": 273
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 275
+          "line": 273
         }
       },
       "ospf_channel": {
@@ -38465,13 +38465,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 255
+              "line": 253
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 255
+          "line": 253
         }
       },
       "ospf_channel_start": {
@@ -38494,7 +38494,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 247
+                  "line": 245
                 },
                 "storage": [
                   "$$",
@@ -38506,13 +38506,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 246
+              "line": 244
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 246
+          "line": 244
         }
       },
       "ospf_iface": {
@@ -38539,7 +38539,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 507
+                  "line": 505
                 },
                 "storage": [],
                 "symbol_classes": []
@@ -38547,13 +38547,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 506
+              "line": 504
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 506
+          "line": 504
         }
       },
       "ospf_iface_item": {
@@ -38576,7 +38576,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 382
+                  "line": 380
                 },
                 "storage": [
                   "OSPF_PATT->cost"
@@ -38586,7 +38586,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 381
+              "line": 379
             }
           },
           {
@@ -38606,7 +38606,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 383
+                  "line": 381
                 },
                 "storage": [
                   "OSPF_PATT->helloint"
@@ -38616,7 +38616,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 383
+              "line": 381
             }
           },
           {
@@ -38636,7 +38636,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 384
+                  "line": 382
                 },
                 "storage": [
                   "OSPF_PATT->pollint"
@@ -38646,7 +38646,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 384
+              "line": 382
             }
           },
           {
@@ -38666,7 +38666,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 385
+                  "line": 383
                 },
                 "storage": [
                   "OSPF_PATT->rxmtint"
@@ -38676,7 +38676,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 385
+              "line": 383
             }
           },
           {
@@ -38696,7 +38696,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 386
+                  "line": 384
                 },
                 "storage": [
                   "OSPF_PATT->waitint"
@@ -38706,7 +38706,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 386
+              "line": 384
             }
           },
           {
@@ -38726,7 +38726,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 387
+                  "line": 385
                 },
                 "storage": [
                   "OSPF_PATT->deadint"
@@ -38736,7 +38736,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 387
+              "line": 385
             }
           },
           {
@@ -38760,10 +38760,70 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 388
+                  "line": 386
                 },
                 "storage": [
                   "OSPF_PATT->deadc"
+                ],
+                "symbol_classes": []
+              }
+            ],
+            "source": {
+              "file": "proto/ospf/config.Y",
+              "line": 386
+            }
+          },
+          {
+            "symbols": [
+              {
+                "kind": "reference",
+                "value": "TYPE"
+              },
+              {
+                "kind": "reference",
+                "value": "BROADCAST"
+              }
+            ],
+            "precedence": null,
+            "actions": [
+              {
+                "position": 2,
+                "source": {
+                  "file": "proto/ospf/config.Y",
+                  "line": 387
+                },
+                "storage": [
+                  "OSPF_PATT->type"
+                ],
+                "symbol_classes": []
+              }
+            ],
+            "source": {
+              "file": "proto/ospf/config.Y",
+              "line": 387
+            }
+          },
+          {
+            "symbols": [
+              {
+                "kind": "reference",
+                "value": "TYPE"
+              },
+              {
+                "kind": "reference",
+                "value": "BCAST"
+              }
+            ],
+            "precedence": null,
+            "actions": [
+              {
+                "position": 2,
+                "source": {
+                  "file": "proto/ospf/config.Y",
+                  "line": 388
+                },
+                "storage": [
+                  "OSPF_PATT->type"
                 ],
                 "symbol_classes": []
               }
@@ -38781,7 +38841,7 @@
               },
               {
                 "kind": "reference",
-                "value": "BROADCAST"
+                "value": "NONBROADCAST"
               }
             ],
             "precedence": null,
@@ -38811,7 +38871,7 @@
               },
               {
                 "kind": "reference",
-                "value": "BCAST"
+                "value": "NBMA"
               }
             ],
             "precedence": null,
@@ -38841,7 +38901,7 @@
               },
               {
                 "kind": "reference",
-                "value": "NONBROADCAST"
+                "value": "POINTOPOINT"
               }
             ],
             "precedence": null,
@@ -38871,7 +38931,7 @@
               },
               {
                 "kind": "reference",
-                "value": "NBMA"
+                "value": "PTP"
               }
             ],
             "precedence": null,
@@ -38901,7 +38961,7 @@
               },
               {
                 "kind": "reference",
-                "value": "POINTOPOINT"
+                "value": "POINTOMULTIPOINT"
               }
             ],
             "precedence": null,
@@ -38931,7 +38991,7 @@
               },
               {
                 "kind": "reference",
-                "value": "PTP"
+                "value": "PTMP"
               }
             ],
             "precedence": null,
@@ -38957,66 +39017,6 @@
             "symbols": [
               {
                 "kind": "reference",
-                "value": "TYPE"
-              },
-              {
-                "kind": "reference",
-                "value": "POINTOMULTIPOINT"
-              }
-            ],
-            "precedence": null,
-            "actions": [
-              {
-                "position": 2,
-                "source": {
-                  "file": "proto/ospf/config.Y",
-                  "line": 395
-                },
-                "storage": [
-                  "OSPF_PATT->type"
-                ],
-                "symbol_classes": []
-              }
-            ],
-            "source": {
-              "file": "proto/ospf/config.Y",
-              "line": 395
-            }
-          },
-          {
-            "symbols": [
-              {
-                "kind": "reference",
-                "value": "TYPE"
-              },
-              {
-                "kind": "reference",
-                "value": "PTMP"
-              }
-            ],
-            "precedence": null,
-            "actions": [
-              {
-                "position": 2,
-                "source": {
-                  "file": "proto/ospf/config.Y",
-                  "line": 396
-                },
-                "storage": [
-                  "OSPF_PATT->type"
-                ],
-                "symbol_classes": []
-              }
-            ],
-            "source": {
-              "file": "proto/ospf/config.Y",
-              "line": 396
-            }
-          },
-          {
-            "symbols": [
-              {
-                "kind": "reference",
                 "value": "REAL"
               },
               {
@@ -39034,7 +39034,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 397
+                  "line": 395
                 },
                 "storage": [
                   "OSPF_PATT->real_bcast"
@@ -39044,7 +39044,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 397
+              "line": 395
             }
           },
           {
@@ -39068,7 +39068,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 398
+                  "line": 396
                 },
                 "storage": [
                   "OSPF_PATT->ptp_netmask"
@@ -39078,7 +39078,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 398
+              "line": 396
             }
           },
           {
@@ -39102,7 +39102,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 399
+                  "line": 397
                 },
                 "storage": [
                   "OSPF_PATT->ptp_address"
@@ -39112,7 +39112,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 399
+              "line": 397
             }
           },
           {
@@ -39136,7 +39136,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 400
+                  "line": 398
                 },
                 "storage": [
                   "OSPF_PATT->inftransdelay"
@@ -39146,7 +39146,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 400
+              "line": 398
             }
           },
           {
@@ -39166,7 +39166,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 401
+                  "line": 399
                 },
                 "storage": [
                   "OSPF_PATT->priority"
@@ -39176,7 +39176,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 401
+              "line": 399
             }
           },
           {
@@ -39200,7 +39200,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 402
+                  "line": 400
                 },
                 "storage": [
                   "OSPF_PATT->strictnbma"
@@ -39210,7 +39210,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 402
+              "line": 400
             }
           },
           {
@@ -39230,7 +39230,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 403
+                  "line": 401
                 },
                 "storage": [
                   "OSPF_PATT->stub"
@@ -39240,7 +39240,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 403
+              "line": 401
             }
           },
           {
@@ -39264,7 +39264,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 404
+                  "line": 402
                 },
                 "storage": [
                   "OSPF_PATT->check_link"
@@ -39274,7 +39274,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 404
+              "line": 402
             }
           },
           {
@@ -39298,7 +39298,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 405
+                  "line": 403
                 },
                 "storage": [
                   "OSPF_PATT->ecmp_weight"
@@ -39308,7 +39308,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 405
+              "line": 403
             }
           },
           {
@@ -39336,7 +39336,7 @@
                 "position": 4,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 406
+                  "line": 404
                 },
                 "storage": [
                   "OSPF_PATT->link_lsa_suppression"
@@ -39346,7 +39346,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 406
+              "line": 404
             }
           },
           {
@@ -39372,7 +39372,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 407
+              "line": 405
             }
           },
           {
@@ -39384,6 +39384,66 @@
               {
                 "kind": "reference",
                 "value": "NONE"
+              }
+            ],
+            "precedence": null,
+            "actions": [
+              {
+                "position": 2,
+                "source": {
+                  "file": "proto/ospf/config.Y",
+                  "line": 406
+                },
+                "storage": [
+                  "OSPF_PATT->autype"
+                ],
+                "symbol_classes": []
+              }
+            ],
+            "source": {
+              "file": "proto/ospf/config.Y",
+              "line": 406
+            }
+          },
+          {
+            "symbols": [
+              {
+                "kind": "reference",
+                "value": "AUTHENTICATION"
+              },
+              {
+                "kind": "reference",
+                "value": "SIMPLE"
+              }
+            ],
+            "precedence": null,
+            "actions": [
+              {
+                "position": 2,
+                "source": {
+                  "file": "proto/ospf/config.Y",
+                  "line": 407
+                },
+                "storage": [
+                  "OSPF_PATT->autype"
+                ],
+                "symbol_classes": []
+              }
+            ],
+            "source": {
+              "file": "proto/ospf/config.Y",
+              "line": 407
+            }
+          },
+          {
+            "symbols": [
+              {
+                "kind": "reference",
+                "value": "AUTHENTICATION"
+              },
+              {
+                "kind": "reference",
+                "value": "CRYPTOGRAPHIC"
               }
             ],
             "precedence": null,
@@ -39409,23 +39469,27 @@
             "symbols": [
               {
                 "kind": "reference",
-                "value": "AUTHENTICATION"
+                "value": "RX"
               },
               {
                 "kind": "reference",
-                "value": "SIMPLE"
+                "value": "BUFFER"
+              },
+              {
+                "kind": "reference",
+                "value": "NORMAL"
               }
             ],
             "precedence": null,
             "actions": [
               {
-                "position": 2,
+                "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
                   "line": 409
                 },
                 "storage": [
-                  "OSPF_PATT->autype"
+                  "OSPF_PATT->rx_buffer"
                 ],
                 "symbol_classes": []
               }
@@ -39439,23 +39503,27 @@
             "symbols": [
               {
                 "kind": "reference",
-                "value": "AUTHENTICATION"
+                "value": "RX"
               },
               {
                 "kind": "reference",
-                "value": "CRYPTOGRAPHIC"
+                "value": "BUFFER"
+              },
+              {
+                "kind": "reference",
+                "value": "LARGE"
               }
             ],
             "precedence": null,
             "actions": [
               {
-                "position": 2,
+                "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
                   "line": 410
                 },
                 "storage": [
-                  "OSPF_PATT->autype"
+                  "OSPF_PATT->rx_buffer"
                 ],
                 "symbol_classes": []
               }
@@ -39477,7 +39545,7 @@
               },
               {
                 "kind": "reference",
-                "value": "NORMAL"
+                "value": "expr"
               }
             ],
             "precedence": null,
@@ -39503,74 +39571,6 @@
             "symbols": [
               {
                 "kind": "reference",
-                "value": "RX"
-              },
-              {
-                "kind": "reference",
-                "value": "BUFFER"
-              },
-              {
-                "kind": "reference",
-                "value": "LARGE"
-              }
-            ],
-            "precedence": null,
-            "actions": [
-              {
-                "position": 3,
-                "source": {
-                  "file": "proto/ospf/config.Y",
-                  "line": 412
-                },
-                "storage": [
-                  "OSPF_PATT->rx_buffer"
-                ],
-                "symbol_classes": []
-              }
-            ],
-            "source": {
-              "file": "proto/ospf/config.Y",
-              "line": 412
-            }
-          },
-          {
-            "symbols": [
-              {
-                "kind": "reference",
-                "value": "RX"
-              },
-              {
-                "kind": "reference",
-                "value": "BUFFER"
-              },
-              {
-                "kind": "reference",
-                "value": "expr"
-              }
-            ],
-            "precedence": null,
-            "actions": [
-              {
-                "position": 3,
-                "source": {
-                  "file": "proto/ospf/config.Y",
-                  "line": 413
-                },
-                "storage": [
-                  "OSPF_PATT->rx_buffer"
-                ],
-                "symbol_classes": []
-              }
-            ],
-            "source": {
-              "file": "proto/ospf/config.Y",
-              "line": 413
-            }
-          },
-          {
-            "symbols": [
-              {
-                "kind": "reference",
                 "value": "TX"
               },
               {
@@ -39584,7 +39584,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 414
+                  "line": 412
                 },
                 "storage": [
                   "OSPF_PATT->tx_tos"
@@ -39594,7 +39594,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 414
+              "line": 412
             }
           },
           {
@@ -39618,7 +39618,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 415
+                  "line": 413
                 },
                 "storage": [
                   "OSPF_PATT->tx_priority"
@@ -39628,7 +39628,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 415
+              "line": 413
             }
           },
           {
@@ -39652,7 +39652,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 416
+                  "line": 414
                 },
                 "storage": [
                   "OSPF_PATT->tx_length"
@@ -39662,7 +39662,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 416
+              "line": 414
             }
           },
           {
@@ -39686,7 +39686,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 417
+                  "line": 415
                 },
                 "storage": [
                   "OSPF_PATT->ttl_security"
@@ -39696,7 +39696,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 417
+              "line": 415
             }
           },
           {
@@ -39724,7 +39724,7 @@
                 "position": 4,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 418
+                  "line": 416
                 },
                 "storage": [
                   "OSPF_PATT->ttl_security"
@@ -39734,7 +39734,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 418
+              "line": 416
             }
           },
           {
@@ -39754,7 +39754,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 419
+                  "line": 417
                 },
                 "storage": [
                   "OSPF_PATT->bfd"
@@ -39764,7 +39764,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 419
+              "line": 417
             }
           },
           {
@@ -39778,13 +39778,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 420
+              "line": 418
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 381
+          "line": 379
         }
       },
       "ospf_iface_opt_list": {
@@ -39796,7 +39796,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 501
+              "line": 499
             }
           },
           {
@@ -39818,13 +39818,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 503
+              "line": 501
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 501
+          "line": 499
         }
       },
       "ospf_iface_opts": {
@@ -39836,7 +39836,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 496
+              "line": 494
             }
           },
           {
@@ -39858,13 +39858,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 498
+              "line": 496
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 496
+          "line": 494
         }
       },
       "ospf_iface_patt_list": {
@@ -39887,7 +39887,7 @@
                 "position": 1,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 493
+                  "line": 491
                 },
                 "storage": [],
                 "symbol_classes": []
@@ -39895,13 +39895,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 492
+              "line": 490
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 492
+          "line": 490
         }
       },
       "ospf_iface_start": {
@@ -39915,7 +39915,7 @@
                 "position": 0,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 464
+                  "line": 462
                 },
                 "storage": [
                   "OSPF_PATT->check_link",
@@ -39939,13 +39939,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 463
+              "line": 461
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 463
+          "line": 461
         }
       },
       "ospf_instance_id": {
@@ -39957,7 +39957,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 487
+              "line": 485
             }
           },
           {
@@ -39977,7 +39977,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 489
+                  "line": 487
                 },
                 "storage": [
                   "OSPF_PATT->instance_id",
@@ -39988,13 +39988,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 489
+              "line": 487
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 487
+          "line": 485
         }
       },
       "ospf_proto": {
@@ -40019,7 +40019,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 235
+              "line": 233
             }
           },
           {
@@ -40041,13 +40041,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 237
+              "line": 235
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 235
+          "line": 233
         }
       },
       "ospf_proto_item": {
@@ -40064,7 +40064,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 257
+              "line": 255
             }
           },
           {
@@ -40080,7 +40080,7 @@
                 "position": 1,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 259
+                  "line": 257
                 },
                 "storage": [
                   "this_proto->net_type"
@@ -40090,7 +40090,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 259
+              "line": 257
             }
           },
           {
@@ -40110,7 +40110,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 260
+                  "line": 258
                 },
                 "storage": [
                   "OSPF_CFG->rfc1583"
@@ -40120,7 +40120,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 260
+              "line": 258
             }
           },
           {
@@ -40140,7 +40140,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 261
+                  "line": 259
                 },
                 "storage": [
                   "OSPF_CFG->af_ext"
@@ -40150,7 +40150,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 261
+              "line": 259
             }
           },
           {
@@ -40174,7 +40174,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 262
+                  "line": 260
                 },
                 "storage": [
                   "OSPF_CFG->vpn_pe"
@@ -40184,7 +40184,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 262
+              "line": 260
             }
           },
           {
@@ -40208,7 +40208,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 263
+                  "line": 261
                 },
                 "storage": [
                   "OSPF_CFG->stub_router"
@@ -40218,7 +40218,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 263
+              "line": 261
             }
           },
           {
@@ -40242,7 +40242,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 264
+                  "line": 262
                 },
                 "storage": [
                   "OSPF_CFG->gr_mode"
@@ -40252,7 +40252,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 264
+              "line": 262
             }
           },
           {
@@ -40276,7 +40276,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 265
+                  "line": 263
                 },
                 "storage": [
                   "OSPF_CFG->gr_mode"
@@ -40286,7 +40286,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 265
+              "line": 263
             }
           },
           {
@@ -40314,7 +40314,7 @@
                 "position": 4,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 266
+                  "line": 264
                 },
                 "storage": [
                   "OSPF_CFG->gr_time"
@@ -40324,7 +40324,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 266
+              "line": 264
             }
           },
           {
@@ -40344,7 +40344,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 267
+                  "line": 265
                 },
                 "storage": [
                   "OSPF_CFG->ecmp"
@@ -40354,7 +40354,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 267
+              "line": 265
             }
           },
           {
@@ -40382,7 +40382,7 @@
                 "position": 4,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 268
+                  "line": 266
                 },
                 "storage": [
                   "OSPF_CFG->ecmp"
@@ -40392,7 +40392,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 268
+              "line": 266
             }
           },
           {
@@ -40416,7 +40416,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 269
+                  "line": 267
                 },
                 "storage": [
                   "OSPF_CFG->merge_external"
@@ -40426,7 +40426,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 269
+              "line": 267
             }
           },
           {
@@ -40446,7 +40446,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 270
+                  "line": 268
                 },
                 "storage": [
                   "OSPF_CFG->tick"
@@ -40456,7 +40456,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 270
+              "line": 268
             }
           },
           {
@@ -40480,7 +40480,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 271
+                  "line": 269
                 },
                 "storage": [
                   "OSPF_CFG->instance_id",
@@ -40491,7 +40491,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 271
+              "line": 269
             }
           },
           {
@@ -40505,13 +40505,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 272
+              "line": 270
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 257
+          "line": 255
         }
       },
       "ospf_proto_start": {
@@ -40534,7 +40534,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 221
+                  "line": 219
                 },
                 "storage": [
                   "OSPF_CFG->af_ext",
@@ -40551,13 +40551,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 220
+              "line": 218
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 220
+          "line": 218
         }
       },
       "ospf_stubnet": {
@@ -40586,7 +40586,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 315
+              "line": 313
             }
           },
           {
@@ -40600,13 +40600,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 317
+              "line": 315
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 315
+          "line": 313
         }
       },
       "ospf_stubnet_item": {
@@ -40629,7 +40629,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 335
+                  "line": 333
                 },
                 "storage": [
                   "this_stubnet->hidden"
@@ -40639,7 +40639,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 334
+              "line": 332
             }
           },
           {
@@ -40659,7 +40659,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 336
+                  "line": 334
                 },
                 "storage": [
                   "this_stubnet->summary"
@@ -40669,7 +40669,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 336
+              "line": 334
             }
           },
           {
@@ -40689,7 +40689,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 337
+                  "line": 335
                 },
                 "storage": [
                   "this_stubnet->cost"
@@ -40699,13 +40699,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 337
+              "line": 335
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 334
+          "line": 332
         }
       },
       "ospf_stubnet_opts": {
@@ -40717,7 +40717,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 329
+              "line": 327
             }
           },
           {
@@ -40739,13 +40739,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 331
+              "line": 329
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 329
+          "line": 327
         }
       },
       "ospf_stubnet_start": {
@@ -40764,7 +40764,7 @@
                 "position": 1,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 321
+                  "line": 319
                 },
                 "storage": [
                   "this_stubnet",
@@ -40776,13 +40776,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 320
+              "line": 318
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 320
+          "line": 318
         }
       },
       "ospf_variant": {
@@ -40801,7 +40801,37 @@
                 "position": 1,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 215
+                  "line": 213
+                },
+                "storage": [
+                  "$$"
+                ],
+                "symbol_classes": []
+              }
+            ],
+            "source": {
+              "file": "proto/ospf/config.Y",
+              "line": 212
+            }
+          },
+          {
+            "symbols": [
+              {
+                "kind": "reference",
+                "value": "OSPF"
+              },
+              {
+                "kind": "reference",
+                "value": "V2"
+              }
+            ],
+            "precedence": null,
+            "actions": [
+              {
+                "position": 2,
+                "source": {
+                  "file": "proto/ospf/config.Y",
+                  "line": 214
                 },
                 "storage": [
                   "$$"
@@ -40822,36 +40852,6 @@
               },
               {
                 "kind": "reference",
-                "value": "V2"
-              }
-            ],
-            "precedence": null,
-            "actions": [
-              {
-                "position": 2,
-                "source": {
-                  "file": "proto/ospf/config.Y",
-                  "line": 216
-                },
-                "storage": [
-                  "$$"
-                ],
-                "symbol_classes": []
-              }
-            ],
-            "source": {
-              "file": "proto/ospf/config.Y",
-              "line": 216
-            }
-          },
-          {
-            "symbols": [
-              {
-                "kind": "reference",
-                "value": "OSPF"
-              },
-              {
-                "kind": "reference",
                 "value": "V3"
               }
             ],
@@ -40861,7 +40861,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 217
+                  "line": 215
                 },
                 "storage": [
                   "$$"
@@ -40871,13 +40871,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 217
+              "line": 215
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 214
+          "line": 212
         }
       },
       "ospf_vlink": {
@@ -40912,7 +40912,7 @@
                 "position": 5,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 341
+                  "line": 339
                 },
                 "storage": [],
                 "symbol_classes": []
@@ -40920,7 +40920,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 340
+              "line": 338
             }
           },
           {
@@ -40940,7 +40940,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 342
+                  "line": 340
                 },
                 "storage": [],
                 "symbol_classes": []
@@ -40948,13 +40948,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 342
+              "line": 340
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 340
+          "line": 338
         }
       },
       "ospf_vlink_item": {
@@ -40966,7 +40966,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 350
+              "line": 348
             }
           },
           {
@@ -40986,7 +40986,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 351
+                  "line": 349
                 },
                 "storage": [
                   "OSPF_PATT->helloint"
@@ -40996,7 +40996,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 351
+              "line": 349
             }
           },
           {
@@ -41016,7 +41016,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 352
+                  "line": 350
                 },
                 "storage": [
                   "OSPF_PATT->rxmtint"
@@ -41026,7 +41026,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 352
+              "line": 350
             }
           },
           {
@@ -41050,7 +41050,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 353
+                  "line": 351
                 },
                 "storage": [
                   "OSPF_PATT->inftransdelay"
@@ -41060,7 +41060,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 353
+              "line": 351
             }
           },
           {
@@ -41080,7 +41080,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 354
+                  "line": 352
                 },
                 "storage": [
                   "OSPF_PATT->waitint"
@@ -41090,7 +41090,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 354
+              "line": 352
             }
           },
           {
@@ -41110,7 +41110,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 355
+                  "line": 353
                 },
                 "storage": [
                   "OSPF_PATT->deadint"
@@ -41120,7 +41120,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 355
+              "line": 353
             }
           },
           {
@@ -41144,10 +41144,70 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 356
+                  "line": 354
                 },
                 "storage": [
                   "OSPF_PATT->deadc"
+                ],
+                "symbol_classes": []
+              }
+            ],
+            "source": {
+              "file": "proto/ospf/config.Y",
+              "line": 354
+            }
+          },
+          {
+            "symbols": [
+              {
+                "kind": "reference",
+                "value": "AUTHENTICATION"
+              },
+              {
+                "kind": "reference",
+                "value": "NONE"
+              }
+            ],
+            "precedence": null,
+            "actions": [
+              {
+                "position": 2,
+                "source": {
+                  "file": "proto/ospf/config.Y",
+                  "line": 355
+                },
+                "storage": [
+                  "OSPF_PATT->autype"
+                ],
+                "symbol_classes": []
+              }
+            ],
+            "source": {
+              "file": "proto/ospf/config.Y",
+              "line": 355
+            }
+          },
+          {
+            "symbols": [
+              {
+                "kind": "reference",
+                "value": "AUTHENTICATION"
+              },
+              {
+                "kind": "reference",
+                "value": "SIMPLE"
+              }
+            ],
+            "precedence": null,
+            "actions": [
+              {
+                "position": 2,
+                "source": {
+                  "file": "proto/ospf/config.Y",
+                  "line": 356
+                },
+                "storage": [
+                  "OSPF_PATT->autype"
                 ],
                 "symbol_classes": []
               }
@@ -41165,7 +41225,7 @@
               },
               {
                 "kind": "reference",
-                "value": "NONE"
+                "value": "CRYPTOGRAPHIC"
               }
             ],
             "precedence": null,
@@ -41191,66 +41251,6 @@
             "symbols": [
               {
                 "kind": "reference",
-                "value": "AUTHENTICATION"
-              },
-              {
-                "kind": "reference",
-                "value": "SIMPLE"
-              }
-            ],
-            "precedence": null,
-            "actions": [
-              {
-                "position": 2,
-                "source": {
-                  "file": "proto/ospf/config.Y",
-                  "line": 358
-                },
-                "storage": [
-                  "OSPF_PATT->autype"
-                ],
-                "symbol_classes": []
-              }
-            ],
-            "source": {
-              "file": "proto/ospf/config.Y",
-              "line": 358
-            }
-          },
-          {
-            "symbols": [
-              {
-                "kind": "reference",
-                "value": "AUTHENTICATION"
-              },
-              {
-                "kind": "reference",
-                "value": "CRYPTOGRAPHIC"
-              }
-            ],
-            "precedence": null,
-            "actions": [
-              {
-                "position": 2,
-                "source": {
-                  "file": "proto/ospf/config.Y",
-                  "line": 359
-                },
-                "storage": [
-                  "OSPF_PATT->autype"
-                ],
-                "symbol_classes": []
-              }
-            ],
-            "source": {
-              "file": "proto/ospf/config.Y",
-              "line": 359
-            }
-          },
-          {
-            "symbols": [
-              {
-                "kind": "reference",
                 "value": "password_list"
               }
             ],
@@ -41258,13 +41258,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 360
+              "line": 358
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 350
+          "line": 348
         }
       },
       "ospf_vlink_opts": {
@@ -41276,7 +41276,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 345
+              "line": 343
             }
           },
           {
@@ -41298,13 +41298,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 347
+              "line": 345
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 345
+          "line": 343
         }
       },
       "ospf_vlink_start": {
@@ -41331,7 +41331,7 @@
                 "position": 3,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 364
+                  "line": 362
                 },
                 "storage": [
                   "OSPF_PATT->deadc",
@@ -41348,13 +41348,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 363
+              "line": 361
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 363
+          "line": 361
         }
       },
       "pair_item": {
@@ -43168,7 +43168,7 @@
                 "position": 1,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 431
+                  "line": 429
                 },
                 "storage": [
                   "this_pref",
@@ -43179,13 +43179,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 430
+              "line": 428
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 430
+          "line": 428
         }
       },
       "pref_item": {
@@ -43210,13 +43210,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 428
+              "line": 426
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 428
+          "line": 426
         }
       },
       "pref_list": {
@@ -43228,7 +43228,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 423
+              "line": 421
             }
           },
           {
@@ -43246,13 +43246,13 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 425
+              "line": 423
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 423
+          "line": 421
         }
       },
       "pref_opt": {
@@ -43264,7 +43264,7 @@
             "actions": [],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 438
+              "line": 436
             }
           },
           {
@@ -43280,7 +43280,7 @@
                 "position": 1,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 440
+                  "line": 438
                 },
                 "storage": [
                   "this_pref->hidden"
@@ -43290,7 +43290,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 440
+              "line": 438
             }
           },
           {
@@ -43310,7 +43310,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 441
+                  "line": 439
                 },
                 "storage": [
                   "this_pref->tag"
@@ -43320,13 +43320,13 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 441
+              "line": 439
             }
           }
         ],
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 438
+          "line": 436
         }
       },
       "proto": {
@@ -43501,7 +43501,7 @@
                 "position": 2,
                 "source": {
                   "file": "proto/ospf/config.Y",
-                  "line": 212
+                  "line": 210
                 },
                 "storage": [],
                 "symbol_classes": []
@@ -43509,7 +43509,7 @@
             ],
             "source": {
               "file": "proto/ospf/config.Y",
-              "line": 212
+              "line": 210
             }
           },
           {
@@ -56756,7 +56756,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 195
+          "line": 193
         },
         "configuration_reachable": true
       },
@@ -56884,7 +56884,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 196
+          "line": 194
         },
         "configuration_reachable": true
       },
@@ -57044,7 +57044,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 196
+          "line": 194
         },
         "configuration_reachable": true
       },
@@ -57380,7 +57380,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 195
+          "line": 193
         },
         "configuration_reachable": true
       },
@@ -57396,7 +57396,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 198
+          "line": 196
         },
         "configuration_reachable": true
       },
@@ -57436,7 +57436,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 196
+          "line": 194
         },
         "configuration_reachable": true
       },
@@ -57748,7 +57748,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 201
+          "line": 199
         },
         "configuration_reachable": true
       },
@@ -57756,7 +57756,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 199
+          "line": 197
         },
         "configuration_reachable": true
       },
@@ -58244,7 +58244,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 199
+          "line": 197
         },
         "configuration_reachable": true
       },
@@ -58436,7 +58436,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 202
+          "line": 200
         },
         "configuration_reachable": true
       },
@@ -58804,7 +58804,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 200
+          "line": 198
         },
         "configuration_reachable": true
       },
@@ -58948,7 +58948,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 203
+          "line": 201
         },
         "configuration_reachable": true
       },
@@ -58956,7 +58956,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 201
+          "line": 199
         },
         "configuration_reachable": true
       },
@@ -58964,7 +58964,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 202
+          "line": 200
         },
         "configuration_reachable": true
       },
@@ -59228,7 +59228,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 197
+          "line": 195
         },
         "configuration_reachable": true
       },
@@ -59276,7 +59276,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 202
+          "line": 200
         },
         "configuration_reachable": true
       },
@@ -59284,7 +59284,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 199
+          "line": 197
         },
         "configuration_reachable": true
       },
@@ -59348,7 +59348,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 197
+          "line": 195
         },
         "configuration_reachable": true
       },
@@ -59364,7 +59364,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 200
+          "line": 198
         },
         "configuration_reachable": true
       },
@@ -59380,7 +59380,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 201
+          "line": 199
         },
         "configuration_reachable": true
       },
@@ -59444,7 +59444,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 199
+          "line": 197
         },
         "configuration_reachable": true
       },
@@ -59476,7 +59476,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 194
+          "line": 192
         },
         "configuration_reachable": true
       },
@@ -59588,7 +59588,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 203
+          "line": 201
         },
         "configuration_reachable": true
       },
@@ -59660,7 +59660,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 197
+          "line": 195
         },
         "configuration_reachable": true
       },
@@ -59668,7 +59668,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 197
+          "line": 195
         },
         "configuration_reachable": true
       },
@@ -59692,7 +59692,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 199
+          "line": 197
         },
         "configuration_reachable": true
       },
@@ -59892,7 +59892,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 197
+          "line": 195
         },
         "configuration_reachable": true
       },
@@ -59900,7 +59900,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 197
+          "line": 195
         },
         "configuration_reachable": true
       },
@@ -60004,7 +60004,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 202
+          "line": 200
         },
         "configuration_reachable": true
       },
@@ -60124,7 +60124,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 195
+          "line": 193
         },
         "configuration_reachable": true
       },
@@ -60156,7 +60156,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 195
+          "line": 193
         },
         "configuration_reachable": true
       },
@@ -60164,7 +60164,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 203
+          "line": 201
         },
         "configuration_reachable": true
       },
@@ -60652,7 +60652,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 201
+          "line": 199
         },
         "configuration_reachable": true
       },
@@ -60692,7 +60692,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 530
+          "line": 528
         },
         "configuration_reachable": true
       },
@@ -60764,7 +60764,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 195
+          "line": 193
         },
         "configuration_reachable": true
       },
@@ -60772,7 +60772,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 200
+          "line": 198
         },
         "configuration_reachable": true
       },
@@ -60788,7 +60788,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 203
+          "line": 201
         },
         "configuration_reachable": true
       },
@@ -60836,7 +60836,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 200
+          "line": 198
         },
         "configuration_reachable": true
       },
@@ -60908,7 +60908,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 195
+          "line": 193
         },
         "configuration_reachable": true
       },
@@ -60972,7 +60972,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 522
+          "line": 520
         },
         "configuration_reachable": true
       },
@@ -60996,7 +60996,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 201
+          "line": 199
         },
         "configuration_reachable": true
       },
@@ -61004,7 +61004,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 196
+          "line": 194
         },
         "configuration_reachable": true
       },
@@ -61156,7 +61156,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 193
+          "line": 191
         },
         "configuration_reachable": true
       },
@@ -61164,7 +61164,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 193
+          "line": 191
         },
         "configuration_reachable": true
       },
@@ -61220,7 +61220,7 @@
         "storage_type": "s",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 199
+          "line": 197
         },
         "configuration_reachable": true
       },
@@ -62551,7 +62551,7 @@
         "value": "V2 V3",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 193
+          "line": 191
         }
       },
       {
@@ -62559,7 +62559,7 @@
         "value": "OSPF",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 194
+          "line": 192
         }
       },
       {
@@ -62567,7 +62567,7 @@
         "value": "AREA RFC1583COMPAT STUB TICK COST2 RETRANSMIT",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 195
+          "line": 193
         }
       },
       {
@@ -62575,7 +62575,7 @@
         "value": "TRANSMIT DEAD BROADCAST BCAST",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 196
+          "line": 194
         }
       },
       {
@@ -62583,7 +62583,7 @@
         "value": "NONBROADCAST NBMA POINTOPOINT PTP POINTOMULTIPOINT PTMP",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 197
+          "line": 195
         }
       },
       {
@@ -62591,7 +62591,7 @@
         "value": "CRYPTOGRAPHIC",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 198
+          "line": 196
         }
       },
       {
@@ -62599,7 +62599,7 @@
         "value": "ELIGIBLE POLL NETWORKS HIDDEN VIRTUAL ONLY",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 199
+          "line": 197
         }
       },
       {
@@ -62607,7 +62607,7 @@
         "value": "LARGE NORMAL STUBNET TAG",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 200
+          "line": 198
         }
       },
       {
@@ -62615,7 +62615,7 @@
         "value": "LSADB ECMP NSSA TRANSLATOR STABILITY",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 201
+          "line": 199
         }
       },
       {
@@ -62623,7 +62623,7 @@
         "value": "LSID INSTANCE REAL NETMASK",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 202
+          "line": 200
         }
       },
       {
@@ -62631,7 +62631,7 @@
         "value": "LSA SUPPRESSION RFC5838 PE",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 203
+          "line": 201
         }
       },
       {
@@ -62639,7 +62639,7 @@
         "value": "lsadb_args",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 206
+          "line": 204
         }
       },
       {
@@ -62647,7 +62647,7 @@
         "value": "ospf_variant ospf_af_mc nbma_eligible",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 207
+          "line": 205
         }
       },
       {
@@ -62655,7 +62655,7 @@
         "value": "ospf_channel_start ospf_channel",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 208
+          "line": 206
         }
       },
       {
@@ -62663,7 +62663,7 @@
         "value": "TOPOLOGY",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 522
+          "line": 520
         }
       },
       {
@@ -62671,7 +62671,7 @@
         "value": "STATE",
         "source": {
           "file": "proto/ospf/config.Y",
-          "line": 530
+          "line": 528
         }
       },
       {
@@ -66899,7 +66899,7 @@
       "token": "V2",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 193
+        "line": 191
       }
     },
     {
@@ -66907,7 +66907,7 @@
       "token": "V3",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 193
+        "line": 191
       }
     },
     {
@@ -66915,7 +66915,7 @@
       "token": "OSPF",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 194
+        "line": 192
       }
     },
     {
@@ -66923,7 +66923,7 @@
       "token": "AREA",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 195
+        "line": 193
       }
     },
     {
@@ -66931,7 +66931,7 @@
       "token": "RFC1583COMPAT",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 195
+        "line": 193
       }
     },
     {
@@ -66939,7 +66939,7 @@
       "token": "STUB",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 195
+        "line": 193
       }
     },
     {
@@ -66947,7 +66947,7 @@
       "token": "TICK",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 195
+        "line": 193
       }
     },
     {
@@ -66955,7 +66955,7 @@
       "token": "COST2",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 195
+        "line": 193
       }
     },
     {
@@ -66963,7 +66963,7 @@
       "token": "RETRANSMIT",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 195
+        "line": 193
       }
     },
     {
@@ -66971,7 +66971,7 @@
       "token": "TRANSMIT",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 196
+        "line": 194
       }
     },
     {
@@ -66979,7 +66979,7 @@
       "token": "DEAD",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 196
+        "line": 194
       }
     },
     {
@@ -66987,7 +66987,7 @@
       "token": "BROADCAST",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 196
+        "line": 194
       }
     },
     {
@@ -66995,7 +66995,7 @@
       "token": "BCAST",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 196
+        "line": 194
       }
     },
     {
@@ -67003,7 +67003,7 @@
       "token": "NONBROADCAST",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 197
+        "line": 195
       }
     },
     {
@@ -67011,7 +67011,7 @@
       "token": "NBMA",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 197
+        "line": 195
       }
     },
     {
@@ -67019,7 +67019,7 @@
       "token": "POINTOPOINT",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 197
+        "line": 195
       }
     },
     {
@@ -67027,7 +67027,7 @@
       "token": "PTP",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 197
+        "line": 195
       }
     },
     {
@@ -67035,7 +67035,7 @@
       "token": "POINTOMULTIPOINT",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 197
+        "line": 195
       }
     },
     {
@@ -67043,7 +67043,7 @@
       "token": "PTMP",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 197
+        "line": 195
       }
     },
     {
@@ -67051,7 +67051,7 @@
       "token": "CRYPTOGRAPHIC",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 198
+        "line": 196
       }
     },
     {
@@ -67059,7 +67059,7 @@
       "token": "ELIGIBLE",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 199
+        "line": 197
       }
     },
     {
@@ -67067,7 +67067,7 @@
       "token": "POLL",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 199
+        "line": 197
       }
     },
     {
@@ -67075,7 +67075,7 @@
       "token": "NETWORKS",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 199
+        "line": 197
       }
     },
     {
@@ -67083,7 +67083,7 @@
       "token": "HIDDEN",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 199
+        "line": 197
       }
     },
     {
@@ -67091,7 +67091,7 @@
       "token": "VIRTUAL",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 199
+        "line": 197
       }
     },
     {
@@ -67099,7 +67099,7 @@
       "token": "ONLY",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 199
+        "line": 197
       }
     },
     {
@@ -67107,7 +67107,7 @@
       "token": "LARGE",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 200
+        "line": 198
       }
     },
     {
@@ -67115,7 +67115,7 @@
       "token": "NORMAL",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 200
+        "line": 198
       }
     },
     {
@@ -67123,7 +67123,7 @@
       "token": "STUBNET",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 200
+        "line": 198
       }
     },
     {
@@ -67131,7 +67131,7 @@
       "token": "TAG",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 200
+        "line": 198
       }
     },
     {
@@ -67139,7 +67139,7 @@
       "token": "LSADB",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 201
+        "line": 199
       }
     },
     {
@@ -67147,7 +67147,7 @@
       "token": "ECMP",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 201
+        "line": 199
       }
     },
     {
@@ -67155,7 +67155,7 @@
       "token": "NSSA",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 201
+        "line": 199
       }
     },
     {
@@ -67163,7 +67163,7 @@
       "token": "TRANSLATOR",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 201
+        "line": 199
       }
     },
     {
@@ -67171,7 +67171,7 @@
       "token": "STABILITY",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 201
+        "line": 199
       }
     },
     {
@@ -67179,7 +67179,7 @@
       "token": "LSID",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 202
+        "line": 200
       }
     },
     {
@@ -67187,7 +67187,7 @@
       "token": "INSTANCE",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 202
+        "line": 200
       }
     },
     {
@@ -67195,7 +67195,7 @@
       "token": "REAL",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 202
+        "line": 200
       }
     },
     {
@@ -67203,7 +67203,7 @@
       "token": "NETMASK",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 202
+        "line": 200
       }
     },
     {
@@ -67211,7 +67211,7 @@
       "token": "LSA",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 203
+        "line": 201
       }
     },
     {
@@ -67219,7 +67219,7 @@
       "token": "SUPPRESSION",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 203
+        "line": 201
       }
     },
     {
@@ -67227,7 +67227,7 @@
       "token": "RFC5838",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 203
+        "line": 201
       }
     },
     {
@@ -67235,7 +67235,7 @@
       "token": "PE",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 203
+        "line": 201
       }
     },
     {
@@ -67243,7 +67243,7 @@
       "token": "TOPOLOGY",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 522
+        "line": 520
       }
     },
     {
@@ -67251,7 +67251,7 @@
       "token": "STATE",
       "source": {
         "file": "proto/ospf/config.Y",
-        "line": 530
+        "line": 528
       }
     },
     {
@@ -115131,7 +115131,7 @@
           ],
           "source": {
             "file": "proto/ospf/config.Y",
-            "line": 293
+            "line": 291
           }
         },
         {
@@ -115286,11 +115286,11 @@
         "copy_hook": "bgp_copy_config",
         "source": {
           "file": "proto/bgp/bgp.c",
-          "line": 4314
+          "line": 4321
         },
         "copy_source": {
           "file": "proto/bgp/bgp.c",
-          "line": 3853
+          "line": 3854
         },
         "reset_paths": [],
         "resets": {},
@@ -115318,7 +115318,7 @@
         "copy_hook": null,
         "source": {
           "file": "proto/bmp/bmp.c",
-          "line": 1591
+          "line": 1595
         },
         "copy_source": null,
         "reset_paths": [],
@@ -115331,11 +115331,11 @@
         "copy_hook": "kbr_copy_config",
         "source": {
           "file": "proto/bridge/bridge.c",
-          "line": 977
+          "line": 981
         },
         "copy_source": {
           "file": "proto/bridge/bridge.c",
-          "line": 932
+          "line": 936
         },
         "reset_paths": [],
         "resets": {},
@@ -115511,7 +115511,7 @@
         "copy_hook": null,
         "source": {
           "file": "proto/ospf/ospf.c",
-          "line": 1517
+          "line": 1499
         },
         "copy_source": null,
         "reset_paths": [],
@@ -115558,7 +115558,7 @@
         "copy_hook": "radv_copy_config",
         "source": {
           "file": "proto/radv/radv.c",
-          "line": 939
+          "line": 942
         },
         "copy_source": {
           "file": "proto/radv/radv.c",
@@ -115597,7 +115597,7 @@
         "copy_hook": null,
         "source": {
           "file": "proto/rip/rip.c",
-          "line": 1399
+          "line": 1386
         },
         "copy_source": null,
         "reset_paths": [],

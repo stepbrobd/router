@@ -30,17 +30,17 @@
       "flake": false,
       "locked": {
         "host": "gitlab.nic.cz",
-        "lastModified": 1791792256,
-        "narHash": "sha256-FPLQlvl+i81adfphQNssP8ylsNllESFzzCpIfrsNvoo=",
+        "lastModified": 1794329523,
+        "narHash": "sha256-KwYajmJ2xahbyjHjzhfYorsfvz8//TJMshL4YSzYWS8=",
         "owner": "labs",
         "repo": "bird",
-        "rev": "c3669497e3949b942d86d07e343092cc439b4659",
+        "rev": "68953fa98daab0726c592dd229dbaa369b56d0e9",
         "type": "gitlab"
       },
       "original": {
         "host": "gitlab.nic.cz",
         "owner": "labs",
-        "ref": "v3.4.0",
+        "ref": "thread-next",
         "repo": "bird",
         "type": "gitlab"
       }
