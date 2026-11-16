@@ -97,6 +97,7 @@ f = ["const struct filter *"]
 ecs = ["enum ec_subtype"]
 cl = ["struct channel_limit"]
 v = ["struct f_val"]
+e = ["struct f_tree *"]
 
 [[namespaces]]
 prefix = ["protocol"]
@@ -218,6 +219,20 @@ rules = ["ec_kind"]
 file = "filter/config.Y"
 storage = "ecs"
 shape = "record"
+
+[[bindings]]
+id = "constant.number"
+rules = ["cnum"]
+file = "filter/config.Y"
+storage = "i32"
+representation = "expression"
+
+[[bindings]]
+id = "constant.ec-item"
+rules = ["ec_item"]
+file = "filter/config.Y"
+storage = "e"
+shape = "constructor"
 
 [[bindings]]
 id = "declaration.type"
@@ -680,6 +695,26 @@ arguments = [
 id = "ec"
 binding = "constant.constructor"
 arguments = ["constant.ec-kind", "constant.expression", "constant.expression"]
+
+[[constructors]]
+id = "ec"
+binding = "constant.ec-item"
+arguments = ["constant.ec-kind", "constant.number", "constant.number"]
+
+[[constructors]]
+id = "ec"
+binding = "constant.ec-item"
+arguments = [
+  "constant.ec-kind",
+  "constant.number",
+  "constant.number",
+  "constant.number",
+]
+
+[[constructors]]
+id = "ec"
+binding = "constant.ec-item"
+arguments = ["constant.ec-kind", "constant.number"]
 
 [[labels]]
 id = "settle"

@@ -376,6 +376,8 @@ impl Values<'_> {
             self.primitive(name, representation)
         } else if binding.and_then(|binding| binding.shape) == Some(Shape::Flag) {
             self.flag_shape(name, nullable)
+        } else if binding.and_then(|binding| binding.shape) == Some(Shape::Constructor) {
+            self.constructor_shape(name, nullable)
         } else if binding.and_then(|binding| binding.shape) == Some(Shape::Body)
             || self
                 .grammar
@@ -422,6 +424,67 @@ impl Values<'_> {
             });
             matches!((values.next(), values.next()), (Some(symbol @ Symbol::Reference(_)), None) if self.fixed(symbol).is_none())
         })
+    }
+
+    // `'[' list ']'` is the list itself between its brackets, as in `[ (rt, 1, 2), (rt, 1, 3) ]`
+    fn bracketed_list(&mut self, name: &str, symbols: &[Symbol]) -> Option<String> {
+        let [open, Symbol::Reference(reference), close] = symbols else {
+            return None;
+        };
+        let (open, close) = (self.fixed(open)?.to_owned(), self.fixed(close)?.to_owned());
+        if !matches!(
+            (open.as_str(), close.as_str()),
+            ("[", "]") | ("(", ")") | ("{", "}")
+        ) || self.active.contains(reference)
+        {
+            return None;
+        }
+        self.infer(reference);
+        let Some(ValueShape::List {
+            item_rule,
+            separator,
+            prefix,
+            suffix,
+            nullable,
+            merge,
+        }) = self.types.get(reference)
+        else {
+            return None;
+        };
+        if !prefix.is_empty() || !suffix.is_empty() {
+            return None;
+        }
+        let shape = ValueShape::List {
+            item_rule: item_rule.clone(),
+            separator: separator.clone(),
+            prefix: vec![open],
+            suffix: vec![close],
+            nullable: *nullable,
+            merge: *merge,
+        };
+        let key = format!("${name}:{reference}");
+        self.types.insert(key.clone(), shape);
+        Some(key)
+    }
+
+    fn constructor_shape(&self, name: &str, nullable: bool) -> ValueShape {
+        let ids = self
+            .registry
+            .into_iter()
+            .flat_map(|registry| &registry.constructors)
+            .filter(|(_, constructor)| constructor.forms.iter().any(|form| form.rule == name))
+            .map(|(id, _)| id.clone())
+            .collect::<Vec<_>>();
+        match ids.as_slice() {
+            [id] => ValueShape::Constructor {
+                id: id.clone(),
+                nullable,
+            },
+            _ => ValueShape::Exact {
+                rule: name.into(),
+                nullable,
+            },
+        }
     }
 
     // a registry flag renders its keyword sequence for true and nothing for false
@@ -509,6 +572,8 @@ impl Values<'_> {
                 }
                 self.infer(reference);
                 alternatives.push(reference.clone());
+            } else if let Some(key) = self.bracketed_list(name, &symbols) {
+                alternatives.push(key);
             } else if let Some(forms) = self.symbol_records(
                 &production.symbols,
                 Some((name, number)),
@@ -708,6 +773,19 @@ mod tests {
         let schema = crate::surface::compile(&grammar, &[]);
         assert!(
             matches!(&schema.value_types["names"], ValueShape::List { item_rule, separator, nullable: false, merge, .. } if item_rule == "TEXT" && separator == &[","] && *merge == Merge::Replace)
+        );
+    }
+
+    #[test]
+    fn a_bracketed_list_is_the_list_between_its_brackets() {
+        let grammar = parse("%union { void *e; }\n%token END TEXT\n%type <e> targets\n%start config\n%%\nconfig: targets END; targets: TEXT | '[' names ']'; names: TEXT | TEXT ',' names;\n%%").unwrap();
+        let schema = crate::surface::compile(&grammar, &[]);
+        assert!(matches!(
+            &schema.value_types["targets"],
+            ValueShape::Choice { alternatives, .. } if alternatives == &["TEXT", "$targets:names"]
+        ));
+        assert!(
+            matches!(&schema.value_types["$targets:names"], ValueShape::List { item_rule, prefix, suffix, .. } if item_rule == "TEXT" && prefix == &["["] && suffix == &["]"])
         );
     }
 

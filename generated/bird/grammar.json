@@ -94822,29 +94822,19 @@
         },
         "nullable": false
       },
-      "$bgp_cease_mask:record": {
-        "kind": "record",
-        "forms": [
-          {
-            "parts": [
-              {
-                "kind": "literal",
-                "text": "{"
-              },
-              {
-                "kind": "field",
-                "name": "bgp-cease-list",
-                "rule": "bgp_cease_list",
-                "optional": false
-              },
-              {
-                "kind": "literal",
-                "text": "}"
-              }
-            ]
-          }
+      "$bgp_cease_mask:bgp_cease_list": {
+        "kind": "list",
+        "item_rule": "bgp_cease_flag",
+        "separator": [
+          ","
         ],
-        "nullable": true,
+        "prefix": [
+          "{"
+        ],
+        "suffix": [
+          "}"
+        ],
+        "nullable": false,
         "merge": "replace"
       },
       "$bgp_channel_opts:item": {
@@ -96399,6 +96389,21 @@
         "nullable": false,
         "merge": "replace"
       },
+      "$debug_mask:debug_list": {
+        "kind": "list",
+        "item_rule": "debug_flag",
+        "separator": [
+          ","
+        ],
+        "prefix": [
+          "{"
+        ],
+        "suffix": [
+          "}"
+        ],
+        "nullable": false,
+        "merge": "replace"
+      },
       "$debug_mask:enum": {
         "kind": "enum",
         "values": {
@@ -96410,31 +96415,6 @@
           ]
         },
         "nullable": false
-      },
-      "$debug_mask:record": {
-        "kind": "record",
-        "forms": [
-          {
-            "parts": [
-              {
-                "kind": "literal",
-                "text": "{"
-              },
-              {
-                "kind": "field",
-                "name": "debug-list",
-                "rule": "debug_list",
-                "optional": false
-              },
-              {
-                "kind": "literal",
-                "text": "}"
-              }
-            ]
-          }
-        ],
-        "nullable": false,
-        "merge": "replace"
       },
       "$ec_kind:enum": {
         "kind": "enum",
@@ -96541,27 +96521,17 @@
         "nullable": false,
         "merge": "replace"
       },
-      "$evpn_targets:record": {
-        "kind": "record",
-        "forms": [
-          {
-            "parts": [
-              {
-                "kind": "literal",
-                "text": "["
-              },
-              {
-                "kind": "field",
-                "name": "ec-items",
-                "rule": "ec_items",
-                "optional": false
-              },
-              {
-                "kind": "literal",
-                "text": "]"
-              }
-            ]
-          }
+      "$evpn_targets:ec_items": {
+        "kind": "list",
+        "item_rule": "ec_item",
+        "separator": [
+          ","
+        ],
+        "prefix": [
+          "["
+        ],
+        "suffix": [
+          "]"
         ],
         "nullable": false,
         "merge": "replace"
@@ -97411,6 +97381,21 @@
         "nullable": false,
         "merge": "replace"
       },
+      "$l3vpn_targets:ec_items": {
+        "kind": "list",
+        "item_rule": "ec_item",
+        "separator": [
+          ","
+        ],
+        "prefix": [
+          "["
+        ],
+        "suffix": [
+          "]"
+        ],
+        "nullable": false,
+        "merge": "replace"
+      },
       "$l3vpn_targets:enum": {
         "kind": "enum",
         "values": {
@@ -97423,31 +97408,6 @@
           ]
         },
         "nullable": false
-      },
-      "$l3vpn_targets:record": {
-        "kind": "record",
-        "forms": [
-          {
-            "parts": [
-              {
-                "kind": "literal",
-                "text": "["
-              },
-              {
-                "kind": "field",
-                "name": "ec-items",
-                "rule": "ec_items",
-                "optional": false
-              },
-              {
-                "kind": "literal",
-                "text": "]"
-              }
-            ]
-          }
-        ],
-        "nullable": false,
-        "merge": "replace"
       },
       "$label_stack:record": {
         "kind": "record",
@@ -97488,27 +97448,17 @@
         },
         "nullable": false
       },
-      "$latency_debug_mask:record": {
-        "kind": "record",
-        "forms": [
-          {
-            "parts": [
-              {
-                "kind": "literal",
-                "text": "{"
-              },
-              {
-                "kind": "field",
-                "name": "latency-debug-list",
-                "rule": "latency_debug_list",
-                "optional": false
-              },
-              {
-                "kind": "literal",
-                "text": "}"
-              }
-            ]
-          }
+      "$latency_debug_mask:latency_debug_list": {
+        "kind": "list",
+        "item_rule": "latency_debug_flag",
+        "separator": [
+          ","
+        ],
+        "prefix": [
+          "{"
+        ],
+        "suffix": [
+          "}"
         ],
         "nullable": false,
         "merge": "replace"
@@ -97554,27 +97504,17 @@
         },
         "nullable": false
       },
-      "$log_mask:record": {
-        "kind": "record",
-        "forms": [
-          {
-            "parts": [
-              {
-                "kind": "literal",
-                "text": "{"
-              },
-              {
-                "kind": "field",
-                "name": "log-mask-list",
-                "rule": "log_mask_list",
-                "optional": false
-              },
-              {
-                "kind": "literal",
-                "text": "}"
-              }
-            ]
-          }
+      "$log_mask:log_mask_list": {
+        "kind": "list",
+        "item_rule": "log_cat",
+        "separator": [
+          ","
+        ],
+        "prefix": [
+          "{"
+        ],
+        "suffix": [
+          "}"
         ],
         "nullable": false,
         "merge": "replace"
@@ -98340,27 +98280,17 @@
         },
         "nullable": false
       },
-      "$mrtdump_mask:record": {
-        "kind": "record",
-        "forms": [
-          {
-            "parts": [
-              {
-                "kind": "literal",
-                "text": "{"
-              },
-              {
-                "kind": "field",
-                "name": "mrtdump-list",
-                "rule": "mrtdump_list",
-                "optional": false
-              },
-              {
-                "kind": "literal",
-                "text": "}"
-              }
-            ]
-          }
+      "$mrtdump_mask:mrtdump_list": {
+        "kind": "list",
+        "item_rule": "mrtdump_flag",
+        "separator": [
+          ","
+        ],
+        "prefix": [
+          "{"
+        ],
+        "suffix": [
+          "}"
         ],
         "nullable": false,
         "merge": "replace"
@@ -110284,7 +110214,7 @@
         "kind": "choice",
         "alternatives": [
           "bool",
-          "$bgp_cease_mask:record"
+          "$bgp_cease_mask:bgp_cease_list"
         ],
         "nullable": true
       },
@@ -110634,17 +110564,11 @@
         "nullable": false
       },
       "cnum": {
-        "kind": "body",
-        "roles": [
-          {
-            "role": "body",
-            "rule": "cnum",
-            "field": "body",
-            "prefix": [],
-            "suffix": []
-          }
-        ],
-        "nullable": false
+        "kind": "primitive",
+        "representation": "expression",
+        "rule": "cnum",
+        "nullable": false,
+        "expression_rule": "conf_expr"
       },
       "conf": {
         "kind": "exact",
@@ -110752,8 +110676,8 @@
       "debug_mask": {
         "kind": "choice",
         "alternatives": [
-          "$debug_mask:enum",
-          "$debug_mask:record"
+          "$debug_mask:debug_list",
+          "$debug_mask:enum"
         ],
         "nullable": false
       },
@@ -110866,8 +110790,8 @@
         "nullable": false
       },
       "ec_item": {
-        "kind": "exact",
-        "rule": "ec_item",
+        "kind": "constructor",
+        "id": "ec",
         "nullable": false
       },
       "ec_items": {
@@ -111008,7 +110932,7 @@
         "kind": "choice",
         "alternatives": [
           "ec_item",
-          "$evpn_targets:record"
+          "$evpn_targets:ec_items"
         ],
         "nullable": false
       },
@@ -111843,8 +111767,8 @@
         "kind": "choice",
         "alternatives": [
           "ec_item",
-          "$l3vpn_targets:enum",
-          "$l3vpn_targets:record"
+          "$l3vpn_targets:ec_items",
+          "$l3vpn_targets:enum"
         ],
         "nullable": false
       },
@@ -111904,8 +111828,8 @@
       "latency_debug_mask": {
         "kind": "choice",
         "alternatives": [
-          "$latency_debug_mask:enum",
-          "$latency_debug_mask:record"
+          "$latency_debug_mask:latency_debug_list",
+          "$latency_debug_mask:enum"
         ],
         "nullable": false
       },
@@ -112000,8 +111924,8 @@
       "log_mask": {
         "kind": "choice",
         "alternatives": [
-          "$log_mask:enum",
-          "$log_mask:record"
+          "$log_mask:log_mask_list",
+          "$log_mask:enum"
         ],
         "nullable": false
       },
@@ -112227,8 +112151,8 @@
       "mrtdump_mask": {
         "kind": "choice",
         "alternatives": [
-          "$mrtdump_mask:enum",
-          "$mrtdump_mask:record"
+          "$mrtdump_mask:mrtdump_list",
+          "$mrtdump_mask:enum"
         ],
         "nullable": false
       },
@@ -114715,6 +114639,21 @@
           "constructor"
         ]
       },
+      "constant.ec-item": {
+        "rule": "ec_item",
+        "source": {
+          "file": "filter/config.Y",
+          "line": 738
+        },
+        "storage": "e",
+        "c_type": "struct f_tree *",
+        "representation": null,
+        "label": null,
+        "shape": "constructor",
+        "checked_aliases": [
+          "ec_item"
+        ]
+      },
       "constant.ec-kind": {
         "rule": "ec_kind",
         "source": {
@@ -114743,6 +114682,21 @@
         "shape": null,
         "checked_aliases": [
           "term"
+        ]
+      },
+      "constant.number": {
+        "rule": "cnum",
+        "source": {
+          "file": "filter/config.Y",
+          "line": 714
+        },
+        "storage": "i32",
+        "c_type": "u32",
+        "representation": "expression",
+        "label": null,
+        "shape": null,
+        "checked_aliases": [
+          "cnum"
         ]
       },
       "constant.reference-expression": {
@@ -116215,9 +116169,9 @@
     ],
     "constructors": {
       "ec": {
-        "rule": "constructor",
         "forms": [
           {
+            "rule": "constructor",
             "arity": 3,
             "parts": [
               {
@@ -116259,13 +116213,153 @@
               "file": "filter/config.Y",
               "line": 866
             }
+          },
+          {
+            "rule": "ec_item",
+            "arity": 3,
+            "parts": [
+              {
+                "kind": "literal",
+                "text": "("
+              },
+              {
+                "kind": "field",
+                "name": "0",
+                "rule": "ec_kind",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ","
+              },
+              {
+                "kind": "field",
+                "name": "1",
+                "rule": "cnum",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ","
+              },
+              {
+                "kind": "field",
+                "name": "2",
+                "rule": "cnum",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ")"
+              }
+            ],
+            "source": {
+              "file": "filter/config.Y",
+              "line": 738
+            }
+          },
+          {
+            "rule": "ec_item",
+            "arity": 4,
+            "parts": [
+              {
+                "kind": "literal",
+                "text": "("
+              },
+              {
+                "kind": "field",
+                "name": "0",
+                "rule": "ec_kind",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ","
+              },
+              {
+                "kind": "field",
+                "name": "1",
+                "rule": "cnum",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ","
+              },
+              {
+                "kind": "field",
+                "name": "2",
+                "rule": "cnum",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ".."
+              },
+              {
+                "kind": "field",
+                "name": "3",
+                "rule": "cnum",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ")"
+              }
+            ],
+            "source": {
+              "file": "filter/config.Y",
+              "line": 740
+            }
+          },
+          {
+            "rule": "ec_item",
+            "arity": 2,
+            "parts": [
+              {
+                "kind": "literal",
+                "text": "("
+              },
+              {
+                "kind": "field",
+                "name": "0",
+                "rule": "ec_kind",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ","
+              },
+              {
+                "kind": "field",
+                "name": "1",
+                "rule": "cnum",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ","
+              },
+              {
+                "kind": "literal",
+                "text": "*"
+              },
+              {
+                "kind": "literal",
+                "text": ")"
+              }
+            ],
+            "source": {
+              "file": "filter/config.Y",
+              "line": 741
+            }
           }
         ]
       },
       "tuple": {
-        "rule": "constructor",
         "forms": [
           {
+            "rule": "constructor",
             "arity": 2,
             "parts": [
               {
@@ -116299,6 +116393,7 @@
             }
           },
           {
+            "rule": "constructor",
             "arity": 3,
             "parts": [
               {
@@ -116511,12 +116606,6 @@
         "bgp_channel_opts[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
         "channel_opts[] export-in: exact net_flow4_ (conf/flowspec.Y:191)",
         "channel_opts[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
-        "evpn_proto_opts[] export-target: exact ec_item (filter/config.Y:738)",
-        "evpn_proto_opts[] import-target: exact ec_item (filter/config.Y:738)",
-        "evpn_proto_opts[] route-target: exact ec_item (filter/config.Y:738)",
-        "l3vpn_proto_opts[] export-target: exact ec_item (filter/config.Y:738)",
-        "l3vpn_proto_opts[] import-target: exact ec_item (filter/config.Y:738)",
-        "l3vpn_proto_opts[] route-target: exact ec_item (filter/config.Y:738)",
         "mpls_channel_opts[] export-in: exact net_flow4_ (conf/flowspec.Y:191)",
         "mpls_channel_opts[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
         "pipe_proto[] export-in: exact net_flow4_ (conf/flowspec.Y:191)",
@@ -117204,7 +117293,6 @@
         "cmd_var",
         "cmds",
         "cmds_int",
-        "cnum",
         "conf",
         "conf_entries",
         "config",
@@ -117220,7 +117308,6 @@
         "dev_iface_patt",
         "dev_proto",
         "dev_proto_start",
-        "ec_item",
         "ec_items",
         "enum_type",
         "evpn_channel",

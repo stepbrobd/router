@@ -27,6 +27,7 @@ pub enum Representation {
 #[serde(rename_all = "kebab-case")]
 pub enum Shape {
     Body,
+    Constructor,
     Flag,
     List,
     Record,
@@ -242,14 +243,14 @@ pub struct Diagnostics {
     pub unprojected: Vec<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Default, Serialize)]
 pub struct Constructor {
-    pub rule: String,
     pub forms: Vec<ConstructorForm>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct ConstructorForm {
+    pub rule: String,
     pub arity: usize,
     pub parts: Vec<RecordPart>,
     pub source: Location,
@@ -803,12 +804,10 @@ impl Registry {
             registry
                 .constructors
                 .entry(constructor.id.clone())
-                .or_insert_with(|| Constructor {
-                    rule: rule.clone(),
-                    forms: Vec::new(),
-                })
+                .or_default()
                 .forms
                 .push(ConstructorForm {
+                    rule: rule.clone(),
                     arity: arguments.len(),
                     parts,
                     source: production.source.clone(),
@@ -892,6 +891,7 @@ impl Registry {
                 Some(Shape::Flag) => {
                     matches!(shape, ValueShape::Enum { values, .. } if values.contains_key("true"))
                 }
+                Some(Shape::Constructor) => matches!(shape, ValueShape::Constructor { .. }),
                 Some(Shape::Record) => matches!(
                     shape,
                     ValueShape::Record { .. } | ValueShape::Choice { .. } | ValueShape::Enum { .. }

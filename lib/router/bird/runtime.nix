@@ -80,17 +80,20 @@ let
       else if value._bird == "ip" then (ip value.value).value
       else if value._bird == "prefix" then (prefix value.value).value
       else if value._bird == "expr" then (expr value.value).value
-      else if elem value._bird [ "tuple" "ec" ] then renderConstructor value._bird value.value
+      else if elem value._bird [ "tuple" "ec" ] then
+        let result = renderConstructor value._bird inventory.registry.bindings."constant.constructor".rule value.value;
+        in if result.ok then result.text else fail "invalid source-derived ${value._bird} constructor"
       else fail "unknown BIRD data constructor ${toString value._bird}"
     else if isString value then quoted value
     else if isBool value then (if value then "true" else "false")
     else if isInt value then toString value
     else if isList value then "[ ${concatStringsSep ", " (map semantic value)} ]"
     else fail "expected typed BIRD data, write native expressions with bird.expr";
-  renderConstructor = name: value:
+  # the forms of constructor `name` that render grammar rule `rule`
+  renderConstructor = name: rule: value:
     let
       constructor = inventory.registry.constructors.${name};
-      forms = if isList value then filter (form: form.arity == length value) constructor.forms else [ ];
+      forms = if isList value then filter (form: form.rule == rule && form.arity == length value) constructor.forms else [ ];
       renderForm = form:
         let
           results = map
@@ -100,9 +103,8 @@ let
             form.parts;
         in
         if all (result: result.ok) results then good (join (map (result: result.text) results)) else bad;
-      result = alternatives (map renderForm forms);
     in
-    if result.ok then result.text else fail "invalid source-derived ${name} constructor";
+    alternatives (map renderForm forms);
 
   keywordTokens = listToAttrs (map
     (keyword: { name = keyword.token; value = keyword.spelling; })
@@ -374,6 +376,8 @@ let
       alternatives (map (candidate: candidate.result) preferred)
     else if shape.kind == "body" then
       if isString value && !allowBodyString then bad else renderDeclaration shape value
+    else if shape.kind == "constructor" then
+      if tagged value && value._bird == shape.id then renderConstructor shape.id name value.value else bad
     else if shape.kind == "exact" then bad
     else fail "unsupported generated value kind ${shape.kind}";
   partRule = part: if (part.value_type or null) != null then part.value_type else part.rule;
@@ -519,6 +523,7 @@ let
       if depth > 1 then "one of several forms"
       else concatStringsSep " or " (lib.unique (map (describeValue (depth + 1)) shape.alternatives))
     else if shape.kind == "body" then "native BIRD text"
+    else if shape.kind == "constructor" then "bird.${shape.id} [ ... ]"
     else ''an exact { _rule = "${shape.rule}"; } node'';
   describeSetting = scope: path:
     let

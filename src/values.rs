@@ -61,6 +61,11 @@ pub enum ValueShape {
         roles: Vec<DeclarationRole>,
         nullable: bool,
     },
+    // a value written with bird.<id>, rendered by the registry constructor forms for this rule
+    Constructor {
+        id: String,
+        nullable: bool,
+    },
     Exact {
         rule: String,
         nullable: bool,
