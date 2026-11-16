@@ -1,4 +1,5 @@
 pub mod grammar;
+pub mod options;
 pub mod registry;
 pub mod source;
 pub mod surface;
@@ -61,4 +62,13 @@ pub fn generate(source: &Path, output: &Path) -> anyhow::Result<()> {
     let path = output.join("grammar.json");
     fs::write(&path, serde_json::to_string_pretty(&inventory)? + "\n")
         .with_context(|| format!("cannot write {}", path.display()))
+}
+
+// NixOS options.json for every setting, with descriptions from the BIRD source's doc/bird.sgml
+pub fn options(source: &Path, source_url: &str) -> anyhow::Result<options::Options> {
+    let inventory = inspect(source)?;
+    let manual = source.join("doc/bird.sgml");
+    let manual =
+        fs::read_to_string(&manual).with_context(|| format!("cannot read {}", manual.display()))?;
+    Ok(options::options(&inventory, &manual, source_url))
 }

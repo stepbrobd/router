@@ -27,11 +27,31 @@ enum Command {
         /// BIRD source tree
         source: PathBuf,
     },
+    /// Print NixOS options.json for every setting, described from doc/bird.sgml
+    Options {
+        /// BIRD source tree
+        source: PathBuf,
+        /// URL the source tree's files are browsable under, ending with a slash
+        #[arg(long)]
+        source_url: String,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
     match Cli::parse().command {
         Command::Generate { source, output } => router::generate(&source, &output),
+        Command::Options { source, source_url } => {
+            let options = router::options(&source, &source_url)?;
+            eprintln!(
+                "{} of {} settings have no entry in doc/bird.sgml",
+                options.undocumented,
+                options.options.len()
+            );
+            let mut stdout = std::io::stdout().lock();
+            serde_json::to_writer(&mut stdout, &options.options)?;
+            writeln!(stdout)?;
+            Ok(())
+        }
         Command::Inspect { source } => {
             let mut stdout = std::io::stdout().lock();
             serde_json::to_writer_pretty(&mut stdout, &router::inspect(&source)?)?;

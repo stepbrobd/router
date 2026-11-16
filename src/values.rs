@@ -1,9 +1,11 @@
 mod addressable;
 mod forms;
 mod records;
+mod settings;
 mod shapes;
 
 pub(crate) use addressable::unaddressable;
+pub(crate) use settings::{Setting, settings};
 
 use crate::grammar::Grammar;
 use crate::registry::{self, Merge, Registry, Representation};
