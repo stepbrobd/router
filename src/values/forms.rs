@@ -81,6 +81,99 @@ pub(super) fn header(
     })
 }
 
+// a block whose statements start with a value, such as OSPF `networks { 10.0.0.0/8; }`, is an
+// ordered list of records, one per statement, and the block's scope stays only while a spread uses it
+pub(super) fn collect_keyless_blocks(
+    scopes: &mut BTreeMap<String, Vec<Form>>,
+    values: &mut Values<'_>,
+) {
+    let statement =
+        |form: &&Form| !matches!(form.parts.as_slice(), [Part::Literal { text }] if text == ";");
+    let blocks = scopes
+        .values()
+        .flatten()
+        .flat_map(|form| &form.parts)
+        .filter_map(|part| match part {
+            Part::Block { scope } => Some(scope.clone()),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    let keyless = scopes
+        .iter()
+        .filter(|(scope, forms)| {
+            let mut statements = forms.iter().filter(statement).peekable();
+            blocks.contains(*scope)
+                && statements.peek().is_some()
+                && statements.all(|form| {
+                    form.header.is_none()
+                        && !form.named
+                        && leading(&form.parts).is_empty()
+                        && !named_entry(&form.parts)
+                })
+        })
+        .map(|(scope, _)| scope.clone())
+        .collect::<Vec<_>>();
+    for scope in keyless {
+        let key = format!("$collection:{scope}");
+        let mut records = Vec::new();
+        for form in scopes[&scope].iter().filter(statement) {
+            let Some(projected) = values.projection_records(&form.parts, &BTreeMap::new(), &key)
+            else {
+                return;
+            };
+            records.extend(projected);
+        }
+        dedup_records(&mut records);
+        let item = format!("{key}:item");
+        values.types.insert(
+            item.clone(),
+            ValueShape::Record {
+                forms: records,
+                nullable: false,
+                merge: Merge::Replace,
+            },
+        );
+        values.types.insert(
+            key.clone(),
+            ValueShape::List {
+                item_rule: item,
+                separator: Vec::new(),
+                prefix: Vec::new(),
+                suffix: Vec::new(),
+                nullable: true,
+                merge: Merge::Append,
+            },
+        );
+        let mut spread = false;
+        for form in scopes.values_mut().flatten() {
+            spread |= form.parts.contains(&Part::Options {
+                scope: scope.clone(),
+            });
+            let block = Part::Block {
+                scope: scope.clone(),
+            };
+            while let Some(index) = form.parts.iter().position(|part| part == &block) {
+                form.parts.splice(
+                    index..=index,
+                    [
+                        Part::Literal { text: "{".into() },
+                        Part::Value {
+                            rule: key.clone(),
+                            value_kind: "typed".into(),
+                            value_type: Some(key.clone()),
+                            label: None,
+                        },
+                        Part::Literal { text: "}".into() },
+                    ],
+                );
+            }
+        }
+        if !spread {
+            scopes.remove(&scope);
+        }
+    }
+}
+
 // a statement that is one value whose record forms each start with keywords holds those
 // statements, such as `conf: debug_unix`, so each record form becomes a statement of the scope
 pub(super) fn hoist_keyless(forms: &mut Vec<Form>, values: &Values<'_>) {
@@ -727,5 +820,31 @@ mod tests {
             .map(|form| form.path.join("."))
             .collect::<Vec<_>>();
         assert_eq!(paths, ["watchdog-warning", "watchdog-timeout"]);
+    }
+
+    #[test]
+    fn keyless_blocks_and_separated_lists_become_list_values() {
+        let grammar = parse("%union { int i; }\n%token END NETWORKS HIDDEN PROVIDERS\n%token <i> NUM\n%type <i> expr\n%start config\n%%\nconfig: entries END; entries: | entries conf;\nconf: NETWORKS '{' nets '}' ';' | PROVIDERS providers ';';\nnets: | nets net;\nnet: expr ';' | expr HIDDEN ';';\nproviders: provider | providers ',' provider;\nprovider: expr;\nexpr: NUM;\n%%").unwrap();
+        let schema =
+            crate::surface::compile(&grammar, &keywords(&["NETWORKS", "HIDDEN", "PROVIDERS"]));
+        assert!(!schema.scopes.contains_key("nets[]"));
+        assert!(!schema.scopes.contains_key("providers[]"));
+        let Some(ValueShape::List { item_rule, .. }) = schema.value_types.get("$collection:nets[]")
+        else {
+            panic!("expected a list of network records");
+        };
+        let Some(ValueShape::Record { forms, .. }) = schema.value_types.get(item_rule) else {
+            panic!("expected network records");
+        };
+        assert!(forms.iter().any(|form| {
+            form.parts
+                .iter()
+                .any(|part| matches!(part, RecordPart::Field { name, .. } if name == "hidden"))
+        }));
+        assert!(matches!(
+            schema.value_types.get("providers"),
+            Some(ValueShape::List { separator, .. }) if separator == &[","]
+        ));
+        assert!(crate::values::unaddressable(&grammar, &schema).is_empty());
     }
 }

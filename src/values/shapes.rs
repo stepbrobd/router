@@ -395,7 +395,7 @@ impl Values<'_> {
             .grammar
             .rules
             .get(name)
-            .is_some_and(|rule| rule.storage_type.is_none())
+            .is_some_and(|rule| rule.storage_type.is_none() && !self.alias(rule))
             && binding.and_then(|binding| binding.shape).is_none()
         {
             ValueShape::Exact {
@@ -412,6 +412,16 @@ impl Values<'_> {
         };
         self.types.insert(name.into(), shape);
         self.active.remove(name);
+    }
+
+    // a rule whose productions are each one value, such as `X: expr { action }`, is that value
+    fn alias(&self, rule: &Rule) -> bool {
+        rule.productions.iter().all(|production| {
+            let mut values = production.symbols.iter().filter(|symbol| {
+                !matches!(symbol, Symbol::Reference(reference) if self.epsilon(reference, &mut BTreeSet::new()))
+            });
+            matches!((values.next(), values.next()), (Some(symbol @ Symbol::Reference(_)), None) if self.fixed(symbol).is_none())
+        })
     }
 
     // a registry flag renders its keyword sequence for true and nothing for false

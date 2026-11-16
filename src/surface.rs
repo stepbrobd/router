@@ -696,9 +696,32 @@ impl<'a> Compiler<'a> {
         Some(forms)
     }
 
+    // `X: item | X ',' item` is a list value, not a block of statements
+    fn separated_list(&self, name: &str) -> bool {
+        let productions = &self.grammar.rules[name].productions;
+        let (recursive, base): (Vec<_>, Vec<_>) = productions.iter().partition(|production| {
+            matches!(production.symbols.first(), Some(Symbol::Reference(reference)) if reference == name)
+        });
+        let [item] = base.as_slice() else {
+            return false;
+        };
+        !recursive.is_empty()
+            && recursive.iter().all(|production| {
+                let tail = &production.symbols[1..];
+                tail.len() > item.symbols.len()
+                    && tail.ends_with(&item.symbols)
+                    && tail[..tail.len() - item.symbols.len()]
+                        .iter()
+                        .all(|symbol| matches!(symbol, Symbol::Literal(_)))
+            })
+    }
+
     fn rule(&mut self, name: &str) -> Vec<Vec<Part>> {
         if let Some(part) = self.atomic(name) {
             return vec![vec![part]];
+        }
+        if self.separated_list(name) {
+            return vec![vec![value(name, "typed")]];
         }
         if !self.active.insert(name.into()) {
             // Indirect or mixed recursion remains explicitly grammar-shaped, never raw source.

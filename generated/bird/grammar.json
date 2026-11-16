@@ -84134,42 +84134,6 @@
           ]
         }
       ],
-      "nbma_list[]": [
-        {
-          "parts": [
-            {
-              "kind": "value",
-              "rule": "ipa",
-              "value_kind": "semantic",
-              "value_type": "ipa"
-            },
-            {
-              "kind": "literal",
-              "text": ";"
-            }
-          ],
-          "path": []
-        },
-        {
-          "parts": [
-            {
-              "kind": "value",
-              "rule": "ipa",
-              "value_kind": "semantic",
-              "value_type": "ipa"
-            },
-            {
-              "kind": "literal",
-              "text": "eligible"
-            },
-            {
-              "kind": "literal",
-              "text": ";"
-            }
-          ],
-          "path": []
-        }
-      ],
       "ospf_area_opts[]": [
         {
           "parts": [
@@ -84381,8 +84345,18 @@
               "text": "networks"
             },
             {
-              "kind": "block",
-              "scope": "pref_list[]"
+              "kind": "literal",
+              "text": "{"
+            },
+            {
+              "kind": "value",
+              "rule": "$collection:pref_list[]",
+              "value_kind": "typed",
+              "value_type": "$collection:pref_list[]"
+            },
+            {
+              "kind": "literal",
+              "text": "}"
             },
             {
               "kind": "literal",
@@ -84400,8 +84374,18 @@
               "text": "external"
             },
             {
-              "kind": "block",
-              "scope": "pref_list[]"
+              "kind": "literal",
+              "text": "{"
+            },
+            {
+              "kind": "value",
+              "rule": "$collection:pref_list[]",
+              "value_kind": "typed",
+              "value_type": "$collection:pref_list[]"
+            },
+            {
+              "kind": "literal",
+              "text": "}"
             },
             {
               "kind": "literal",
@@ -84988,8 +84972,18 @@
               "text": "neighbors"
             },
             {
-              "kind": "block",
-              "scope": "nbma_list[]"
+              "kind": "literal",
+              "text": "{"
+            },
+            {
+              "kind": "value",
+              "rule": "$collection:nbma_list[]",
+              "value_kind": "typed",
+              "value_type": "$collection:nbma_list[]"
+            },
+            {
+              "kind": "literal",
+              "text": "}"
             },
             {
               "kind": "literal",
@@ -88163,67 +88157,6 @@
           "path": [
             "max-generation"
           ]
-        }
-      ],
-      "pref_list[]": [
-        {
-          "parts": [
-            {
-              "kind": "value",
-              "rule": "net_ip",
-              "value_kind": "semantic",
-              "value_type": "net_ip"
-            },
-            {
-              "kind": "literal",
-              "text": ";"
-            }
-          ],
-          "path": []
-        },
-        {
-          "parts": [
-            {
-              "kind": "value",
-              "rule": "net_ip",
-              "value_kind": "semantic",
-              "value_type": "net_ip"
-            },
-            {
-              "kind": "literal",
-              "text": "hidden"
-            },
-            {
-              "kind": "literal",
-              "text": ";"
-            }
-          ],
-          "path": []
-        },
-        {
-          "parts": [
-            {
-              "kind": "value",
-              "rule": "net_ip",
-              "value_kind": "semantic",
-              "value_type": "net_ip"
-            },
-            {
-              "kind": "literal",
-              "text": "tag"
-            },
-            {
-              "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
-            },
-            {
-              "kind": "literal",
-              "text": ";"
-            }
-          ],
-          "path": []
         }
       ],
       "radv_dnssl_opts[]": [
@@ -92596,23 +92529,6 @@
           ]
         }
       ],
-      "stat_aspa_providers[]": [
-        {
-          "parts": [
-            {
-              "kind": "literal",
-              "text": ","
-            },
-            {
-              "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
-            }
-          ],
-          "path": []
-        }
-      ],
       "stat_nexthop[]": [
         {
           "parts": [
@@ -94328,6 +94244,24 @@
       "var_list_r"
     ],
     "value_types": {
+      "$$collection:nbma_list[]:flag:3:eligible": {
+        "kind": "enum",
+        "values": {
+          "true": [
+            "eligible"
+          ]
+        },
+        "nullable": false
+      },
+      "$$collection:pref_list[]:flag:3:hidden": {
+        "kind": "enum",
+        "values": {
+          "true": [
+            "hidden"
+          ]
+        },
+        "nullable": false
+      },
       "$aggregator_proto_opts:item": {
         "kind": "record",
         "forms": [
@@ -96329,6 +96263,130 @@
                 "kind": "field",
                 "name": "debug",
                 "rule": "debug_mask",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ";"
+              }
+            ]
+          }
+        ],
+        "nullable": false,
+        "merge": "replace"
+      },
+      "$collection:nbma_list[]": {
+        "kind": "list",
+        "item_rule": "$collection:nbma_list[]:item",
+        "separator": [],
+        "prefix": [],
+        "suffix": [],
+        "nullable": true,
+        "merge": "append"
+      },
+      "$collection:nbma_list[]:item": {
+        "kind": "record",
+        "forms": [
+          {
+            "parts": [
+              {
+                "kind": "field",
+                "name": "address",
+                "rule": "ipa",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ";"
+              }
+            ]
+          },
+          {
+            "parts": [
+              {
+                "kind": "field",
+                "name": "address",
+                "rule": "ipa",
+                "optional": false
+              },
+              {
+                "kind": "field",
+                "name": "eligible",
+                "rule": "$$collection:nbma_list[]:flag:3:eligible",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ";"
+              }
+            ]
+          }
+        ],
+        "nullable": false,
+        "merge": "replace"
+      },
+      "$collection:pref_list[]": {
+        "kind": "list",
+        "item_rule": "$collection:pref_list[]:item",
+        "separator": [],
+        "prefix": [],
+        "suffix": [],
+        "nullable": true,
+        "merge": "append"
+      },
+      "$collection:pref_list[]:item": {
+        "kind": "record",
+        "forms": [
+          {
+            "parts": [
+              {
+                "kind": "field",
+                "name": "prefix",
+                "rule": "net_ip",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ";"
+              }
+            ]
+          },
+          {
+            "parts": [
+              {
+                "kind": "field",
+                "name": "prefix",
+                "rule": "net_ip",
+                "optional": false
+              },
+              {
+                "kind": "field",
+                "name": "hidden",
+                "rule": "$$collection:pref_list[]:flag:3:hidden",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ";"
+              }
+            ]
+          },
+          {
+            "parts": [
+              {
+                "kind": "field",
+                "name": "prefix",
+                "rule": "net_ip",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": "tag"
+              },
+              {
+                "kind": "field",
+                "name": "tag",
+                "rule": "expr",
                 "optional": false
               },
               {
@@ -103042,12 +103100,8 @@
               {
                 "kind": "field",
                 "name": "providers",
-                "rule": "expr",
+                "rule": "stat_aspa_providers",
                 "optional": false
-              },
-              {
-                "kind": "spread",
-                "scope": "stat_aspa_providers[]"
               },
               {
                 "kind": "body",
@@ -103090,12 +103144,8 @@
               {
                 "kind": "field",
                 "name": "providers",
-                "rule": "expr",
+                "rule": "stat_aspa_providers",
                 "optional": false
-              },
-              {
-                "kind": "spread",
-                "scope": "stat_aspa_providers[]"
               },
               {
                 "kind": "body",
@@ -109985,8 +110035,10 @@
         "nullable": true
       },
       "bfd_multihop": {
-        "kind": "exact",
-        "rule": "bfd_multihop",
+        "kind": "choice",
+        "alternatives": [
+          "bfd_iface_opt_list"
+        ],
         "nullable": true
       },
       "bfd_neigh_iface": {
@@ -110261,8 +110313,10 @@
         "merge": "replace"
       },
       "bgp_channel_start": {
-        "kind": "exact",
-        "rule": "bgp_channel_start",
+        "kind": "choice",
+        "alternatives": [
+          "bgp_afi"
+        ],
         "nullable": false
       },
       "bgp_lladdr": {
@@ -111212,8 +111266,10 @@
         "nullable": false
       },
       "flow_num_type": {
-        "kind": "exact",
-        "rule": "flow_num_type",
+        "kind": "choice",
+        "alternatives": [
+          "flow_num_type_"
+        ],
         "nullable": false
       },
       "flow_num_type_": {
@@ -111422,9 +111478,15 @@
         "nullable": true
       },
       "iface_patt": {
-        "kind": "exact",
-        "rule": "iface_patt",
-        "nullable": false
+        "kind": "list",
+        "item_rule": "iface_patt_node",
+        "separator": [
+          ","
+        ],
+        "prefix": [],
+        "suffix": [],
+        "nullable": false,
+        "merge": "replace"
       },
       "iface_patt_init": {
         "kind": "exact",
@@ -111955,8 +112017,10 @@
         "merge": "replace"
       },
       "log_udp_host": {
-        "kind": "exact",
-        "rule": "log_udp_host",
+        "kind": "choice",
+        "alternatives": [
+          "text_or_ipa"
+        ],
         "nullable": false
       },
       "log_udp_port": {
@@ -112035,8 +112099,10 @@
         "nullable": true
       },
       "mpls_domain_opt": {
-        "kind": "exact",
-        "rule": "mpls_domain_opt",
+        "kind": "choice",
+        "alternatives": [
+          "mpls_range"
+        ],
         "nullable": false
       },
       "mpls_domain_opt_list": {
@@ -113001,8 +113067,10 @@
         "merge": "replace"
       },
       "ospf_stubnet_start": {
-        "kind": "exact",
-        "rule": "ospf_stubnet_start",
+        "kind": "choice",
+        "alternatives": [
+          "net_ip"
+        ],
         "nullable": false
       },
       "ospf_variant": {
@@ -113136,8 +113204,10 @@
         "nullable": true
       },
       "password_list": {
-        "kind": "exact",
-        "rule": "password_list",
+        "kind": "choice",
+        "alternatives": [
+          "password_list_body"
+        ],
         "nullable": false
       },
       "password_list_body": {
@@ -113156,8 +113226,10 @@
         "nullable": false
       },
       "pref_base": {
-        "kind": "exact",
-        "rule": "pref_base",
+        "kind": "choice",
+        "alternatives": [
+          "net_ip"
+        ],
         "nullable": false
       },
       "pref_item": {
@@ -113248,8 +113320,10 @@
         "nullable": true
       },
       "radv_dnssl_node": {
-        "kind": "exact",
-        "rule": "radv_dnssl_node",
+        "kind": "choice",
+        "alternatives": [
+          "text"
+        ],
         "nullable": false
       },
       "radv_dnssl_opts": {
@@ -113349,8 +113423,10 @@
         "merge": "replace"
       },
       "radv_prefix_start": {
-        "kind": "exact",
-        "rule": "radv_prefix_start",
+        "kind": "choice",
+        "alternatives": [
+          "net_ip6"
+        ],
         "nullable": false
       },
       "radv_proto": {
@@ -113389,8 +113465,10 @@
         "nullable": true
       },
       "radv_rdnss_node": {
-        "kind": "exact",
-        "rule": "radv_rdnss_node",
+        "kind": "choice",
+        "alternatives": [
+          "ipa"
+        ],
         "nullable": false
       },
       "radv_rdnss_opts": {
@@ -113510,8 +113588,10 @@
         "nullable": false
       },
       "rpki_cache_addr": {
-        "kind": "exact",
-        "rule": "rpki_cache_addr",
+        "kind": "choice",
+        "alternatives": [
+          "text_or_ipa"
+        ],
         "nullable": false
       },
       "rpki_keep_interval": {
@@ -113683,8 +113763,10 @@
         "merge": "replace"
       },
       "stat_aspa_provider": {
-        "kind": "exact",
-        "rule": "stat_aspa_provider",
+        "kind": "choice",
+        "alternatives": [
+          "expr"
+        ],
         "nullable": false
       },
       "stat_aspa_providers": {
@@ -116437,14 +116519,10 @@
         "l3vpn_proto_opts[] route-target: exact ec_item (filter/config.Y:738)",
         "mpls_channel_opts[] export-in: exact net_flow4_ (conf/flowspec.Y:191)",
         "mpls_channel_opts[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
-        "nbma_list[] : no setting path",
         "pipe_proto[] export-in: exact net_flow4_ (conf/flowspec.Y:191)",
         "pipe_proto[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
         "pipe_proto[] import-in: exact net_flow4_ (conf/flowspec.Y:191)",
         "pipe_proto[] import-in: exact net_flow6_ (conf/flowspec.Y:197)",
-        "pref_list[] : 2 parts after the setting name",
-        "pref_list[] : no setting path",
-        "stat_aspa_providers[] : no setting path",
         "static_proto[] route: exact net_flow4_ (conf/flowspec.Y:191)",
         "static_proto[] route: exact net_flow6_ (conf/flowspec.Y:197)"
       ],

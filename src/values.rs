@@ -122,8 +122,11 @@ pub fn compile(
     let protocol_header = registry
         .and_then(|registry| registry.bindings.get("protocol.header"))
         .and_then(|binding| forms::header(grammar, &values.spellings, &binding.rule));
-    for (scope, forms) in &mut schema.scopes {
+    for forms in schema.scopes.values_mut() {
         forms::hoist_keyless(forms, &values);
+    }
+    forms::collect_keyless_blocks(&mut schema.scopes, &mut values);
+    for (scope, forms) in &mut schema.scopes {
         forms::normalize_named_headers(forms, &values);
         forms::factor_enums(scope, forms, &mut values);
         if let Some(registry) = registry {
