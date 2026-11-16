@@ -57,6 +57,12 @@ pkgs.testers.runNixOSTest {
               assert machine.succeed("ip -4 -o address show dev eth1").strip() == ""
             ''}
 
+    with subtest("interface patterns exclude eth9 before a wildcard match"):
+        for machine, _, _, _, _, _, _ in roles:
+            machine.wait_until_succeeds("birdc 'show route table pattern_control protocol pattern_probe' | grep -F '192.0.2.200/32'")
+            connected = machine.succeed("birdc 'show route table main4 protocol connected'")
+            assert "192.0.2.200/32" not in connected, connected
+
     with subtest("local static routes exist but export selects only owned prefixes"):
         for machine, owned, forbidden, remote, _, _, _ in roles:
             local_routes = machine.succeed("birdc 'show route table main4 protocol originate4 where (65000, 999) ~ bgp_community'")
@@ -64,6 +70,16 @@ pkgs.testers.runNixOSTest {
             exported = machine.succeed("birdc 'show route export peer'")
             assert owned in exported, exported
             assert forbidden not in exported and remote not in exported, exported
+
+    with subtest("static inheritance appends and retains duplicate prefix sources"):
+        for machine, owned, _, _, _, _, _ in roles:
+            inherited = machine.succeed(
+                f"birdc 'show route table main4 all protocol originate4 where net = {owned} && (65000, 901) !~ bgp_community'"
+            )
+            appended = machine.succeed(
+                f"birdc 'show route table main4 all protocol originate4 where net = {owned} && (65000, 901) ~ bgp_community'"
+            )
+            assert owned in inherited and owned in appended, (inherited, appended)
 
     with subtest("named functions mutate all three community types and import policy accepts them"):
         for machine, _, _, remote, remote_forbidden, _, _ in roles:

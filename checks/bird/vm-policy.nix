@@ -1,88 +1,60 @@
-{ router, owned }:
-{ config, ... }:
-let
-  bird = router.bird;
-  inherit (bird) expr stmt;
-  settings = config.services.bird.settings;
-  member =
-    name: attribute:
-    expr.raw {
-      text = "${name} ~ ${attribute}";
-      type = "bool";
-      dependsOn = [ settings.defines.${name}.ref ];
-    };
-in
+{ router, owned, ... }:
+let bird = router.bird; in
 {
   services.bird.settings = {
-    defines = {
-      OWNED = bird.prefixSet [ owned ];
-      C_STANDARD = bird.community.standard 65000 100;
-      C_LARGE = bird.community.large 65000 100 1;
-      C_EXTENDED = bird.community.extended "rt" 65000 100;
-      C_STALE = bird.community.standard 65000 999;
+    define = {
+      OWNED = [ (bird.prefix owned) ];
+      C_STANDARD = bird.tuple [ 65000 100 ];
+      C_LARGE = bird.tuple [ 65000 100 1 ];
+      C_EXTENDED = bird.ec [ "rt" 65000 100 ];
+      C_STALE = bird.tuple [ 65000 999 ];
+      C_DUPLICATE = bird.tuple [ 65000 901 ];
     };
-    functions = {
+    function = {
       owns = {
-        params = [
-          {
-            name = "candidate";
-            type = "prefix";
-          }
-        ];
-        returnType = "bool";
-        body = [
-          (stmt.return (expr.inSet (expr.local "candidate") settings.defines.OWNED.ref))
-        ];
+        args = [{ name = "candidate"; type = "prefix"; }];
+        return = "bool";
+        body = ''
+          return candidate ~ OWNED;
+        '';
       };
-      tag_origin.body = [
-        (stmt.addCommunities [
-          settings.defines.C_STANDARD.ref
-          settings.defines.C_LARGE.ref
-          settings.defines.C_EXTENDED.ref
-        ])
-        (stmt.deleteCommunities [ settings.defines.C_STALE.ref ])
-      ];
+      tag_origin = {
+        args = [ ];
+        body = ''
+          bgp_community.add(C_STANDARD);
+          bgp_large_community.add(C_LARGE);
+          bgp_ext_community.add(C_EXTENDED);
+          bgp_community.delete(C_STALE);
+        '';
+      };
       verified = {
-        returnType = "bool";
-        body = [
-          (stmt.return (
-            expr.all [
-              (member "C_STANDARD" "bgp_community")
-              (member "C_LARGE" "bgp_large_community")
-              (member "C_EXTENDED" "bgp_ext_community")
-              (expr.not (member "C_STALE" "bgp_community"))
-              (expr.eq bird.route.bgpMed 42)
-            ]
-          ))
-        ];
+        args = [ ];
+        return = "bool";
+        body = ''
+          return (C_STANDARD ~ bgp_community)
+            && (C_LARGE ~ bgp_large_community)
+            && (C_EXTENDED ~ bgp_ext_community)
+            && !(C_STALE ~ bgp_community)
+            && (bgp_med = 42);
+        '';
       };
     };
-    filters = {
-      export_owned = {
-        default = "reject";
-        body = [
-          (stmt.when
-            (expr.all [
-              (expr.fromProtocol settings.protocols.originate4.ref)
-              (expr.call settings.functions.owns.ref [ bird.route.net ])
-            ])
-            [
-              (stmt.call settings.functions.tag_origin.ref [ ])
-              (stmt.set bird.route.bgpMed 42)
-              stmt.accept
-            ]
-          )
-        ];
-      };
-      import_verified = {
-        default = "reject";
-        body = [
-          (stmt.when (expr.call settings.functions.verified.ref [ ]) [
-            (stmt.set bird.route.bgpLocalPref 250)
-            stmt.accept
-          ])
-        ];
-      };
+    filter = {
+      export_owned.body = ''
+        if proto = "originate4" && owns(net) then {
+          tag_origin();
+          bgp_med = 42;
+          accept;
+        }
+        reject;
+      '';
+      import_verified.body = ''
+        if verified() then {
+          bgp_local_pref = 250;
+          accept;
+        }
+        reject;
+      '';
     };
   };
 }

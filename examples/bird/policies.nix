@@ -1,93 +1,50 @@
-{ config, lib, ... }:
-let
-  bird = lib.router.bird;
-  inherit (bird) expr stmt;
-in
 {
-  functions = {
+  function = {
     is_owned4 = {
-      params = [
-        {
-          name = "candidate";
-          type = "prefix";
-        }
-      ];
-      returnType = "bool";
-      body = [
-        (stmt.return (expr.inSet (expr.local "candidate") config.defines.OWNED4.ref))
-      ];
+      args = [{ name = "candidate"; type = "prefix"; }];
+      return = "bool";
+      body = ''
+        return candidate ~ OWNED4;
+      '';
     };
     is_owned6 = {
-      params = [
-        {
-          name = "candidate";
-          type = "prefix";
-        }
-      ];
-      returnType = "bool";
-      body = [
-        (stmt.return (expr.inSet (expr.local "candidate") config.defines.OWNED6.ref))
-      ];
+      args = [{ name = "candidate"; type = "prefix"; }];
+      return = "bool";
+      body = ''
+        return candidate ~ OWNED6;
+      '';
     };
-    tag_origin.body = [
-      (stmt.addCommunities [
-        config.defines.C_STANDARD.ref
-        config.defines.C_LARGE.ref
-        config.defines.C_EXTENDED.ref
-      ])
-    ];
+    tag_origin = {
+      args = [ ];
+      body = ''
+        bgp_community.add(C_STANDARD);
+        bgp_large_community.add(C_LARGE);
+        bgp_ext_community.add(C_EXTENDED);
+      '';
+    };
   };
 
-  filters = {
-    export_owned4 = {
-      default = "reject";
-      body = [
-        (stmt.when
-          (expr.all [
-            (expr.fromProtocol config.protocols.originate4.ref)
-            (expr.call config.functions.is_owned4.ref [ bird.route.net ])
-          ])
-          [
-            (stmt.call config.functions.tag_origin.ref [ ])
-            stmt.accept
-          ]
-        )
-      ];
-    };
-    export_owned6 = {
-      default = "reject";
-      body = [
-        (stmt.when
-          (expr.all [
-            (expr.fromProtocol config.protocols.originate6.ref)
-            (expr.call config.functions.is_owned6.ref [ bird.route.net ])
-          ])
-          [
-            (stmt.call config.functions.tag_origin.ref [ ])
-            stmt.accept
-          ]
-        )
-      ];
-    };
-    import_peer4 = {
-      default = "reject";
-      body = [
-        (stmt.when
-          (expr.inSet bird.route.net (
-            bird.prefixSet [
-              {
-                prefix = "198.51.100.0/24";
-                ge = 24;
-                le = 28;
-              }
-            ]
-          ))
-          [
-            (stmt.set bird.route.bgpLocalPref 150)
-            stmt.accept
-          ]
-        )
-      ];
-    };
+  filter = {
+    export_owned4.body = ''
+      if proto = "originate4" && is_owned4(net) then {
+        tag_origin();
+        accept;
+      }
+      reject;
+    '';
+    export_owned6.body = ''
+      if proto = "originate6" && is_owned6(net) then {
+        tag_origin();
+        accept;
+      }
+      reject;
+    '';
+    import_peer4.body = ''
+      if net ~ [ 198.51.100.0/24{24,28} ] then {
+        bgp_local_pref = 150;
+        accept;
+      }
+      reject;
+    '';
   };
 }

@@ -6,15 +6,15 @@
 , owned
 , forbidden
 }:
-{ config, pkgs, ... }:
+{ pkgs, config, ... }:
 let
   bird = router.bird;
-  settings = config.services.bird.settings;
   peerId = 3 - nodeId;
   address = id: if crossFamily then "2001:db8:1::${toString id}" else "192.0.2.${toString id}";
   source = id: if crossFamily then "2001:db8:1::1${toString id}" else "192.0.2.1${toString id}";
   prefixLength = if crossFamily then "64" else "24";
   fixture = ../../examples/bird/credentials.example.conf;
+  resolved = bird.resolve config.services.bird.settings;
 in
 {
   imports = [
@@ -33,8 +33,18 @@ in
     networkConfig = {
       Address = [
         "${address nodeId}/${prefixLength}"
-        "${source nodeId}/${prefixLength}"
+        "${resolved.protocol.bgp.peer.source-address}/${prefixLength}"
       ];
+      DHCP = "no";
+      IPv6AcceptRA = false;
+      LinkLocalAddressing = "no";
+    };
+  };
+  systemd.network.netdevs."02-eth9".netdevConfig = { Name = "eth9"; Kind = "dummy"; };
+  systemd.network.networks."02-eth9" = {
+    name = "eth9";
+    networkConfig = {
+      Address = [ "192.0.2.200/32" ];
       DHCP = "no";
       IPv6AcceptRA = false;
       LinkLocalAddressing = "no";
@@ -44,83 +54,83 @@ in
   environment.etc."bird/credentials.conf".source = fixture;
   services.bird = {
     enable = true;
-    package = pkgs.bird3;
+    package = self.packages.${pkgs.stdenv.hostPlatform.system}.bird;
     preCheckConfig = ''
       cp ${fixture} credentials.conf
     '';
     settings = {
-      id = "192.0.2.${toString nodeId}";
-      includes = [ "credentials.conf" ];
-      tables = {
-        main4.type = "ipv4";
-      }
-      // lib.optionalAttrs crossFamily { main6.type = "ipv6"; };
-      protocols = {
-        device0 = {
-          type = "device";
-          scanTime = 1;
-        };
-        connected = {
-          type = "direct";
-          interfaces = [ "eth1" ];
-          checkLink = true;
-          channels = {
-            ipv4.table = settings.tables.main4.ref;
-          }
-          // lib.optionalAttrs crossFamily { ipv6.table = settings.tables.main6.ref; };
-        };
-        originate4 = {
-          type = "static";
-          channels.ipv4.table = settings.tables.main4.ref;
-          routes =
-            map
-              (prefix: {
-                inherit prefix;
-                destination.type = "blackhole";
-                body = [ (bird.stmt.addCommunities [ settings.defines.C_STALE.ref ]) ];
-              })
-              [
-                owned
-                forbidden
-              ];
-        };
-        kernel4 = {
-          type = "kernel";
-          kernelTable = 200;
-          scanTime = 1;
-          metric = 32;
-          channels.ipv4 = {
-            table = settings.tables.main4.ref;
+      router-id = "192.0.2.${toString nodeId}";
+      include = [ "credentials.conf" ];
+      ipv4.table.main4 = { };
+      ipv4.table.pattern_control = { };
+      filter.import_verified.body = lib.mkBefore "bgp_local_pref = 1;";
+      template.bgp = {
+        z_transport = {
+          local.as = 65000 + nodeId;
+          source-address = address nodeId;
+          direct = true;
+          hold-time = 15;
+          keepalive-time = 5;
+          ipv4 = {
+            table = "main4";
             import = "none";
-            export.where = bird.expr.fromProtocol settings.protocols.peer.ref;
+            export = "none";
+            gateway = "direct";
+            extended-next-hop = crossFamily;
+            next-hop-self = true;
+            next-hop-address = source nodeId;
           };
         };
-        peer = {
-          type = "bgp";
-          local.asn = 65000 + nodeId;
-          neighbor = {
-            asn = 65000 + peerId;
-            address = source peerId;
-          };
-          sourceAddress = source nodeId;
-          holdTime = 15;
-          keepaliveTime = 5;
-          password = bird.external {
-            kind = "value";
-            name = "EXAMPLE_PEER_PASSWORD";
-            type = "string";
-          };
-          channels.ipv4 = {
-            table = settings.tables.main4.ref;
-            import = settings.filters.import_verified.ref;
-            export = settings.filters.export_owned.ref;
-            gateway = "direct";
-            extendedNextHop = crossFamily;
-            nextHopSelf = true;
-            nextHopAddress = source nodeId;
-          };
+        a_policy = {
+          from = "z_transport";
+          password = bird.symbol "EXAMPLE_PEER_PASSWORD";
+          ipv4.export.filter = "export_owned";
         };
       };
-    };
+      template.static.origin_base = {
+        ipv4.table = "main4";
+        route = [{ prefix = owned; blackhole = true; body = "bgp_community.add(C_STALE);"; }];
+      };
+      protocol = {
+        device.device0.scan-time = 1;
+        direct.connected = {
+          interface = [{
+            patterns = [
+              { pattern = "eth9"; exclude = true; }
+              { pattern = "eth*"; }
+            ];
+          }];
+          check-link = true;
+          ipv4.table = "main4";
+        } // lib.optionalAttrs crossFamily { ipv6.table = "main6"; };
+        direct.pattern_probe = {
+          interface = [{ pattern = "eth9"; }];
+          ipv4.table = "pattern_control";
+        };
+        static.originate4 = {
+          from = "origin_base";
+          route = [
+            { prefix = forbidden; blackhole = true; body = "bgp_community.add(C_STALE);"; }
+            { prefix = owned; blackhole = true; body = "bgp_community.add(C_STALE); bgp_community.add(C_DUPLICATE);"; }
+          ];
+        };
+        kernel.kernel4 = {
+          kernel-table = 200;
+          scan-time = 1;
+          metric = 32;
+          ipv4 = {
+            table = "main4";
+            import = "none";
+            export.where = ''proto = "peer"'';
+          };
+        };
+        bgp.peer = {
+          from = "a_policy";
+          local.address = source nodeId;
+          neighbor = { address = source peerId; as = 65000 + peerId; };
+          ipv4.import.filter = "import_verified";
+        };
+      };
+    } // lib.optionalAttrs crossFamily { ipv6.table.main6 = { }; };
   };
 }

@@ -1,59 +1,42 @@
-{ config, lib, ... }:
-let
-  bird = lib.router.bird;
-  password = bird.external {
-    kind = "value";
-    name = "EXAMPLE_PEER_PASSWORD";
-    type = "string";
-  };
-in
+{ lib, ... }:
+let bird = lib.router.bird; in
 {
-  protocols = {
+  protocol.bgp = {
     upstream4 = {
-      type = "bgp";
-      local.asn = 65000;
-      neighbor = {
-        asn = 65001;
-        address = "192.0.2.1";
-      };
-      transport.type = "direct";
-      sourceAddress = "192.0.2.10";
-      gracefulRestart = "aware";
-      holdTime = 30;
-      keepaliveTime = 10;
-      inherit password;
-      channels.ipv4 = {
-        table = config.tables.main4.ref;
-        import = config.filters.import_peer4.ref;
-        export = config.filters.export_owned4.ref;
-        nextHopSelf = true;
+      local.as = 65000;
+      neighbor = { address = "192.0.2.1"; as = 65001; };
+      direct = true;
+      source-address = "192.0.2.10";
+      graceful-restart-aware = true;
+      hold-time = 30;
+      keepalive-time = 10;
+      password = bird.symbol "EXAMPLE_PEER_PASSWORD";
+      ipv4 = {
+        table = "main4";
+        import.filter = "import_peer4";
+        export.filter = "export_owned4";
+        next-hop-self = true;
       };
     };
     upstream6 = {
-      type = "bgp";
-      local.asn = 65000;
-      neighbor = {
-        asn = 65002;
-        address = "2001:db8:ffff::1";
+      local.as = 65000;
+      neighbor = { address = "2001:db8:ffff::1"; as = 65002; };
+      direct = true;
+      source-address = "2001:db8:ffff::2";
+      password = bird.symbol "EXAMPLE_PEER_PASSWORD";
+      ipv4 = {
+        table = "main4";
+        import = "none";
+        export.filter = "export_owned4";
+        extended-next-hop = true;
+        next-hop-self = true;
+        next-hop-address = "2001:db8:ffff::2";
       };
-      transport.type = "direct";
-      sourceAddress = "2001:db8:ffff::2";
-      inherit password;
-      channels = {
-        ipv4 = {
-          table = config.tables.main4.ref;
-          import = "none";
-          export = config.filters.export_owned4.ref;
-          extendedNextHop = true;
-          nextHopSelf = true;
-          nextHopAddress = "2001:db8:ffff::2";
-        };
-        ipv6 = {
-          table = config.tables.main6.ref;
-          import = "none";
-          export = config.filters.export_owned6.ref;
-          nextHopSelf = true;
-        };
+      ipv6 = {
+        table = "main6";
+        import = "none";
+        export.filter = "export_owned6";
+        next-hop-self = true;
       };
     };
   };
