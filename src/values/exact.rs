@@ -96,3 +96,29 @@ fn exact_shape(
         _ => BTreeSet::new(),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::fixtures::keywords;
+    use super::*;
+    use crate::grammar::parse;
+
+    #[test]
+    fn unnamed_positional_values_and_all_exact_alternatives_need_exact_nodes() {
+        let grammar = parse("%union { int i; }\n%token END SETTLE HOLD MODE KIND PICK\n%token <i> NUM\n%type <i> expr mode other either some\n%start config\n%%\nconfig: entries END; entries: | entries conf;\nconf: SETTLE expr expr ';' | HOLD expr ';' | MODE mode ';' | KIND either ';' | PICK some ';';\nexpr: NUM;\nmode: NUM NUM;\nother: NUM NUM NUM;\neither: mode | other;\nsome: mode | expr;\n%%").unwrap();
+        let schema = crate::surface::compile(
+            &grammar,
+            &keywords(&["SETTLE", "HOLD", "MODE", "KIND", "PICK"]),
+        );
+        let scope = &schema.root;
+        assert_eq!(
+            exact_settings(&schema),
+            [
+                format!("{scope} kind -> mode"),
+                format!("{scope} kind -> other"),
+                format!("{scope} mode -> mode"),
+                format!("{scope} settle"),
+            ]
+        );
+    }
+}

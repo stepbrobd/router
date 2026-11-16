@@ -499,7 +499,7 @@ pub(super) fn assign_paths(
 
 #[cfg(test)]
 mod tests {
-    use super::super::fixtures::keywords;
+    use super::super::fixtures::{keywords, value_compiler};
     use super::*;
     use crate::grammar::parse;
 
@@ -527,5 +527,86 @@ mod tests {
         assert_eq!(header.name_rule, "symbol");
         assert_eq!(header.from_rule.as_deref(), Some("PARENT"));
         assert_eq!(header.from_prefix, vec!["from"]);
+    }
+
+    fn statement(parts: &[&str]) -> Form {
+        Form {
+            parts: parts
+                .iter()
+                .map(|part| match part.strip_prefix('$') {
+                    Some(rule) => Part::Value {
+                        rule: rule.into(),
+                        value_kind: "typed".into(),
+                        value_type: None,
+                    },
+                    None => Part::Literal {
+                        text: (*part).into(),
+                    },
+                })
+                .collect(),
+            path: Vec::new(),
+            header: None,
+        }
+    }
+
+    fn positional_grammar() -> Grammar {
+        parse("%union { int i; char *t; }\n%token END\n%token <i> NUM\n%token <t> TEXT\n%type <i> expr\n%type <t> word\n%start config\n%%\nconfig: END; expr: NUM; word: TEXT;\n%%").unwrap()
+    }
+
+    #[test]
+    fn positional_values_become_one_record_named_by_keyword_or_label() {
+        let grammar = positional_grammar();
+        let program_rules = BTreeSet::new();
+        let mut values = value_compiler(&grammar, &[], &program_rules);
+        let mut forms = vec![statement(&["limit", "$expr", "action", "$word", ";"])];
+        project_positional("conf[]", &mut forms, &mut values);
+        let key = "$positional:conf[]:limit";
+        assert_eq!(
+            forms,
+            [Form {
+                parts: vec![
+                    Part::Literal {
+                        text: "limit".into()
+                    },
+                    Part::Value {
+                        rule: key.into(),
+                        value_kind: "typed".into(),
+                        value_type: Some(key.into()),
+                    },
+                    Part::Literal { text: ";".into() },
+                ],
+                path: vec!["limit".into()],
+                header: None,
+            }]
+        );
+        let Some(ValueShape::Record { forms: records, .. }) = values.types.get(key) else {
+            panic!("expected a positional record");
+        };
+        let fields = records[0]
+            .parts
+            .iter()
+            .filter_map(|part| match part {
+                RecordPart::Field { name, rule, .. } => Some((name.as_str(), rule.as_str())),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(fields, [("expr", "expr"), ("action", "word")]);
+    }
+
+    #[test]
+    fn positional_values_without_distinct_names_keep_their_exact_form() {
+        let grammar = positional_grammar();
+        let program_rules = BTreeSet::new();
+        let mut values = value_compiler(&grammar, &[], &program_rules);
+        let original = vec![statement(&["settle", "$expr", "$expr", ";"])];
+        let mut forms = original.clone();
+        project_positional("conf[]", &mut forms, &mut values);
+        assert_eq!(forms, original);
+        assert!(
+            !values
+                .types
+                .keys()
+                .any(|key| key.starts_with("$positional"))
+        );
     }
 }
