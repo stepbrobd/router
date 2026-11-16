@@ -233,6 +233,8 @@ let
       renderValue expressionRule value
     else if representation == "expression" then
       if !data value then bad
+      # every reader of a parenthesized config expression asserts a scalar type, never a set
+      else if isList value && (shape.expression_prefix or [ ]) != [ ] then bad
       else if tag == "symbol" then good (semantic value)
       else good (join ((shape.expression_prefix or [ ]) ++ [ (semantic value) ] ++ (shape.expression_suffix or [ ])))
     else if representation == "number-expression" then
@@ -281,6 +283,12 @@ let
       if hasAttr value values then good (join values.${value})
       else if elem value tokens then good value
       else alternatives recursive;
+  entryNames = lib.mapAttrs (_: forms: map (form: head form.path) (filter (form: form.path != [ ]) forms)) schema.scopes;
+  # options outside braces continue their statement on its line
+  renderOptions = scope: value:
+    let results = map (name: renderEntry scope [ name ] value.${name}) (orderedNames value);
+    in if all (result: result.ok) results then good (join (map (result: result.text) results))
+    else head (filter (result: !result.ok) results);
   renderRecord = shape: value:
     if !ordinary value then bad
     else
@@ -292,11 +300,16 @@ let
               names = map (part: part.name) fields;
               spreads = filter (part: part.kind == "spread") form.parts;
               remaining = removeAttrs value names;
+              # a setting no spread knows goes to the first, whose error then names it
+              owner = name: (lib.findFirst (part: elem name entryNames.${part.scope}) (head spreads) spreads).scope;
+              share = scope: lib.filterAttrs (name: _: owner name == scope) remaining;
               required = all (part: (part.optional or false) || hasAttr part.name value) fields;
-              results = map
-                (part:
+              braced = index: index > 0 && elemAt form.parts (index - 1) == { kind = "literal"; text = "{"; };
+              results = lib.imap0
+                (index: part:
                   if part.kind == "literal" then good part.text
-                  else if part.kind == "spread" then renderScope part.scope remaining
+                  else if part.kind == "spread" then
+                    if braced index then renderScope part.scope (share part.scope) else renderOptions part.scope (share part.scope)
                   else if !hasAttr part.name value then good ""
                   else located [ part.name ] (renderValue part.rule value.${part.name}))
                 form.parts;
