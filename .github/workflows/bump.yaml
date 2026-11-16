@@ -46,7 +46,7 @@ jobs:
           branch=bump/bird
           git switch --force-create "$branch"
 
-          exact() { jq '.registry.diagnostics.exact_settings' generated/bird/grammar.json; }
+          exact() { jq '.registry.diagnostics.unaddressable' generated/bird/grammar.json; }
           before=$(exact)
           old=$(jq -r '.nodes.bird.locked.rev' flake.lock)
 
@@ -64,7 +64,7 @@ jobs:
           git commit -m "$title"
           git push --force -u origin "$branch"
 
-          # settings that need exact grammar nodes after the bump, compared with before it
+          # settings that cannot be written as attributes after the bump, compared with before it
           # shellcheck disable=SC2016 # $before is a jq variable
           added=$(exact | jq -r --argjson before "$before" '. - $before | .[]')
           # shellcheck disable=SC2016
@@ -72,10 +72,10 @@ jobs:
           bullets() { local -a lines; mapfile -t lines <<<"$1"; printf -- '- %s\n' "${lines[@]}"; }
           body="https://github.com/cz-nic/bird/compare/${old}...${new}"
           if [[ -n "$added" ]]; then
-            body+=$'\n\nNew settings that need exact grammar nodes, review before merging:\n'"$(bullets "$added")"
+            body+=$'\n\nNew settings that cannot be written as attributes, review before merging:\n'"$(bullets "$added")"
           fi
           if [[ -n "$removed" ]]; then
-            body+=$'\n\nSettings that no longer need exact grammar nodes:\n'"$(bullets "$removed")"
+            body+=$'\n\nSettings that can now be written as attributes:\n'"$(bullets "$removed")"
           fi
 
           if [[ $(gh pr view "$branch" --json state --jq .state 2>/dev/null) == OPEN ]]; then

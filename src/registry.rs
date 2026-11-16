@@ -208,7 +208,7 @@ pub struct Effect {
 
 #[derive(Debug, Default, Serialize)]
 pub struct Diagnostics {
-    pub exact_settings: Vec<String>,
+    pub unaddressable: Vec<String>,
     pub unprojected: Vec<String>,
 }
 
@@ -845,7 +845,7 @@ impl Registry {
                 )));
             }
         }
-        self.diagnostics.exact_settings = crate::values::exact_settings(schema);
+        self.diagnostics.unaddressable = crate::values::unaddressable(grammar, schema);
         self.diagnostics.unprojected = schema
             .value_types
             .keys()

@@ -1,9 +1,9 @@
-mod exact;
+mod addressable;
 mod forms;
 mod records;
 mod shapes;
 
-pub(crate) use exact::exact_settings;
+pub(crate) use addressable::unaddressable;
 
 use crate::grammar::Grammar;
 use crate::registry::{self, Merge, Registry, Representation};

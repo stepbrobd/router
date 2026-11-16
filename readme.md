@@ -197,9 +197,9 @@ runtime in `lib/router/bird` interprets it, and the NixOS module there is what
 `nixosModules.bird` imports. The checked-in inventory follows the `bird` input
 in `flake.lock`, BIRD's `thread-next` branch. Grammar productions remain
 available through their exact production form, `{ _rule; _production; _args; }`,
-when a construct has no attribute form. `inspect` lists the settings that still
-need one in `registry.diagnostics.exact_settings`, such as the settle times and
-`timeformat`.
+when a construct has no attribute form. The `inspect` command lists the setting
+forms the runtime cannot write from attributes in
+`registry.diagnostics.unaddressable`, such as the settle times and `timeformat`.
 
 `registry/bird.toml` holds the stable public type and field identities, source
 aliases, projection hints and declaration order, grouped by table kind. Syntax,
