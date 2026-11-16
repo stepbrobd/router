@@ -12,6 +12,7 @@
         (_: package: lib.meta.availableOn pkgs.stdenv.hostPlatform package)
         (packages // {
           bird = packages.bird.override { source = inputs.bird; };
+          default = packages.router;
         });
     };
 }
