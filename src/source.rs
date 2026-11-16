@@ -46,6 +46,8 @@ pub struct Assembly {
     pub keywords: Vec<Keyword>,
     pub include: Include,
     pub facts: BTreeMap<String, String>,
+    // identifiers in conf/cf-lex.l, which name every non-keyword token the lexer can emit
+    pub lexer_words: BTreeSet<String>,
 }
 
 fn error(file: &str, line: usize, message: impl Into<String>) -> Error {
@@ -578,6 +580,11 @@ pub fn read(root: &Path) -> Result<Assembly, Error> {
         parser,
         keywords,
         facts,
+        lexer_words: lexer
+            .split(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
+            .filter(|word| !word.is_empty())
+            .map(str::to_owned)
+            .collect(),
         include: Include {
             keyword: "include",
             argument: "nonempty double-quoted filename or glob, terminated by semicolon",

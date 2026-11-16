@@ -406,6 +406,12 @@ fn annotation(action: &str, position: usize, source: Location) -> Action {
 }
 
 pub fn parse(input: &str) -> Result<Grammar, Error> {
+    parse_lexed(input, &|_| true)
+}
+
+// `lexed` tells whether BIRD's lexer can emit a declared token
+// a production that needs a token it never emits is dead, such as a placeholder that a protocol overrides
+pub fn parse_lexed(input: &str, lexed: &dyn Fn(&str) -> bool) -> Result<Grammar, Error> {
     let mut lexer = Lexer::new(input, "<m4-output>");
     let mut lexemes = Vec::new();
     // The epilogue is C, not grammar. Do not lex it as grammar syntax.
@@ -653,6 +659,19 @@ pub fn parse(input: &str) -> Result<Grammar, Error> {
             }
         }
     }
+    for (name, rule) in &mut grammar.rules {
+        rule.productions.retain(|production| {
+            !production.symbols.iter().any(|symbol| {
+                matches!(symbol, Symbol::Reference(token) if grammar.tokens.contains_key(token) && !lexed(token))
+            })
+        });
+        if rule.productions.is_empty() {
+            return Err(Error::at(
+                rule.source.clone(),
+                format!("every production of {name} needs a token the lexer never emits"),
+            ));
+        }
+    }
     // CLI is a separate entry alternative, never a configuration construct.
     let start = grammar
         .rules
@@ -746,6 +765,19 @@ mod tests {
         let action = &grammar.rules["item"].productions[0].actions[0];
         assert!(action.storage.contains(&"cfg->value".to_owned()));
         assert_eq!(grammar.rules["entries"].productions.len(), 2);
+    }
+
+    #[test]
+    fn productions_needing_a_token_the_lexer_never_emits_are_dropped() {
+        let input = "%token END BFD INVALID_TOKEN\n%start config\n%%\nconfig: opts END;\nopts: '{' INVALID_TOKEN '}' | '{' BFD '}';\n%%";
+        let grammar = parse_lexed(input, &|token| token != "INVALID_TOKEN").unwrap();
+        assert_eq!(grammar.rules["opts"].productions.len(), 1);
+        assert_eq!(
+            grammar.rules["opts"].productions[0].symbols[1],
+            Symbol::Reference("BFD".into())
+        );
+        let error = parse_lexed(input, &|token| token == "END").unwrap_err();
+        assert!(error.message.contains("every production of opts"));
     }
 
     #[test]

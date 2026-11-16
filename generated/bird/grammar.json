@@ -11799,28 +11799,6 @@
               },
               {
                 "kind": "reference",
-                "value": "INVALID_TOKEN"
-              },
-              {
-                "kind": "literal",
-                "value": "}"
-              }
-            ],
-            "precedence": null,
-            "actions": [],
-            "source": {
-              "file": "nest/config.Y",
-              "line": 691
-            }
-          },
-          {
-            "symbols": [
-              {
-                "kind": "literal",
-                "value": "{"
-              },
-              {
-                "kind": "reference",
                 "value": "bfd_opts_start"
               },
               {
@@ -58494,7 +58472,7 @@
           "file": "conf/confbase.Y",
           "line": 141
         },
-        "configuration_reachable": true
+        "configuration_reachable": false
       },
       "IP": {
         "storage_type": "s",
@@ -74719,35 +74697,6 @@
           ],
           "path": [
             "bfd-graceful"
-          ]
-        },
-        {
-          "parts": [
-            {
-              "kind": "literal",
-              "text": "bfd"
-            },
-            {
-              "kind": "literal",
-              "text": "{"
-            },
-            {
-              "kind": "value",
-              "rule": "INVALID_TOKEN",
-              "value_kind": "semantic",
-              "value_type": "INVALID_TOKEN"
-            },
-            {
-              "kind": "literal",
-              "text": "}"
-            },
-            {
-              "kind": "literal",
-              "text": ";"
-            }
-          ],
-          "path": [
-            "bfd"
           ]
         },
         {
@@ -116052,7 +116001,6 @@
         "bgp_channel_opts[] export-in: exact net_flow4_ (conf/flowspec.Y:191)",
         "bgp_channel_opts[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
         "bgp_channel_opts[] export-settle-time: exact settle (conf/confbase.Y:547)",
-        "bgp_proto[] bfd: exact INVALID_TOKEN (conf/confbase.Y:141)",
         "bgp_proto[] error-wait-time: 2 parts after the setting name",
         "channel_opts[] export-in: exact net_flow4_ (conf/flowspec.Y:191)",
         "channel_opts[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",

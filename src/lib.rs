@@ -23,7 +23,14 @@ pub struct Inventory {
 
 pub fn inspect(source: &Path) -> Result<Inventory, grammar::Error> {
     let assembly = source::read(source)?;
-    let grammar = grammar::parse(&assembly.parser)?;
+    let lexed = |token: &str| {
+        assembly.lexer_words.contains(token)
+            || assembly
+                .keywords
+                .iter()
+                .any(|keyword| keyword.token == token)
+    };
+    let grammar = grammar::parse_lexed(&assembly.parser, &lexed)?;
     let mut registry = registry::Registry::resolve(&grammar, &assembly.keywords, &assembly.facts)?;
     let schema = surface::compile_with_registry(&grammar, &assembly.keywords, &registry);
     registry.complete(&grammar, &schema)?;
