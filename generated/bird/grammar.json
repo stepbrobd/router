@@ -78677,13 +78677,90 @@
         {
           "parts": [
             {
+              "kind": "literal",
+              "text": "debug"
+            },
+            {
+              "kind": "literal",
+              "text": "latency"
+            },
+            {
               "kind": "value",
-              "rule": "debug_unix",
-              "value_kind": "semantic",
-              "value_type": "debug_unix"
+              "rule": "latency_debug_mask",
+              "value_kind": "typed",
+              "value_type": "latency_debug_mask"
             }
           ],
-          "path": []
+          "path": [
+            "debug-latency"
+          ]
+        },
+        {
+          "parts": [
+            {
+              "kind": "literal",
+              "text": "debug"
+            },
+            {
+              "kind": "literal",
+              "text": "latency"
+            },
+            {
+              "kind": "literal",
+              "text": "limit"
+            },
+            {
+              "kind": "value",
+              "rule": "expr_us",
+              "value_kind": "typed",
+              "value_type": "expr_us"
+            }
+          ],
+          "path": [
+            "debug-latency-limit"
+          ]
+        },
+        {
+          "parts": [
+            {
+              "kind": "literal",
+              "text": "watchdog"
+            },
+            {
+              "kind": "literal",
+              "text": "warning"
+            },
+            {
+              "kind": "value",
+              "rule": "expr_us",
+              "value_kind": "typed",
+              "value_type": "expr_us"
+            }
+          ],
+          "path": [
+            "watchdog-warning"
+          ]
+        },
+        {
+          "parts": [
+            {
+              "kind": "literal",
+              "text": "watchdog"
+            },
+            {
+              "kind": "literal",
+              "text": "timeout"
+            },
+            {
+              "kind": "value",
+              "rule": "expr_us",
+              "value_kind": "typed",
+              "value_type": "expr_us"
+            }
+          ],
+          "path": [
+            "watchdog-timeout"
+          ]
         }
       ],
       "dev_proto[]": [
@@ -83969,17 +84046,21 @@
         {
           "parts": [
             {
-              "kind": "value",
-              "rule": "where_filter",
-              "value_kind": "semantic",
-              "value_type": "where_filter"
+              "kind": "literal",
+              "text": "where"
+            },
+            {
+              "kind": "body",
+              "rule": "$where_filter:constant.expression:native"
             },
             {
               "kind": "literal",
               "text": ";"
             }
           ],
-          "path": []
+          "path": [
+            "where"
+          ]
         },
         {
           "parts": [
@@ -116348,7 +116429,6 @@
         "bgp_channel_opts[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
         "channel_opts[] export-in: exact net_flow4_ (conf/flowspec.Y:191)",
         "channel_opts[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
-        "conf_entries[] : no setting path",
         "evpn_proto_opts[] export-target: exact ec_item (filter/config.Y:738)",
         "evpn_proto_opts[] import-target: exact ec_item (filter/config.Y:738)",
         "evpn_proto_opts[] route-target: exact ec_item (filter/config.Y:738)",
@@ -116357,7 +116437,6 @@
         "l3vpn_proto_opts[] route-target: exact ec_item (filter/config.Y:738)",
         "mpls_channel_opts[] export-in: exact net_flow4_ (conf/flowspec.Y:191)",
         "mpls_channel_opts[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
-        "mrt_proto_opts[] : no setting path",
         "nbma_list[] : no setting path",
         "pipe_proto[] export-in: exact net_flow4_ (conf/flowspec.Y:191)",
         "pipe_proto[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",

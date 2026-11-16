@@ -1,7 +1,7 @@
 use super::records::dedup_records;
 use super::{
-    RecordPart, ValueShape, Values, common_prefix, leading, named_entry, retain_indexed,
-    statement_tail,
+    RecordPart, ValueShape, Values, common_prefix, leading, named_entry, punctuation,
+    retain_indexed, statement_tail,
 };
 use crate::grammar::{Grammar, Symbol};
 use crate::registry::{self, Merge, Registry, Shape, StorageRole};
@@ -79,6 +79,67 @@ pub(super) fn header(
         field: registry::definition().header_field.clone(),
         modifiers: Vec::new(),
     })
+}
+
+// a statement that is one value whose record forms each start with keywords holds those
+// statements, such as `conf: debug_unix`, so each record form becomes a statement of the scope
+pub(super) fn hoist_keyless(forms: &mut Vec<Form>, values: &Values<'_>) {
+    let mut hoisted = Vec::with_capacity(forms.len());
+    for form in forms.drain(..) {
+        match keyword_records(&form, values) {
+            Some(statements) => hoisted.extend(statements),
+            None => hoisted.push(form),
+        }
+    }
+    *forms = hoisted;
+}
+
+fn keyword_records(form: &Form, values: &Values<'_>) -> Option<Vec<Form>> {
+    let [Part::Value { rule, .. }, tail @ ..] = form.parts.as_slice() else {
+        return None;
+    };
+    if form.header.is_some()
+        || form.named
+        || !tail.iter().all(|part| matches!(part, Part::Literal { .. }))
+    {
+        return None;
+    }
+    let Some(ValueShape::Record { forms: records, .. }) = values.types.get(rule) else {
+        return None;
+    };
+    records
+        .iter()
+        .map(|record| {
+            if !matches!(record.parts.first(), Some(RecordPart::Literal { text }) if !punctuation(text))
+            {
+                return None;
+            }
+            let mut parts = record
+                .parts
+                .iter()
+                .map(|part| match part {
+                    RecordPart::Literal { text } => Part::Literal { text: text.clone() },
+                    RecordPart::Field { rule, .. } => Part::Value {
+                        rule: rule.clone(),
+                        value_kind: "typed".into(),
+                        value_type: None,
+                        label: None,
+                    },
+                    RecordPart::Body { rule, .. } => Part::Body { rule: rule.clone() },
+                    RecordPart::Spread { scope } => Part::Options {
+                        scope: scope.clone(),
+                    },
+                })
+                .collect::<Vec<_>>();
+            parts.extend(tail.iter().cloned());
+            Some(Form {
+                parts,
+                path: Vec::new(),
+                header: None,
+                named: false,
+            })
+        })
+        .collect()
 }
 
 pub(super) fn normalize_named_headers(forms: &mut Vec<Form>, values: &Values<'_>) {
@@ -654,5 +715,17 @@ mod tests {
         assert!(records[0].parts.contains(&RecordPart::Spread {
             scope: "opts[]".into()
         }));
+    }
+
+    #[test]
+    fn keyless_values_with_keyword_led_records_become_statements() {
+        let grammar = parse("%union { int i; }\n%token END WATCHDOG WARNING TIMEOUT\n%token <i> NUM\n%type <i> expr unix\n%start config\n%%\nconfig: entries END; entries: | entries conf;\nconf: unix;\nunix: WATCHDOG WARNING expr | WATCHDOG TIMEOUT expr;\nexpr: NUM;\n%%").unwrap();
+        let schema =
+            crate::surface::compile(&grammar, &keywords(&["WATCHDOG", "WARNING", "TIMEOUT"]));
+        let paths = schema.scopes[&schema.root]
+            .iter()
+            .map(|form| form.path.join("."))
+            .collect::<Vec<_>>();
+        assert_eq!(paths, ["watchdog-warning", "watchdog-timeout"]);
     }
 }
