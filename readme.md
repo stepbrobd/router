@@ -8,8 +8,9 @@ daemon, package selection, secrets and host networking.
 
 `nixosModules.bird` adds `services.bird.settings` to the nixpkgs module. The
 selected package must be built from the BIRD source the inventory was generated
-from, and an assertion compares the two. The inventory follows the BIRD v3.4.0
-release, which is also what nixpkgs ships as `bird3`:
+from, and an assertion compares the two. The inventory follows BIRD's
+`thread-next` branch, and `packages.bird` builds nixpkgs' `bird3` from that
+source:
 
 ```nix
 { inputs, pkgs, ... }:
@@ -18,7 +19,7 @@ release, which is also what nixpkgs ships as `bird3`:
 
   services.bird = {
     enable = true;
-    package = pkgs.bird3;
+    package = inputs.router.packages.${pkgs.stdenv.hostPlatform.system}.bird;
     settings = {
       router-id = "192.0.2.1";
       protocol.device.device0 = { };
@@ -26,10 +27,6 @@ release, which is also what nixpkgs ships as `bird3`:
   };
 }
 ```
-
-When nixpkgs and the pinned source differ, use
-`inputs.router.packages.${pkgs.stdenv.hostPlatform.system}.bird`, which builds
-`bird3` from the pinned source.
 
 Settings have one canonical path. Use dashed multiword directives such as
 `router-id`, `hold-time` and `peer-table`, declaration namespaces such as
@@ -137,7 +134,7 @@ in
   generated = bird.eval { modules = [ ./bird.nix ]; };
   checked = bird.check {
     inherit pkgs;
-    package = pkgs.bird3;
+    package = inputs.router.packages.${pkgs.stdenv.hostPlatform.system}.bird;
     modules = [ ./bird.nix ];
   };
 }
@@ -178,10 +175,10 @@ router generate /path/to/bird --output generated/bird
 `generate` writes `generated/bird/grammar.json`, the grammar inventory. The Nix
 runtime in `lib/router/bird` interprets it, and the NixOS module there is what
 `nixosModules.bird` imports. The checked-in inventory follows the `bird` input
-in `flake.lock`, the v3.4.0 release tag. Grammar productions remain available
-through their exact production form, `{ _rule; _production; _args; }`, when a
-construct has no attribute form. `inspect` lists the settings that still need
-one in `registry.diagnostics.exact_settings`, such as the settle times and
+in `flake.lock`, BIRD's `thread-next` branch. Grammar productions remain
+available through their exact production form, `{ _rule; _production; _args; }`,
+when a construct has no attribute form. `inspect` lists the settings that still
+need one in `registry.diagnostics.exact_settings`, such as the settle times and
 `timeformat`.
 
 `registry/bird.toml` holds the stable public type and field identities, source
