@@ -62,6 +62,13 @@ let
   expr = value:
     if !isString value || value == "" then fail "expr expects a nonempty native BIRD expression"
     else { _bird = "expr"; inherit value; };
+  # BIRD's lexer replaces an include line with the file, so it can stand in for any value
+  includeKeyword = inventory.lexer_include.keyword;
+  include = value:
+    if !(isString value || isPath value) || toString value == "" then fail "include expects a nonempty filename or glob"
+    else { _bird = "include"; value = toString value; };
+  includeDirective = value: "${includeKeyword} ${quoted (include value).value};";
+  includeLine = value: "\n${includeDirective value}\n";
   quoted = value: ''"${(string value).value}"'';
   reference = value:
     if tagged value && attrNames value != [ "_bird" "value" ] then null
@@ -80,6 +87,7 @@ let
       else if value._bird == "ip" then (ip value.value).value
       else if value._bird == "prefix" then (prefix value.value).value
       else if value._bird == "expr" then (expr value.value).value
+      else if value._bird == "include" then includeLine value.value
       else if elem value._bird [ "tuple" "ec" ] then
         let result = renderConstructor value._bird inventory.registry.bindings."constant.constructor".rule value.value;
         in if result.ok then result.text else fail "invalid source-derived ${value._bird} constructor"
@@ -335,6 +343,7 @@ let
   renderTypedValue = allowBodyString: name: value:
     let shape = schema.value_types.${name} or (fail "generated value type ${name} is missing");
     in if value == null then if shape.nullable or false then good "" else bad
+    else if tagged value && value._bird == "include" then good (includeLine value.value)
     else if node value then
       if value._rule == (shape.rule or name) || value._rule == name then good (exact value) else bad
     else if shape.kind == "primitive" then renderPrimitive shape value
@@ -587,7 +596,7 @@ let
       first = position order.first;
       last = position order.last;
     in
-    if name == "include" then 0
+    if name == includeKeyword then 0
     else if first != null then 1 + first
     else if last != null then 2 + length order.first + last
     else 1 + length order.first;
@@ -715,7 +724,7 @@ let
     in
     combine (map
       (entry:
-        if entry.path == [ "include" ] then good (includeText entry.value)
+        if entry.path == [ includeKeyword ] then good (includeText entry.value)
         else renderEntry schema.root entry.path entry.value)
       (orderDeclarations entries));
   renderScope = scope: value:
@@ -724,15 +733,14 @@ let
     else if isList value then combine (map (renderScope scope) value)
     else if ordinary value then
       if scope == schema.root then renderRoot value
-      else combine (map (name: renderEntry scope [ name ] value.${name}) (orderedNames value))
+      else
+        combine (map
+          (name: if name == includeKeyword then good (includeText value.${name}) else renderEntry scope [ name ] value.${name})
+          (orderedNames value))
     else bad;
   includeText = values:
-    let paths = if isList values then values else [ values ];
-    in if paths == [ ] then "" else "\n" + concatStringsSep "\n" (map
-      (path:
-        let value = if isString path || isPath path then toString path else fail "include expects filenames or glob strings";
-        in if value == "" then fail "include paths must not be empty" else "include ${quoted value};")
-      paths) + "\n";
+    let paths = lib.toList values;
+    in if paths == [ ] then "" else "\n" + concatStringsSep "\n" (map includeDirective paths) + "\n";
   render = settings:
     if !ordinary settings && !isList settings && !node settings then fail "settings must be named attributes or ordered declaration groups"
     else
@@ -881,7 +889,7 @@ let
 in
 {
   inherit settingsModule settingsType render validate resolve eval check matchesSource
-    string symbol ip prefix tuple ec expr inventory;
+    string symbol ip prefix tuple ec expr include inventory;
   toText = semantic;
   nixosModule = ./module.nix;
 }

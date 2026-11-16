@@ -138,7 +138,13 @@ let
   overlayScope = scope: base: value:
     if isList value then lib.foldl' (overlayScope scope) base value
     else if node value then fail "cannot interpret an exact structural grammar node as explicit inherited data"
-    else lib.foldl' (current: name: overlayEntry scope [ name ] current value.${name}) base (orderedNames value);
+    else
+      lib.foldl'
+        (current: name:
+          if name == inventory.lexer_include.keyword then current // { ${name} = (current.${name} or [ ]) ++ lib.toList value.${name}; }
+          else overlayEntry scope [ name ] current value.${name})
+        base
+        (orderedNames value);
   collectNamespace = namespace: values: state:
     lib.foldl'
       (current: kind:

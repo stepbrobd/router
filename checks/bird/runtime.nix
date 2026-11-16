@@ -100,4 +100,10 @@ assert lib.hasInfix "route 192.0.2.0/24 via 192.0.2.1 weight 1\nvia 192.0.2.2 ;"
 assert !(force (backend.render {
   protocol.static.s.route = [{ prefix = "192.0.2.0/24"; via = [ (backend.ip "192.0.2.1") (backend.ip "192.0.2.2") ]; }];
 })).success;
+# BIRD expands include at the start of any line, so blocks and values take one too
+assert lib.hasInfix "ipv4 {\n\ninclude \"/run/bird/ipv4.conf\";\n\nexport none ;"
+  (backend.render { protocol.bgp.upstream.ipv4 = { include = [ "/run/bird/ipv4.conf" ]; export = "none"; }; });
+assert lib.hasInfix "password \ninclude \"/run/bird/password.conf\";\n ;"
+  (backend.render { protocol.bgp.upstream.password = backend.include "/run/bird/password.conf"; });
+assert !(force (backend.include "")).success;
 true
