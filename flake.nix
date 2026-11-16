@@ -7,7 +7,7 @@
   inputs.autopilot.inputs.nixpkgs.follows = "nixpkgs";
   inputs.autopilot.inputs.parts.follows = "parts";
   inputs.autopilot.inputs.systems.follows = "systems";
-  inputs.bird.url = "gitlab:labs/bird/thread-next?host=gitlab.nic.cz";
+  inputs.bird.url = "github:cz-nic/bird/thread-next";
   inputs.bird.flake = false;
   outputs = inputs: inputs.autopilot.lib.mkFlake
     {
