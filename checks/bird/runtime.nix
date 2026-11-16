@@ -105,4 +105,27 @@ assert lib.hasInfix "ipv4 {\n\ninclude \"/run/bird/ipv4.conf\";\n\nexport none ;
 assert lib.hasInfix "password \ninclude \"/run/bird/password.conf\";\n ;"
   (backend.render { protocol.bgp.upstream.password = backend.include "/run/bird/password.conf"; });
 assert !(force (backend.include "")).success;
+# values that neither keywords nor bindings name take their registry labels
+assert lib.hasInfix "cork threshold 1000 2000 ;"
+  (backend.render { ipv4.table.t.cork-threshold = { low = 1000; high = 2000; }; });
+# a named entry folds the parts after its name into one record
+assert lib.hasInfix "virtual link 0.0.0.9 instance 3 { hello 5 ; } ;"
+  (backend.render { protocol.ospf.o.area."0.0.0.1".virtual-link."0.0.0.9" = { instance = 3; hello = 5; }; });
+# keyword-led records in a keyless statement are statements of their own
+assert lib.hasInfix "watchdog warning 5 s" (backend.render { watchdog-warning = { value = 5; unit = "s"; }; });
+# blocks of keyless statements and separated repetitions are lists
+assert lib.hasInfix "networks { 10.0.0.0/8 ; 10.1.0.0/16 hidden ; } ;"
+  (backend.render { protocol.ospf.o.area."0".networks = [{ prefix = "10.0.0.0/8"; } { prefix = "10.1.0.0/16"; hidden = true; }]; });
+assert lib.hasInfix "route aspa 65000 providers 65001, 65002 ;"
+  (backend.render { protocol.static.s.route = [{ prefix.aspa = 65000; providers = [ 65001 65002 ]; }]; });
+# extended community items take bird.ec with the source's arities
+assert lib.hasInfix "import target [ ( rt , 65000 , 1 ), ( rt , 65000 , 2 .. 10 ), ( rt , 65001 , * ) ] ;"
+  (backend.render {
+    protocol.l3vpn.v.import-target = [ (backend.ec [ "rt" 65000 1 ]) (backend.ec [ "rt" 65000 2 10 ]) (backend.ec [ "rt" 65001 ]) ];
+  });
+assert !(force (backend.render { protocol.l3vpn.v.import-target = [ "rt" 65000 1 ]; })).success;
+# flowspec components are named by their keywords, with operator expressions as native text
+assert lib.hasInfix "route flow4 { dst 10.0.0.0/8 ;\nport \n> 24 && < 30\n ; } ;"
+  (backend.render { protocol.static.s.route = [{ prefix.flow4 = { dst = "10.0.0.0/8"; port.body = "> 24 && < 30"; }; }]; });
+assert !(force (backend.render { protocol.static.s.route = [{ prefix.flow4.not-a-component = "1"; }]; })).success;
 true

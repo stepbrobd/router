@@ -255,6 +255,63 @@ let
         };
       };
     }]).text;
+    # forms that need registry labels, keyless collections, flowspec components or nested includes
+    knob-parity = (evaluate [{
+      watchdog-warning = { value = 5; unit = "s"; };
+      watchdog-timeout = { value = 30; unit = "s"; };
+      ipv4.table.settled = {
+        cork-threshold = { low = 1000; high = 2000; };
+        export-settle-time = { min = { value = 1; unit = "ms"; }; max = { value = 100; unit = "ms"; }; };
+      };
+      aspa.table.aspas = { };
+      flow4.table.flows4 = { };
+      flow6.table.flows6 = { };
+      protocol = {
+        ospf.ospf1 = {
+          include = [ "${pkgs.writeText "ospf-options.conf" "tick 1;"}" ];
+          ipv4 = { table = "main4"; import = "all"; export = "none"; };
+          area."0".interface = [{ pattern = "eth0"; }];
+          area."0.0.0.1" = {
+            networks = [{ prefix = "172.16.1.0/24"; } { prefix = "172.16.2.0/24"; hidden = true; }];
+            virtual-link."192.0.2.9" = { instance = 1; hello = 5; };
+            interface = [{
+              pattern = "eth1";
+              type = "nbma";
+              neighbors = [{ address = "192.168.120.1"; eligible = true; } { address = "192.168.120.2"; }];
+            }];
+          };
+        };
+        static.aspa0 = {
+          aspa.table = "aspas";
+          route = [
+            { prefix.aspa = 65000; providers = [ 65001 65002 ]; }
+            { prefix.aspa = 65010; transit = true; }
+          ];
+        };
+        static.flowspec4 = {
+          flow4.table = "flows4";
+          route = [{
+            prefix.flow4 = {
+              dst = "10.0.0.0/8";
+              port.body = "> 24 && < 30 || 40..50,60..70,80 && >= 90";
+              tcp-flags = "0x03/0x0f";
+              length = "> 1024";
+              dscp = "= 63";
+              fragment = "dont_fragment, is_fragment || !first_fragment";
+            };
+          }];
+        };
+        static.flowspec6 = {
+          flow6.table = "flows6";
+          route = [{
+            prefix.flow6 = {
+              dst = { prefix = "::1234:5678:9800:0000/101"; offset = 64; };
+              next-header = "6";
+            };
+          }];
+        };
+      };
+    }]).text;
     typed-constants = (evaluate [{
       define = {
         ENABLED = true;
