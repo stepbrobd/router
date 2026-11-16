@@ -681,6 +681,7 @@ impl<'a> Compiler<'a> {
         let grammar = self.grammar;
         let productions = &grammar.rules[name].productions;
         let mut base = Vec::new();
+        let mut items = Vec::new();
         let mut left = Vec::new();
         let mut right = Vec::new();
         for (number, production) in productions.iter().enumerate() {
@@ -691,6 +692,7 @@ impl<'a> Compiler<'a> {
             {
                 right.push(&production.symbols[..production.symbols.len() - 1]);
             } else {
+                items.push(production.symbols.as_slice());
                 base.extend(
                     self.declaration(name, number, production)
                         .unwrap_or_else(|| self.sequence(&production.symbols)),
@@ -721,6 +723,13 @@ impl<'a> Compiler<'a> {
                 } else {
                     form.insert(0, options.clone());
                 }
+            }
+            // in a pure repetition such as `X: Y | X Y` the scope alone can hold every item, the first included
+            if right.is_empty()
+                && left.iter().all(|tail| items.contains(tail))
+                && items.iter().all(|item| left.contains(item))
+            {
+                base.push(vec![options]);
             }
         }
         self.active.remove(name);
@@ -936,6 +945,35 @@ mod tests {
                 .flatten()
                 .any(|form| form.parts.contains(&literal("new")))
         );
+    }
+
+    #[test]
+    fn pure_repetitions_also_take_every_item_from_their_scope() {
+        let grammar = parse("%token END ROUTE VIA WEIGHT NUM\n%start config\n%%\nconfig: entries END; entries: | entries conf; conf: ROUTE NUM hops ';'; hops: hop | hops hop; hop: VIA NUM | hop WEIGHT NUM;\n%%").unwrap();
+        let keywords = ["ROUTE", "VIA", "WEIGHT"].map(|name| Keyword {
+            spelling: name.to_lowercase(),
+            token: name.into(),
+            source: Location {
+                file: "test.Y".into(),
+                line: 1,
+            },
+        });
+        let schema = compile(&grammar, &keywords);
+        let options = |scope: &str| Part::Options {
+            scope: scope.into(),
+        };
+        let routes = schema.scopes[&schema.root]
+            .iter()
+            .map(|form| &form.parts[2..])
+            .collect::<Vec<_>>();
+        assert_eq!(routes.len(), 2, "{routes:?}");
+        assert!(
+            routes
+                .iter()
+                .any(|parts| parts.first() == Some(&literal("via"))
+                    && parts.ends_with(&[options("hop[]"), options("hops[]"), literal(";")]))
+        );
+        assert!(routes.contains(&[options("hops[]"), literal(";")].as_slice()));
     }
 
     #[test]

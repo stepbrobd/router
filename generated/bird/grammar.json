@@ -102182,6 +102182,34 @@
                 "optional": false
               },
               {
+                "kind": "spread",
+                "scope": "stat_nexthops[]"
+              },
+              {
+                "kind": "body",
+                "name": "body",
+                "rule": "stat_route_opt_list",
+                "optional": true
+              },
+              {
+                "kind": "literal",
+                "text": ";"
+              }
+            ]
+          },
+          {
+            "parts": [
+              {
+                "kind": "literal",
+                "text": "route"
+              },
+              {
+                "kind": "field",
+                "name": "prefix",
+                "rule": "net_any",
+                "optional": false
+              },
+              {
                 "kind": "literal",
                 "text": "mpls"
               },
@@ -102266,6 +102294,44 @@
               {
                 "kind": "spread",
                 "scope": "stat_nexthop[]"
+              },
+              {
+                "kind": "spread",
+                "scope": "stat_nexthops[]"
+              },
+              {
+                "kind": "body",
+                "name": "body",
+                "rule": "stat_route_opt_list",
+                "optional": true
+              },
+              {
+                "kind": "literal",
+                "text": ";"
+              }
+            ]
+          },
+          {
+            "parts": [
+              {
+                "kind": "literal",
+                "text": "route"
+              },
+              {
+                "kind": "field",
+                "name": "prefix",
+                "rule": "net_any",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": "mpls"
+              },
+              {
+                "kind": "field",
+                "name": "mpls",
+                "rule": "expr",
+                "optional": false
               },
               {
                 "kind": "spread",
