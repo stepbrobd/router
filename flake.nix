@@ -9,6 +9,16 @@
   inputs.autopilot.inputs.systems.follows = "systems";
   inputs.bird.url = "github:cz-nic/bird/thread-next";
   inputs.bird.flake = false;
+  inputs.utils.url = "github:numtide/flake-utils";
+  inputs.utils.inputs.systems.follows = "systems";
+  inputs.ixx.url = "github:nuschtos/ixx";
+  inputs.ixx.inputs.nixpkgs.follows = "nixpkgs";
+  inputs.ixx.inputs.flake-utils.follows = "utils";
+  inputs.search.url = "github:nuschtos/search";
+  inputs.search.inputs.nixpkgs.follows = "nixpkgs";
+  inputs.search.inputs.flake-utils.follows = "utils";
+  inputs.search.inputs.ixx.follows = "ixx";
+  inputs.search.inputs.nix-index-database.inputs.nixpkgs.follows = "nixpkgs";
   outputs = inputs: inputs.autopilot.lib.mkFlake
     {
       inherit inputs;
