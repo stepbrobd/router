@@ -235,6 +235,27 @@ storage = "e"
 shape = "constructor"
 
 [[bindings]]
+id = "flowspec.numeric-operators"
+rules = ["flow_num_opts"]
+file = "conf/flowspec.Y"
+shape = "text"
+atomic = true
+
+[[bindings]]
+id = "flowspec.bitmask-operators"
+rules = ["flow_bmk_opts"]
+file = "conf/flowspec.Y"
+shape = "text"
+atomic = true
+
+[[bindings]]
+id = "flowspec.fragment-operators"
+rules = ["flow_frag_opts"]
+file = "conf/flowspec.Y"
+shape = "text"
+atomic = true
+
+[[bindings]]
 id = "declaration.type"
 rules = ["type"]
 file = "filter/config.Y"
@@ -834,3 +855,9 @@ fields = [
   { at = 3, name = "recursive", storage = "this_srt->via" },
   { at = 5, name = "recursive-mpls", storage = "this_srt->mls" },
 ]
+
+[[labels]]
+id = "flowspec.prefix-offset"
+rule = "flow6_item"
+production = ["flow_srcdst", "net_ip6", "OFFSET", "expr"]
+fields = [{ at = 2, name = "prefix" }, { at = 4, name = "offset" }]

@@ -16,7 +16,11 @@ impl Values<'_> {
     ) -> Option<Vec<RecordForm>> {
         let mut forms = vec![RecordForm { parts: Vec::new() }];
         let mut pending = Vec::new();
+        let mut closed = None;
         for (index, symbol) in symbols.iter().enumerate() {
+            if closed == Some(index) {
+                continue;
+            }
             if let Some(text) = self.fixed(symbol) {
                 if !text.is_empty() {
                     pending.push(text.to_owned());
@@ -27,6 +31,23 @@ impl Values<'_> {
                 return None;
             };
             if self.epsilon(reference, &mut BTreeSet::new()) {
+                continue;
+            }
+            if let Some(close) = self.statement_block(symbols, index, &pending) {
+                pending.pop();
+                let name = self
+                    .keyword_name(&pending)
+                    .unwrap_or_else(|| self.label(reference, fields));
+                append_literals(&mut forms, &mut pending);
+                let part = RecordPart::Field {
+                    name,
+                    rule: format!("$block:{reference}[]"),
+                    optional: false,
+                };
+                for form in &mut forms {
+                    form.parts.push(part.clone());
+                }
+                closed = Some(close);
                 continue;
             }
             let binding = self
@@ -42,7 +63,7 @@ impl Values<'_> {
                         binding.atomic
                             || matches!(
                                 binding.shape,
-                                Some(Shape::List | Shape::Flag | Shape::Body)
+                                Some(Shape::List | Shape::Flag | Shape::Body | Shape::Text)
                             )
                     })
                     && !self.program_rules.contains(reference));
@@ -97,16 +118,9 @@ impl Values<'_> {
             });
             let name = explicit_label.or(forced_label).map_or_else(
                 || {
-                    let keyword = pending
-                        .iter()
-                        .filter(|text| !punctuation(text))
-                        .map(String::as_str)
-                        .collect::<Vec<_>>();
-                    if !is_body && !keyword.is_empty() {
-                        keyword.join("-")
-                    } else {
-                        self.label(reference, fields)
-                    }
+                    self.keyword_name(&pending)
+                        .filter(|_| !is_body)
+                        .unwrap_or_else(|| self.label(reference, fields))
                 },
                 str::to_owned,
             );
@@ -135,6 +149,61 @@ impl Values<'_> {
             return None;
         }
         Some(forms)
+    }
+
+    fn keyword_name(&self, pending: &[String]) -> Option<String> {
+        let keyword = pending
+            .iter()
+            .filter(|text| !punctuation(text))
+            .map(String::as_str)
+            .collect::<Vec<_>>();
+        (!keyword.is_empty()).then(|| keyword.join("-"))
+    }
+
+    // `'{' X '}'` where X repeats statements, such as `flow4 { dst 10.0.0.0/8; }`, holds the
+    // scope of X as a record, and returns the position of the closing brace
+    fn statement_block(
+        &mut self,
+        symbols: &[Symbol],
+        index: usize,
+        pending: &[String],
+    ) -> Option<usize> {
+        let Symbol::Reference(reference) = &symbols[index] else {
+            return None;
+        };
+        let close = index + 1;
+        if pending.last().map(String::as_str) != Some("{")
+            || symbols.get(close).and_then(|symbol| self.fixed(symbol)) != Some("}")
+            || self.grammar.rules.get(reference)?.storage_type.is_some()
+        {
+            return None;
+        }
+        let scope = format!("{reference}[]");
+        let key = format!("$block:{scope}");
+        if !self.types.contains_key(&key) {
+            let scopes = crate::surface::statement_scopes(
+                self.grammar,
+                &self.spellings,
+                self.registry,
+                reference,
+            )?;
+            self.scopes.extend(scopes);
+            self.types.insert(
+                key,
+                ValueShape::Record {
+                    forms: vec![RecordForm {
+                        parts: vec![
+                            RecordPart::Literal { text: "{".into() },
+                            RecordPart::Spread { scope },
+                            RecordPart::Literal { text: "}".into() },
+                        ],
+                    }],
+                    nullable: false,
+                    merge: registry::Merge::Replace,
+                },
+            );
+        }
+        Some(close)
     }
 
     pub(super) fn normalize_projection_blocks(&self, forms: &mut Vec<RecordForm>) {
@@ -591,5 +660,43 @@ mod tests {
                 if matches!(roles.as_slice(), [DeclarationRole::Body { prefix, suffix, .. }]
                     if prefix == &["{"] && suffix == &["}"])
         ));
+    }
+
+    #[test]
+    fn a_braced_statement_list_in_a_value_is_a_field_holding_its_scope() {
+        let grammar = parse("%union { int i; }\n%token END FLOW DST PROTO\n%token <i> NUM\n%type <i> expr flow\n%start config\n%%\nconfig: entries END; entries: | entries conf;\nconf: DST flow ';';\nflow: FLOW '{' opts '}';\nopts: | opts item ';';\nitem: DST expr | PROTO expr;\nexpr: NUM;\n%%").unwrap();
+        let schema = crate::surface::compile(
+            &grammar,
+            &crate::values::fixtures::keywords(&["FLOW", "DST", "PROTO"]),
+        );
+        assert_eq!(
+            schema.value_types["flow"],
+            ValueShape::Record {
+                forms: vec![RecordForm {
+                    parts: vec![
+                        RecordPart::Literal {
+                            text: "flow".into()
+                        },
+                        RecordPart::Field {
+                            name: "flow".into(),
+                            rule: "$block:opts[]".into(),
+                            optional: false,
+                        },
+                    ],
+                }],
+                nullable: false,
+                merge: crate::registry::Merge::Replace,
+            }
+        );
+        assert!(matches!(
+            &schema.value_types["$block:opts[]"],
+            ValueShape::Record { forms, .. } if forms[0].parts.contains(&RecordPart::Spread { scope: "opts[]".into() })
+        ));
+        let paths = schema.scopes["opts[]"]
+            .iter()
+            .map(|form| form.path.join("."))
+            .collect::<Vec<_>>();
+        assert_eq!(paths, ["dst", "proto"]);
+        assert!(crate::values::unaddressable(&grammar, &schema).is_empty());
     }
 }

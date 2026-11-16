@@ -800,6 +800,33 @@ impl<'a> Compiler<'a> {
     }
 }
 
+// the scope of a statement repetition such as `X: | X item ';'`, with any scope its items open
+pub(crate) fn statement_scopes(
+    grammar: &Grammar,
+    spellings: &BTreeMap<String, String>,
+    registry: Option<&Registry>,
+    name: &str,
+) -> Option<BTreeMap<String, Vec<Form>>> {
+    let mut compiler = Compiler {
+        grammar,
+        spellings: spellings.clone(),
+        scopes: BTreeMap::new(),
+        active: BTreeSet::new(),
+        registry,
+    };
+    let scope = format!("{name}[]");
+    let forms = compiler.rule(name);
+    (forms
+        == [vec![Part::Options {
+            scope: scope.clone(),
+        }]]
+        && compiler
+            .scopes
+            .get(&scope)
+            .is_some_and(|forms| !forms.is_empty()))
+    .then_some(compiler.scopes)
+}
+
 fn fold_blocks(parts: Vec<Part>) -> Vec<Part> {
     let mut result = Vec::new();
     let mut iter = parts

@@ -31,6 +31,8 @@ pub enum Shape {
     Flag,
     List,
     Record,
+    // native text with no delimiters of its own, such as a flowspec operator expression
+    Text,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -892,6 +894,9 @@ impl Registry {
                     matches!(shape, ValueShape::Enum { values, .. } if values.contains_key("true"))
                 }
                 Some(Shape::Constructor) => matches!(shape, ValueShape::Constructor { .. }),
+                Some(Shape::Text) => {
+                    matches!(shape, ValueShape::Body { roles, .. } if matches!(roles.as_slice(), [crate::surface::DeclarationRole::Body { prefix, suffix, .. }] if prefix.is_empty() && suffix.is_empty()))
+                }
                 Some(Shape::Record) => matches!(
                     shape,
                     ValueShape::Record { .. } | ValueShape::Choice { .. } | ValueShape::Enum { .. }

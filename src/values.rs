@@ -105,6 +105,8 @@ struct Values<'a> {
     program_rules: &'a BTreeSet<String>,
     types: BTreeMap<String, ValueShape>,
     active: BTreeSet<String>,
+    // statement scopes that values open, such as the components of a flowspec literal
+    scopes: BTreeMap<String, Vec<crate::surface::Form>>,
 }
 
 pub fn compile(
@@ -120,9 +122,13 @@ pub fn compile(
         program_rules: &schema.program_rules,
         types: BTreeMap::new(),
         active: BTreeSet::new(),
+        scopes: BTreeMap::new(),
     };
     for name in grammar.tokens.keys().chain(grammar.rules.keys()) {
         values.infer(name);
+    }
+    for (scope, forms) in std::mem::take(&mut values.scopes) {
+        schema.scopes.entry(scope).or_insert(forms);
     }
     let protocol_header = registry
         .and_then(|registry| registry.bindings.get("protocol.header"))
@@ -241,6 +247,7 @@ mod fixtures {
             program_rules,
             types: BTreeMap::new(),
             active: BTreeSet::new(),
+            scopes: BTreeMap::new(),
         }
     }
 }

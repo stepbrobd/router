@@ -378,6 +378,8 @@ impl Values<'_> {
             self.flag_shape(name, nullable)
         } else if binding.and_then(|binding| binding.shape) == Some(Shape::Constructor) {
             self.constructor_shape(name, nullable)
+        } else if binding.and_then(|binding| binding.shape) == Some(Shape::Text) {
+            self.raw_body(name, nullable)
         } else if binding.and_then(|binding| binding.shape) == Some(Shape::Body)
             || self
                 .grammar
