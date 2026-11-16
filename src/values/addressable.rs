@@ -10,6 +10,7 @@ use std::collections::{BTreeMap, BTreeSet};
 pub(crate) fn unaddressable(grammar: &Grammar, schema: &Schema) -> Vec<String> {
     let mut found = BTreeSet::new();
     for (scope, forms) in &schema.scopes {
+        let at = origin(grammar, scope.strip_suffix("[]").unwrap_or(scope));
         for form in forms {
             if matches!(form.parts.as_slice(), [Part::Literal { text }] if text == ";") {
                 continue;
@@ -24,10 +25,12 @@ pub(crate) fn unaddressable(grammar: &Grammar, schema: &Schema) -> Vec<String> {
                 .count();
             let setting = format!("{scope} {}", form.path.join("."));
             if form.path.is_empty() && !named {
-                found.insert(format!("{setting}: no setting path"));
+                found.insert(format!("{setting}: no setting path{at}"));
             }
             if slots > 1 {
-                found.insert(format!("{setting}: {slots} parts after the setting name"));
+                found.insert(format!(
+                    "{setting}: {slots} parts after the setting name{at}"
+                ));
             }
             for part in &form.parts {
                 if let Part::Value {
@@ -107,11 +110,11 @@ mod tests {
         assert_eq!(
             unaddressable(&grammar, &schema),
             [
-                format!("{scope} : no setting path"),
+                format!("{scope} : no setting path (<m4-output>:7)"),
                 format!("{scope} kind: exact mode (<m4-output>:10)"),
                 format!("{scope} kind: exact other (<m4-output>:11)"),
                 format!("{scope} pick: exact mode (<m4-output>:10)"),
-                format!("{scope} settle: 2 parts after the setting name"),
+                format!("{scope} settle: 2 parts after the setting name (<m4-output>:7)"),
             ]
         );
     }

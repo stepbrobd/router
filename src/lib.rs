@@ -46,8 +46,17 @@ pub fn inspect(source: &Path) -> Result<Inventory, grammar::Error> {
     })
 }
 
+// every setting must have an attribute form, so a BIRD bump that adds one without needs a registry change
 pub fn generate(source: &Path, output: &Path) -> anyhow::Result<()> {
     let inventory = inspect(source)?;
+    let unaddressable = &inventory.registry.diagnostics.unaddressable;
+    if !unaddressable.is_empty() {
+        anyhow::bail!(
+            "{} setting forms cannot be written as attributes, name their values in registry/bird.toml:\n{}",
+            unaddressable.len(),
+            unaddressable.join("\n")
+        );
+    }
     fs::create_dir_all(output).with_context(|| format!("cannot create {}", output.display()))?;
     let path = output.join("grammar.json");
     fs::write(&path, serde_json::to_string_pretty(&inventory)? + "\n")
