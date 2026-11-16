@@ -409,7 +409,7 @@ let
       rest = lib.drop (length prefix) form.parts;
       first = if rest == [ ] then null else head rest;
       header = form.header or null;
-      named = header != null || (first != null && first.kind == "value" && (
+      named = header != null || (form.named or false) || (first != null && first.kind == "value" && (
         hasKind "block" (tail rest) || hasKind "declaration" (tail rest)
           || hasKind "body" (tail rest)
           || any (part: part.kind == "literal" && part.text == "=") (tail rest)

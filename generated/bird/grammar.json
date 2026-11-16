@@ -84436,18 +84436,10 @@
               "value_type": "idval"
             },
             {
-              "kind": "literal",
-              "text": "instance"
-            },
-            {
               "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
-            },
-            {
-              "kind": "block",
-              "scope": "ospf_vlink_opts[]"
+              "rule": "$named:ospf_area_opts[]:virtual-link",
+              "value_kind": "typed",
+              "value_type": "$named:ospf_area_opts[]:virtual-link"
             },
             {
               "kind": "literal",
@@ -84456,7 +84448,8 @@
           ],
           "path": [
             "virtual-link"
-          ]
+          ],
+          "named": true
         },
         {
           "parts": [
@@ -98222,6 +98215,39 @@
                 "name": "mrtdump-list",
                 "rule": "mrtdump_list",
                 "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": "}"
+              }
+            ]
+          }
+        ],
+        "nullable": false,
+        "merge": "replace"
+      },
+      "$named:ospf_area_opts[]:virtual-link": {
+        "kind": "record",
+        "forms": [
+          {
+            "parts": [
+              {
+                "kind": "literal",
+                "text": "instance"
+              },
+              {
+                "kind": "field",
+                "name": "instance",
+                "rule": "expr",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": "{"
+              },
+              {
+                "kind": "spread",
+                "scope": "ospf_vlink_opts[]"
               },
               {
                 "kind": "literal",
@@ -116333,7 +116359,6 @@
         "mpls_channel_opts[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
         "mrt_proto_opts[] : no setting path",
         "nbma_list[] : no setting path",
-        "ospf_area_opts[] virtual-link: 2 parts after the setting name",
         "pipe_proto[] export-in: exact net_flow4_ (conf/flowspec.Y:191)",
         "pipe_proto[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
         "pipe_proto[] import-in: exact net_flow4_ (conf/flowspec.Y:191)",

@@ -16,7 +16,7 @@ pub(crate) fn unaddressable(grammar: &Grammar, schema: &Schema) -> Vec<String> {
             }
             let keywords = leading(&form.parts);
             let rest = &form.parts[keywords.len()..];
-            let named = form.header.is_some() || named_entry(rest);
+            let named = form.header.is_some() || form.named || named_entry(rest);
             let tail = if named { &rest[1..] } else { rest };
             let slots = tail
                 .iter()

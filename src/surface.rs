@@ -88,6 +88,9 @@ pub struct Form {
     pub path: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub header: Option<Header>,
+    // the first value after the keywords names the entry even without a block after it
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub named: bool,
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -744,6 +747,7 @@ impl<'a> Compiler<'a> {
                         .map(|parts| Form {
                             path: Vec::new(),
                             header: None,
+                            named: false,
                             parts: fold_blocks(parts),
                         }),
                 );
@@ -823,6 +827,7 @@ fn compile_syntax(grammar: &Grammar, keywords: &[Keyword], registry: Option<&Reg
         .map(|parts| Form {
             path: Vec::new(),
             header: None,
+            named: false,
             parts: fold_blocks(parts),
         })
         .collect::<Vec<_>>();

@@ -233,6 +233,7 @@ pub(super) fn factor_enums(scope: &str, forms: &mut Vec<Form>, values: &mut Valu
             parts,
             path: Vec::new(),
             header: None,
+            named: false,
         });
         replaced.extend(indices.iter().copied());
     }
@@ -367,36 +368,40 @@ pub(super) fn project(
             parts,
             path,
             header: None,
+            named: false,
         },
     );
 }
 
 // a statement with several positional values becomes a record named by the keyword before each value or its registry label
+// a named entry keeps its name and folds the parts after it, block included, into one record
 // single-value forms on the same path stay as they are
 // a form whose fields cannot be named uniquely keeps its exact form, which `router inspect` lists
 pub(super) fn project_positional(scope: &str, forms: &mut Vec<Form>, values: &mut Values<'_>) {
-    let mut groups: BTreeMap<Vec<String>, Vec<usize>> = BTreeMap::new();
+    let mut groups: BTreeMap<(Vec<String>, bool), Vec<usize>> = BTreeMap::new();
     for (index, form) in forms.iter().enumerate() {
         let keywords = leading(&form.parts);
         let tail = statement_tail(&form.parts, keywords.len());
-        let slots = tail
+        let named = named_entry(tail);
+        let slots = tail[usize::from(named)..]
             .iter()
             .filter(|part| !matches!(part, Part::Literal { .. }))
             .count();
-        if form.header.is_none() && !keywords.is_empty() && slots > 1 && !named_entry(tail) {
-            groups.entry(keywords).or_default().push(index);
+        if form.header.is_none() && !form.named && !keywords.is_empty() && slots > 1 {
+            groups.entry((keywords, named)).or_default().push(index);
         }
     }
     let mut replacements = BTreeMap::new();
     let mut removed = BTreeSet::new();
-    for (keywords, indexes) in groups {
-        let key = format!("$positional:{scope}:{}", keywords.join("-"));
+    for ((keywords, named), indexes) in groups {
+        let kind = if named { "named" } else { "positional" };
+        let key = format!("${kind}:{scope}:{}", keywords.join("-"));
         let mut records = Vec::new();
         let mut indexes = indexes;
         indexes.retain(|&index| {
             let tail = statement_tail(&forms[index].parts, keywords.len());
             values
-                .projection_records(tail, &BTreeMap::new(), &key)
+                .projection_records(&tail[usize::from(named)..], &BTreeMap::new(), &key)
                 .map(|projected| records.extend(projected))
                 .is_some()
         });
@@ -414,7 +419,7 @@ pub(super) fn project_positional(scope: &str, forms: &mut Vec<Form>, values: &mu
             },
         );
         let first = &forms[indexes[0]];
-        let mut parts = first.parts[..keywords.len()].to_vec();
+        let mut parts = first.parts[..keywords.len() + usize::from(named)].to_vec();
         parts.push(Part::Value {
             rule: key.clone(),
             value_kind: "typed".into(),
@@ -434,6 +439,7 @@ pub(super) fn project_positional(scope: &str, forms: &mut Vec<Form>, values: &mu
                 parts,
                 path: registry::canonical_path(&keywords, false),
                 header: None,
+                named,
             },
         );
         removed.extend(indexes);
@@ -550,6 +556,7 @@ mod tests {
                 .collect(),
             path: Vec::new(),
             header: None,
+            named: false,
         }
     }
 
@@ -582,6 +589,7 @@ mod tests {
                 ],
                 path: vec!["limit".into()],
                 header: None,
+                named: false,
             }]
         );
         let Some(ValueShape::Record { forms: records, .. }) = values.types.get(key) else {
@@ -613,5 +621,38 @@ mod tests {
                 .keys()
                 .any(|key| key.starts_with("$positional"))
         );
+    }
+
+    #[test]
+    fn named_entries_fold_the_parts_after_the_name_into_one_record() {
+        let grammar = positional_grammar();
+        let program_rules = BTreeSet::new();
+        let mut values = value_compiler(&grammar, &[], &program_rules);
+        let mut form = statement(&["link", "$expr", "instance", "$expr", ";"]);
+        form.parts.insert(
+            4,
+            Part::Block {
+                scope: "opts[]".into(),
+            },
+        );
+        let mut forms = vec![form.clone()];
+        project_positional("conf[]", &mut forms, &mut values);
+        let key = "$named:conf[]:link";
+        assert!(forms[0].named);
+        assert_eq!(forms[0].path, ["link"]);
+        assert_eq!(forms[0].parts[1], form.parts[1]);
+        assert!(matches!(&forms[0].parts[2], Part::Value { rule, .. } if rule == key));
+        let Some(ValueShape::Record { forms: records, .. }) = values.types.get(key) else {
+            panic!("expected a named entry record");
+        };
+        assert!(
+            records[0]
+                .parts
+                .iter()
+                .any(|part| matches!(part, RecordPart::Field { name, .. } if name == "instance"))
+        );
+        assert!(records[0].parts.contains(&RecordPart::Spread {
+            scope: "opts[]".into()
+        }));
     }
 }
