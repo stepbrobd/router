@@ -1,0 +1,92 @@
+name: Bump
+
+on:
+  schedule:
+    - cron: "0 3 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: bump
+  cancel-in-progress: true
+
+jobs:
+  Bird:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          # a pull request opened with the default token would not start CI
+          token: ${{ secrets.TOKEN }}
+          persist-credentials: true # zizmor: ignore[artipacked]
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31.11.5
+        with:
+          extra_nix_config: |
+            accept-flake-config = true
+            trusted-public-keys = cache.ysun.co-1:WxPYwT5g3kt9XhUhHPpNLZKI9HIOsVVAuqSHpok8Qt4= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+            substituters = https://cache.ysun.co https://cache.nixos.org
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN }}
+        run: |
+          set -euo pipefail
+
+          branch=bump/bird
+          git switch --force-create "$branch"
+
+          exact() { jq '.registry.diagnostics.exact_settings' generated/bird/grammar.json; }
+          before=$(exact)
+          old=$(jq -r '.nodes.bird.locked.rev' flake.lock)
+
+          # dependabot leaves bird alone, its inventory has to be regenerated in the same commit
+          nix flake update bird
+          new=$(jq -r '.nodes.bird.locked.rev' flake.lock)
+          if [[ "$old" == "$new" ]]; then
+            echo "bird is already at ${new}"
+            exit 0
+          fi
+          nix run .#generate
+
+          title="flake: bump bird ${old:0:7} -> ${new:0:7}"
+          git add flake.lock generated/bird
+          git commit -m "$title"
+          git push --force -u origin "$branch"
+
+          # settings that need exact grammar nodes after the bump, compared with before it
+          # shellcheck disable=SC2016 # $before is a jq variable
+          added=$(exact | jq -r --argjson before "$before" '. - $before | .[]')
+          # shellcheck disable=SC2016
+          removed=$(exact | jq -r --argjson before "$before" '$before - . | .[]')
+          bullets() { local -a lines; mapfile -t lines <<<"$1"; printf -- '- %s\n' "${lines[@]}"; }
+          body="https://github.com/cz-nic/bird/compare/${old}...${new}"
+          if [[ -n "$added" ]]; then
+            body+=$'\n\nNew settings that need exact grammar nodes, review before merging:\n'"$(bullets "$added")"
+          fi
+          if [[ -n "$removed" ]]; then
+            body+=$'\n\nSettings that no longer need exact grammar nodes:\n'"$(bullets "$removed")"
+          fi
+
+          if [[ $(gh pr view "$branch" --json state --jq .state 2>/dev/null) == OPEN ]]; then
+            gh pr edit "$branch" --title "$title" --body "$body"
+          else
+            gh pr create --head "$branch" --title "$title" --body "$body"
+          fi
+
+          # the merge workflow skips drafts
+          if [[ -n "$added" ]]; then
+            gh pr ready "$branch" --undo || true
+          else
+            gh pr ready "$branch" || true
+          fi
