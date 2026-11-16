@@ -226,6 +226,7 @@ pub(super) fn factor_enums(scope: &str, forms: &mut Vec<Form>, values: &mut Valu
             rule: key.clone(),
             value_kind: "typed".into(),
             value_type: Some(key),
+            label: None,
         });
         parts.extend_from_slice(suffix);
         additions.push(Form {
@@ -349,6 +350,7 @@ pub(super) fn project(
         rule: key.clone(),
         value_kind: "typed".into(),
         value_type: Some(key),
+        label: None,
     });
     if !projection.collection {
         parts.extend(suffix.unwrap_or_default());
@@ -417,6 +419,7 @@ pub(super) fn project_positional(scope: &str, forms: &mut Vec<Form>, values: &mu
             rule: key.clone(),
             value_kind: "typed".into(),
             value_type: Some(key),
+            label: None,
         });
         parts.extend(
             first
@@ -538,6 +541,7 @@ mod tests {
                         rule: rule.into(),
                         value_kind: "typed".into(),
                         value_type: None,
+                        label: None,
                     },
                     None => Part::Literal {
                         text: (*part).into(),
@@ -572,6 +576,7 @@ mod tests {
                         rule: key.into(),
                         value_kind: "typed".into(),
                         value_type: Some(key.into()),
+                        label: None,
                     },
                     Part::Literal { text: ";".into() },
                 ],

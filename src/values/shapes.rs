@@ -484,7 +484,7 @@ impl Values<'_> {
             .cloned()
             .unwrap_or_default();
         let mut exact = false;
-        for production in &rule.productions {
+        for (number, production) in rule.productions.iter().enumerate() {
             let symbols = production.symbols.iter().filter(|symbol| !matches!(symbol, Symbol::Reference(reference) if self.epsilon(reference, &mut BTreeSet::new()))).cloned().collect::<Vec<_>>();
             if let Some(tokens) = symbols
                 .iter()
@@ -499,9 +499,13 @@ impl Values<'_> {
                 }
                 self.infer(reference);
                 alternatives.push(reference.clone());
-            } else if let Some(forms) =
-                self.symbol_records(&symbols, &fields, &mut BTreeSet::from([name.into()]), None)
-            {
+            } else if let Some(forms) = self.symbol_records(
+                &production.symbols,
+                Some((name, number)),
+                &fields,
+                &mut BTreeSet::from([name.into()]),
+                None,
+            ) {
                 records.extend(forms);
             } else {
                 exact = true;
@@ -655,6 +659,7 @@ impl Values<'_> {
         } else {
             let forms = self.symbol_records(
                 item,
+                None,
                 &BTreeMap::new(),
                 &mut BTreeSet::from([name.into()]),
                 None,

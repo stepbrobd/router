@@ -16,6 +16,9 @@ pub enum Part {
         value_kind: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         value_type: Option<String>,
+        // registry name of the production slot that produced this value
+        #[serde(skip_serializing_if = "Option::is_none")]
+        label: Option<String>,
     },
     Body {
         rule: String,
@@ -157,8 +160,12 @@ fn value(rule: &str, kind: &str) -> Part {
         rule: rule.into(),
         value_kind: kind.into(),
         value_type: None,
+        label: None,
     }
 }
+
+// a production slot of `rule`: production number and the index of its first symbol
+type Origin<'b> = Option<(&'b str, usize, usize)>;
 
 impl<'a> Compiler<'a> {
     fn native(&self, name: &str) -> bool {
@@ -559,10 +566,26 @@ impl<'a> Compiler<'a> {
         }
     }
 
-    fn sequence(&mut self, symbols: &[Symbol]) -> Vec<Vec<Part>> {
+    fn sequence(&mut self, symbols: &[Symbol], origin: Origin<'_>) -> Vec<Vec<Part>> {
         let mut forms = vec![Vec::new()];
-        for symbol in symbols {
-            let choices = self.symbol(symbol);
+        for (index, symbol) in symbols.iter().enumerate() {
+            let mut choices = self.symbol(symbol);
+            // values a nested production made carry that production's label already
+            if let Some((rule, number, offset)) = origin
+                && let Some(name) = self
+                    .registry
+                    .and_then(|registry| registry.slot_label(rule, number, offset + index))
+            {
+                for part in choices.iter_mut().flatten() {
+                    if let Part::Value {
+                        label: label @ None,
+                        ..
+                    } = part
+                    {
+                        *label = Some(name.to_owned());
+                    }
+                }
+            }
             let mut next = Vec::with_capacity(forms.len() * choices.len());
             for prefix in &forms {
                 for choice in &choices {
@@ -656,7 +679,7 @@ impl<'a> Compiler<'a> {
             native_rule: body.clone(),
             roles,
         };
-        let mut forms = self.sequence(&production.symbols[..index]);
+        let mut forms = self.sequence(&production.symbols[..index], None);
         if forms.iter().any(|form| {
             form.iter()
                 .any(|part| !matches!(part, Part::Literal { .. }))
@@ -687,15 +710,21 @@ impl<'a> Compiler<'a> {
         for (number, production) in productions.iter().enumerate() {
             if matches!(production.symbols.first(), Some(Symbol::Reference(reference)) if reference == name)
             {
-                left.push(&production.symbols[1..]);
+                left.push((number, 1, &production.symbols[1..]));
             } else if matches!(production.symbols.last(), Some(Symbol::Reference(reference)) if reference == name)
             {
-                right.push(&production.symbols[..production.symbols.len() - 1]);
+                right.push((
+                    number,
+                    0,
+                    &production.symbols[..production.symbols.len() - 1],
+                ));
             } else {
                 items.push(production.symbols.as_slice());
                 base.extend(
                     self.declaration(name, number, production)
-                        .unwrap_or_else(|| self.sequence(&production.symbols)),
+                        .unwrap_or_else(|| {
+                            self.sequence(&production.symbols, Some((name, number, 0)))
+                        }),
                 );
             }
         }
@@ -707,12 +736,17 @@ impl<'a> Compiler<'a> {
             let scope = format!("{name}[]");
             self.scopes.entry(scope.clone()).or_default();
             let mut forms = Vec::new();
-            for symbols in left.iter().chain(&right) {
-                forms.extend(self.sequence(symbols).into_iter().map(|parts| Form {
-                    path: Vec::new(),
-                    header: None,
-                    parts: fold_blocks(parts),
-                }));
+            for (number, offset, symbols) in left.iter().chain(&right) {
+                let origin = Some((name, *number, *offset));
+                forms.extend(
+                    self.sequence(symbols, origin)
+                        .into_iter()
+                        .map(|parts| Form {
+                            path: Vec::new(),
+                            header: None,
+                            parts: fold_blocks(parts),
+                        }),
+                );
             }
             dedup(&mut forms);
             self.scopes.insert(scope.clone(), forms);
@@ -726,8 +760,10 @@ impl<'a> Compiler<'a> {
             }
             // in a pure repetition such as `X: Y | X Y` the scope alone can hold every item, the first included
             if right.is_empty()
-                && left.iter().all(|tail| items.contains(tail))
-                && items.iter().all(|item| left.contains(item))
+                && left.iter().all(|(_, _, tail)| items.contains(tail))
+                && items
+                    .iter()
+                    .all(|item| left.iter().any(|(_, _, tail)| tail == item))
             {
                 base.push(vec![options]);
             }

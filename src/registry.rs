@@ -1,4 +1,4 @@
-use crate::grammar::{Error, Grammar, Location, Rule, Symbol};
+use crate::grammar::{Error, Grammar, Location, Production, Rule, Symbol};
 use crate::source::Keyword;
 use crate::surface::Schema;
 use crate::values::{RecordPart, ValueShape};
@@ -69,6 +69,8 @@ pub(crate) struct Definition {
     pub copy_fields: BTreeMap<String, BTreeMap<String, Vec<String>>>,
     pub constructors: Vec<ConstructorDefinition>,
     pub declaration_order: DeclarationOrder,
+    #[serde(default)]
+    pub labels: Vec<LabelDefinition>,
 }
 
 // Root declarations BIRD must read before the entries that reference them. Entries not named here
@@ -150,6 +152,25 @@ pub(crate) struct ConstructorDefinition {
     arguments: Vec<String>,
 }
 
+// names for the values of one production that neither a keyword nor a binding label tells apart
+// `at` is the value's Bison position, the n of `$n` in the production's C action
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct LabelDefinition {
+    id: String,
+    rule: String,
+    production: Vec<String>,
+    fields: Vec<LabelField>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct LabelField {
+    at: usize,
+    name: String,
+    storage: Option<String>,
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct FieldDefinition {
@@ -167,6 +188,15 @@ pub struct Field {
     pub path: Vec<String>,
     pub storage: String,
     pub source: Location,
+}
+
+#[derive(Debug, Serialize)]
+pub struct Label {
+    pub rule: String,
+    pub production: usize,
+    pub source: Location,
+    // value names by symbol index within the production
+    pub names: BTreeMap<usize, String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -245,6 +275,7 @@ pub struct Registry {
     pub effects: Vec<Effect>,
     pub aliases: Vec<Effect>,
     pub constructors: BTreeMap<String, Constructor>,
+    pub labels: BTreeMap<String, Label>,
     pub declaration_order: DeclarationOrder,
     pub diagnostics: Diagnostics,
     #[serde(skip)]
@@ -346,6 +377,107 @@ fn semantic_types(grammar: &Grammar) -> BTreeMap<String, String> {
         start = index + 1;
     }
     result
+}
+
+// Bison numbers mid-rule actions like symbols, so `$n` of symbol i counts the actions before it
+fn bison_positions(production: &Production) -> Vec<usize> {
+    let mut position = 0;
+    (0..production.symbols.len())
+        .map(|index| {
+            position += production
+                .actions
+                .iter()
+                .filter(|action| action.position == index)
+                .count()
+                + 1;
+            position
+        })
+        .collect()
+}
+
+fn resolve_label(grammar: &Grammar, label: &LabelDefinition) -> Result<Label, Error> {
+    let fail = |message: String| error(format!("label {}: {message}", label.id));
+    let rule = grammar
+        .rules
+        .get(&label.rule)
+        .ok_or_else(|| fail(format!("no grammar rule {}", label.rule)))?;
+    let candidates = rule
+        .productions
+        .iter()
+        .enumerate()
+        .filter(|(_, production)| {
+            production
+                .symbols
+                .iter()
+                .map(|symbol| match symbol {
+                    Symbol::Reference(name) => name.clone(),
+                    Symbol::Literal(text) => format!("'{text}'"),
+                })
+                .eq(label.production.iter().cloned())
+        })
+        .collect::<Vec<_>>();
+    let [(number, production)] = candidates.as_slice() else {
+        return Err(fail(format!(
+            "{} has {} productions {:?}",
+            label.rule,
+            candidates.len(),
+            label.production
+        )));
+    };
+    let positions = bison_positions(production);
+    let mut names = BTreeMap::new();
+    for field in &label.fields {
+        let index = positions
+            .iter()
+            .position(|position| *position == field.at)
+            .ok_or_else(|| fail(format!("${} is not a grammar symbol", field.at)))?;
+        let Symbol::Reference(name) = &production.symbols[index] else {
+            return Err(fail(format!("${} is a literal", field.at)));
+        };
+        let value = grammar
+            .rules
+            .get(name)
+            .map(|rule| rule.storage_type.is_some())
+            .or_else(|| {
+                grammar
+                    .tokens
+                    .get(name)
+                    .map(|token| token.storage_type.is_some())
+            });
+        if value != Some(true) {
+            return Err(fail(format!(
+                "${} ({name}) carries no semantic value",
+                field.at
+            )));
+        }
+        if let Some(storage) = &field.storage
+            && !production.actions.iter().any(|action| {
+                action
+                    .assignments
+                    .iter()
+                    .any(|(lhs, position)| lhs == storage && *position == field.at)
+            })
+        {
+            return Err(fail(format!(
+                "source does not assign ${} to {storage}",
+                field.at
+            )));
+        }
+        if names.values().any(|existing| existing == &field.name)
+            || names.insert(index, field.name.clone()).is_some()
+        {
+            return Err(fail(format!(
+                "duplicate field {} or position ${}",
+                field.name, field.at
+            )));
+        }
+    }
+    Ok(Label {
+        rule: label.rule.clone(),
+        production: *number,
+        source: production.source.clone(),
+        names,
+    })
 }
 
 fn select_binding<'a>(
@@ -514,6 +646,7 @@ impl Registry {
             effects: Vec::new(),
             aliases: Vec::new(),
             constructors: BTreeMap::new(),
+            labels: BTreeMap::new(),
             declaration_order: definition.declaration_order.clone(),
             diagnostics: Diagnostics::default(),
             definition,
@@ -681,8 +814,35 @@ impl Registry {
                     source: production.source.clone(),
                 });
         }
+        for label in &definition.labels {
+            let resolved = resolve_label(grammar, label)?;
+            if registry
+                .labels
+                .values()
+                .any(|other| other.rule == resolved.rule && other.production == resolved.production)
+            {
+                return Err(error(format!(
+                    "label {} names a production another label already names",
+                    label.id
+                )));
+            }
+            if registry.labels.insert(label.id.clone(), resolved).is_some() {
+                return Err(error(format!(
+                    "duplicate stable label identity {}",
+                    label.id
+                )));
+            }
+        }
         registry.protocols = protocol_facts(facts, &definition.copy_fields)?;
         Ok(registry)
+    }
+
+    pub(crate) fn slot_label(&self, rule: &str, production: usize, symbol: usize) -> Option<&str> {
+        self.labels
+            .values()
+            .find(|label| label.rule == rule && label.production == production)
+            .and_then(|label| label.names.get(&symbol))
+            .map(String::as_str)
     }
 
     pub(crate) fn rule(&self, id: &str) -> Result<&str, Error> {
@@ -1181,6 +1341,52 @@ fn protocol_facts(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn label(fields: Vec<(usize, &str, Option<&str>)>) -> LabelDefinition {
+        LabelDefinition {
+            id: "cork".into(),
+            rule: "opt".into(),
+            production: ["CORK", "expr", "expr", "';'"].map(String::from).to_vec(),
+            fields: fields
+                .into_iter()
+                .map(|(at, name, storage)| LabelField {
+                    at,
+                    name: name.into(),
+                    storage: storage.map(String::from),
+                })
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn labels_name_values_by_bison_position_and_check_their_storage() {
+        let grammar = crate::grammar::parse("%union { int i; }\n%token END CORK\n%token <i> NUM\n%type <i> expr\n%start config\n%%\nconfig: opt END;\nopt: CORK { mid(); } expr expr ';' { cfg->low = $3; cfg->high = $4; };\nexpr: NUM;\n%%").unwrap();
+        let resolved = resolve_label(
+            &grammar,
+            &label(vec![(3, "low", Some("cfg->low")), (4, "high", None)]),
+        )
+        .unwrap();
+        assert_eq!(
+            resolved.names,
+            BTreeMap::from([(1, "low".to_owned()), (2, "high".to_owned())])
+        );
+        let swapped = resolve_label(&grammar, &label(vec![(4, "low", Some("cfg->low"))]));
+        assert!(swapped.unwrap_err().message.contains("does not assign $4"));
+        let keyword = resolve_label(&grammar, &label(vec![(1, "cork", None)]));
+        assert!(
+            keyword
+                .unwrap_err()
+                .message
+                .contains("carries no semantic value")
+        );
+        let action = resolve_label(&grammar, &label(vec![(2, "mid", None)]));
+        assert!(
+            action
+                .unwrap_err()
+                .message
+                .contains("is not a grammar symbol")
+        );
+    }
 
     #[test]
     fn c_comments_and_literals_cannot_invent_copy_hooks() {

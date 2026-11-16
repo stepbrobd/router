@@ -680,3 +680,122 @@ arguments = [
 id = "ec"
 binding = "constant.constructor"
 arguments = ["constant.ec-kind", "constant.expression", "constant.expression"]
+
+[[labels]]
+id = "settle"
+rule = "settle"
+production = ["expr_us", "expr_us"]
+fields = [
+  { at = 1, name = "min", storage = "$$.min" },
+  { at = 2, name = "max", storage = "$$.max" },
+]
+
+[[labels]]
+id = "table.cork-threshold"
+rule = "table_opt"
+production = ["CORK", "THRESHOLD", "expr", "expr"]
+fields = [
+  { at = 3, name = "low", storage = "this_table->cork_threshold.low" },
+  { at = 4, name = "high", storage = "this_table->cork_threshold.high" },
+]
+
+[[labels]]
+id = "bgp.error-wait-time"
+rule = "bgp_proto"
+production = [
+  "bgp_proto",
+  "ERROR",
+  "WAIT",
+  "TIME",
+  "expr",
+  "','",
+  "expr",
+  "';'",
+]
+fields = [
+  { at = 5, name = "min", storage = "BGP_CFG->error_delay_time_min" },
+  { at = 7, name = "max", storage = "BGP_CFG->error_delay_time_max" },
+]
+
+[[labels]]
+id = "filter.stacks"
+rule = "conf"
+production = ["FILTER", "STACKS", "expr", "expr", "';'"]
+fields = [
+  { at = 3, name = "value", storage = "new_config->filter_vstk" },
+  { at = 4, name = "execution", storage = "new_config->filter_estk" },
+]
+
+[[labels]]
+id = "filter.test-same"
+rule = "bt_test_same"
+production = [
+  "BT_TEST_SAME",
+  "'('",
+  "symbol_known",
+  "','",
+  "symbol_known",
+  "','",
+  "expr",
+  "')'",
+]
+fields = [
+  { at = 3, name = "function" },
+  { at = 5, name = "compare" },
+  { at = 7, name = "result", storage = "t->result" },
+]
+
+[[labels]]
+id = "log.file"
+rule = "log_file"
+production = ["text", "log_limit"]
+fields = [{ at = 1, name = "filename", storage = "this_log->filename" }]
+
+[[labels]]
+id = "log.fixed"
+rule = "log_file"
+production = ["FIXED", "text", "expr"]
+fields = [
+  { at = 2, name = "filename", storage = "this_log->filename" },
+  { at = 3, name = "size", storage = "this_log->limit" },
+]
+
+[[labels]]
+id = "log.limit"
+rule = "log_limit"
+production = ["expr", "text"]
+fields = [
+  { at = 1, name = "limit", storage = "this_log->limit" },
+  { at = 2, name = "backup", storage = "this_log->backup" },
+]
+
+[[labels]]
+id = "timeformat.limit"
+rule = "timeformat_spec"
+production = ["text", "expr", "text"]
+fields = [
+  { at = 1, name = "format1" },
+  { at = 2, name = "limit" },
+  { at = 3, name = "format2" },
+]
+
+[[labels]]
+id = "radv.custom-option"
+rule = "radv_proto_item"
+production = ["CUSTOM", "OPTION", "TYPE", "expr", "VALUE", "bytestring"]
+fields = [{ at = 4, name = "type" }, { at = 6, name = "value" }]
+
+[[labels]]
+id = "radv.interface.custom-option"
+rule = "radv_iface_item"
+production = ["CUSTOM", "OPTION", "TYPE", "expr", "VALUE", "bytestring"]
+fields = [{ at = 4, name = "type" }, { at = 6, name = "value" }]
+
+[[labels]]
+id = "static.recursive-mpls"
+rule = "stat_route"
+production = ["stat_route0", "RECURSIVE", "ipa", "MPLS", "label_stack"]
+fields = [
+  { at = 3, name = "recursive", storage = "this_srt->via" },
+  { at = 5, name = "recursive-mpls", storage = "this_srt->mls" },
+]

@@ -73607,19 +73607,9 @@
             },
             {
               "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
-            },
-            {
-              "kind": "literal",
-              "text": ","
-            },
-            {
-              "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
+              "rule": "$positional:bgp_proto[]:error-wait-time",
+              "value_kind": "typed",
+              "value_type": "$positional:bgp_proto[]:error-wait-time"
             },
             {
               "kind": "literal",
@@ -75769,15 +75759,9 @@
             },
             {
               "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
-            },
-            {
-              "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
+              "rule": "$positional:conf_entries[]:filter-stacks",
+              "value_kind": "typed",
+              "value_type": "$positional:conf_entries[]:filter-stacks"
             },
             {
               "kind": "literal",
@@ -75916,38 +75900,10 @@
               "text": "bt_test_same"
             },
             {
-              "kind": "literal",
-              "text": "("
-            },
-            {
               "kind": "value",
-              "rule": "symbol_known",
-              "value_kind": "symbol",
-              "value_type": "symbol_known"
-            },
-            {
-              "kind": "literal",
-              "text": ","
-            },
-            {
-              "kind": "value",
-              "rule": "symbol_known",
-              "value_kind": "symbol",
-              "value_type": "symbol_known"
-            },
-            {
-              "kind": "literal",
-              "text": ","
-            },
-            {
-              "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
-            },
-            {
-              "kind": "literal",
-              "text": ")"
+              "rule": "$positional:conf_entries[]:bt_test_same",
+              "value_kind": "typed",
+              "value_type": "$positional:conf_entries[]:bt_test_same"
             }
           ],
           "path": [
@@ -78453,45 +78409,6 @@
               "rule": "$positional:conf_entries[]:log",
               "value_kind": "typed",
               "value_type": "$positional:conf_entries[]:log"
-            },
-            {
-              "kind": "literal",
-              "text": ";"
-            }
-          ],
-          "path": [
-            "log"
-          ]
-        },
-        {
-          "parts": [
-            {
-              "kind": "literal",
-              "text": "log"
-            },
-            {
-              "kind": "value",
-              "rule": "text",
-              "value_kind": "text",
-              "value_type": "text"
-            },
-            {
-              "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
-            },
-            {
-              "kind": "value",
-              "rule": "text",
-              "value_kind": "text",
-              "value_type": "text"
-            },
-            {
-              "kind": "value",
-              "rule": "log_mask",
-              "value_kind": "semantic",
-              "value_type": "log_mask"
             },
             {
               "kind": "literal",
@@ -88801,19 +88718,9 @@
             },
             {
               "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
-            },
-            {
-              "kind": "literal",
-              "text": "value"
-            },
-            {
-              "kind": "value",
-              "rule": "bytestring",
-              "value_kind": "semantic",
-              "value_type": "bytestring"
+              "rule": "$positional:radv_iface_opts[]:custom-option-type",
+              "value_kind": "typed",
+              "value_type": "$positional:radv_iface_opts[]:custom-option-type"
             },
             {
               "kind": "literal",
@@ -89954,19 +89861,9 @@
             },
             {
               "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
-            },
-            {
-              "kind": "literal",
-              "text": "value"
-            },
-            {
-              "kind": "value",
-              "rule": "bytestring",
-              "value_kind": "semantic",
-              "value_type": "bytestring"
+              "rule": "$positional:radv_proto_opts[]:custom-option-type",
+              "value_kind": "typed",
+              "value_type": "$positional:radv_proto_opts[]:custom-option-type"
             },
             {
               "kind": "literal",
@@ -93524,63 +93421,6 @@
           "path": [
             "route"
           ]
-        },
-        {
-          "parts": [
-            {
-              "kind": "literal",
-              "text": "route"
-            },
-            {
-              "kind": "value",
-              "rule": "net_any",
-              "value_kind": "semantic",
-              "value_type": "net_any"
-            },
-            {
-              "kind": "literal",
-              "text": "mpls"
-            },
-            {
-              "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
-            },
-            {
-              "kind": "literal",
-              "text": "recursive"
-            },
-            {
-              "kind": "value",
-              "rule": "ipa",
-              "value_kind": "semantic",
-              "value_type": "ipa"
-            },
-            {
-              "kind": "literal",
-              "text": "mpls"
-            },
-            {
-              "kind": "value",
-              "rule": "label_stack",
-              "value_kind": "semantic",
-              "value_type": "label_stack"
-            },
-            {
-              "kind": "value",
-              "rule": "stat_route_opt_list",
-              "value_kind": "typed",
-              "value_type": "stat_route_opt_list"
-            },
-            {
-              "kind": "literal",
-              "text": ";"
-            }
-          ],
-          "path": [
-            "route"
-          ]
         }
       ],
       "table_opts[]": [
@@ -93709,15 +93549,9 @@
             },
             {
               "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
-            },
-            {
-              "kind": "value",
-              "rule": "expr",
-              "value_kind": "semantic",
-              "value_type": "expr"
+              "rule": "$positional:table_opts[]:cork-threshold",
+              "value_kind": "typed",
+              "value_type": "$positional:table_opts[]:cork-threshold"
             },
             {
               "kind": "literal",
@@ -98662,6 +98496,33 @@
         "nullable": false,
         "merge": "replace"
       },
+      "$positional:bgp_proto[]:error-wait-time": {
+        "kind": "record",
+        "forms": [
+          {
+            "parts": [
+              {
+                "kind": "field",
+                "name": "min",
+                "rule": "expr",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ","
+              },
+              {
+                "kind": "field",
+                "name": "max",
+                "rule": "expr",
+                "optional": false
+              }
+            ]
+          }
+        ],
+        "nullable": false,
+        "merge": "replace"
+      },
       "$positional:channel_opts[]:export-in": {
         "kind": "record",
         "forms": [
@@ -98737,6 +98598,51 @@
         "nullable": false,
         "merge": "replace"
       },
+      "$positional:conf_entries[]:bt_test_same": {
+        "kind": "record",
+        "forms": [
+          {
+            "parts": [
+              {
+                "kind": "literal",
+                "text": "("
+              },
+              {
+                "kind": "field",
+                "name": "function",
+                "rule": "symbol_known",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ","
+              },
+              {
+                "kind": "field",
+                "name": "compare",
+                "rule": "symbol_known",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ","
+              },
+              {
+                "kind": "field",
+                "name": "result",
+                "rule": "expr",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": ")"
+              }
+            ]
+          }
+        ],
+        "nullable": false,
+        "merge": "replace"
+      },
       "$positional:conf_entries[]:bt_test_suite": {
         "kind": "record",
         "forms": [
@@ -98772,6 +98678,29 @@
         "nullable": false,
         "merge": "replace"
       },
+      "$positional:conf_entries[]:filter-stacks": {
+        "kind": "record",
+        "forms": [
+          {
+            "parts": [
+              {
+                "kind": "field",
+                "name": "value",
+                "rule": "expr",
+                "optional": false
+              },
+              {
+                "kind": "field",
+                "name": "execution",
+                "rule": "expr",
+                "optional": false
+              }
+            ]
+          }
+        ],
+        "nullable": false,
+        "merge": "replace"
+      },
       "$positional:conf_entries[]:log": {
         "kind": "record",
         "forms": [
@@ -98779,7 +98708,35 @@
             "parts": [
               {
                 "kind": "field",
-                "name": "text",
+                "name": "filename",
+                "rule": "text",
+                "optional": false
+              },
+              {
+                "kind": "field",
+                "name": "classes",
+                "rule": "log_mask",
+                "optional": false
+              }
+            ]
+          },
+          {
+            "parts": [
+              {
+                "kind": "field",
+                "name": "filename",
+                "rule": "text",
+                "optional": false
+              },
+              {
+                "kind": "field",
+                "name": "limit",
+                "rule": "expr",
+                "optional": false
+              },
+              {
+                "kind": "field",
+                "name": "backup",
                 "rule": "text",
                 "optional": false
               },
@@ -98802,13 +98759,13 @@
             "parts": [
               {
                 "kind": "field",
-                "name": "text",
+                "name": "filename",
                 "rule": "text",
                 "optional": false
               },
               {
                 "kind": "field",
-                "name": "value",
+                "name": "size",
                 "rule": "expr",
                 "optional": false
               },
@@ -99070,6 +99027,33 @@
         "nullable": false,
         "merge": "replace"
       },
+      "$positional:radv_iface_opts[]:custom-option-type": {
+        "kind": "record",
+        "forms": [
+          {
+            "parts": [
+              {
+                "kind": "field",
+                "name": "type",
+                "rule": "expr",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": "value"
+              },
+              {
+                "kind": "field",
+                "name": "value",
+                "rule": "bytestring",
+                "optional": false
+              }
+            ]
+          }
+        ],
+        "nullable": false,
+        "merge": "replace"
+      },
       "$positional:radv_iface_opts[]:default-lifetime": {
         "kind": "record",
         "forms": [
@@ -99218,6 +99202,33 @@
         "nullable": false,
         "merge": "replace"
       },
+      "$positional:radv_proto_opts[]:custom-option-type": {
+        "kind": "record",
+        "forms": [
+          {
+            "parts": [
+              {
+                "kind": "field",
+                "name": "type",
+                "rule": "expr",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": "value"
+              },
+              {
+                "kind": "field",
+                "name": "value",
+                "rule": "bytestring",
+                "optional": false
+              }
+            ]
+          }
+        ],
+        "nullable": false,
+        "merge": "replace"
+      },
       "$positional:rip_proto_opts[]:ecmp": {
         "kind": "record",
         "forms": [
@@ -99283,6 +99294,29 @@
               {
                 "kind": "spread",
                 "scope": "stat_nexthop[]"
+              }
+            ]
+          }
+        ],
+        "nullable": false,
+        "merge": "replace"
+      },
+      "$positional:table_opts[]:cork-threshold": {
+        "kind": "record",
+        "forms": [
+          {
+            "parts": [
+              {
+                "kind": "field",
+                "name": "low",
+                "rule": "expr",
+                "optional": false
+              },
+              {
+                "kind": "field",
+                "name": "high",
+                "rule": "expr",
+                "optional": false
               }
             ]
           }
@@ -102404,7 +102438,61 @@
               },
               {
                 "kind": "field",
+                "name": "recursive-mpls",
+                "rule": "label_stack",
+                "optional": false
+              },
+              {
+                "kind": "body",
+                "name": "body",
+                "rule": "stat_route_opt_list",
+                "optional": true
+              },
+              {
+                "kind": "literal",
+                "text": ";"
+              }
+            ]
+          },
+          {
+            "parts": [
+              {
+                "kind": "literal",
+                "text": "route"
+              },
+              {
+                "kind": "field",
+                "name": "prefix",
+                "rule": "net_any",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": "mpls"
+              },
+              {
+                "kind": "field",
                 "name": "mpls",
+                "rule": "expr",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": "recursive"
+              },
+              {
+                "kind": "field",
+                "name": "recursive",
+                "rule": "ipa",
+                "optional": false
+              },
+              {
+                "kind": "literal",
+                "text": "mpls"
+              },
+              {
+                "kind": "field",
+                "name": "recursive-mpls",
                 "rule": "label_stack",
                 "optional": false
               },
@@ -103808,13 +103896,13 @@
               },
               {
                 "kind": "field",
-                "name": "cork-threshold",
+                "name": "low",
                 "rule": "expr",
                 "optional": false
               },
               {
                 "kind": "field",
-                "name": "value",
+                "name": "high",
                 "rule": "expr",
                 "optional": false
               },
@@ -104130,6 +104218,69 @@
               {
                 "kind": "literal",
                 "text": ";"
+              }
+            ]
+          }
+        ],
+        "nullable": false,
+        "merge": "replace"
+      },
+      "$timeformat_spec:enum": {
+        "kind": "enum",
+        "values": {
+          "long": [
+            "iso",
+            "long"
+          ],
+          "long-ms": [
+            "iso",
+            "long",
+            "ms"
+          ],
+          "long-us": [
+            "iso",
+            "long",
+            "us"
+          ],
+          "short": [
+            "iso",
+            "short"
+          ],
+          "short-ms": [
+            "iso",
+            "short",
+            "ms"
+          ],
+          "short-us": [
+            "iso",
+            "short",
+            "us"
+          ]
+        },
+        "nullable": false
+      },
+      "$timeformat_spec:record": {
+        "kind": "record",
+        "forms": [
+          {
+            "parts": [
+              {
+                "kind": "field",
+                "name": "format1",
+                "rule": "text",
+                "optional": false
+              },
+              {
+                "kind": "field",
+                "name": "limit",
+                "rule": "expr",
+                "optional": false
+              },
+              {
+                "kind": "field",
+                "name": "format2",
+                "rule": "text",
+                "optional": false
               }
             ]
           }
@@ -113402,9 +113553,27 @@
         "merge": "replace"
       },
       "settle": {
-        "kind": "exact",
-        "rule": "settle",
-        "nullable": false
+        "kind": "record",
+        "forms": [
+          {
+            "parts": [
+              {
+                "kind": "field",
+                "name": "min",
+                "rule": "expr_us",
+                "optional": false
+              },
+              {
+                "kind": "field",
+                "name": "max",
+                "rule": "expr_us",
+                "optional": false
+              }
+            ]
+          }
+        ],
+        "nullable": false,
+        "merge": "replace"
       },
       "stat_aspa_provider": {
         "kind": "exact",
@@ -113840,8 +114009,12 @@
         "nullable": false
       },
       "timeformat_spec": {
-        "kind": "exact",
-        "rule": "timeformat_spec",
+        "kind": "choice",
+        "alternatives": [
+          "text",
+          "$timeformat_spec:enum",
+          "$timeformat_spec:record"
+        ],
         "nullable": false
       },
       "timeformat_which": {
@@ -115982,6 +116155,153 @@
         ]
       }
     },
+    "labels": {
+      "bgp.error-wait-time": {
+        "rule": "bgp_proto",
+        "production": 43,
+        "source": {
+          "file": "proto/bgp/config.Y",
+          "line": 212
+        },
+        "names": {
+          "4": "min",
+          "6": "max"
+        }
+      },
+      "filter.stacks": {
+        "rule": "conf",
+        "production": 2,
+        "source": {
+          "file": "filter/config.Y",
+          "line": 406
+        },
+        "names": {
+          "2": "value",
+          "3": "execution"
+        }
+      },
+      "filter.test-same": {
+        "rule": "bt_test_same",
+        "production": 0,
+        "source": {
+          "file": "filter/config.Y",
+          "line": 467
+        },
+        "names": {
+          "2": "function",
+          "4": "compare",
+          "6": "result"
+        }
+      },
+      "log.file": {
+        "rule": "log_file",
+        "production": 0,
+        "source": {
+          "file": "sysdep/unix/config.Y",
+          "line": 60
+        },
+        "names": {
+          "0": "filename"
+        }
+      },
+      "log.fixed": {
+        "rule": "log_file",
+        "production": 1,
+        "source": {
+          "file": "sysdep/unix/config.Y",
+          "line": 69
+        },
+        "names": {
+          "1": "filename",
+          "2": "size"
+        }
+      },
+      "log.limit": {
+        "rule": "log_limit",
+        "production": 1,
+        "source": {
+          "file": "sysdep/unix/config.Y",
+          "line": 51
+        },
+        "names": {
+          "0": "limit",
+          "1": "backup"
+        }
+      },
+      "radv.custom-option": {
+        "rule": "radv_proto_item",
+        "production": 7,
+        "source": {
+          "file": "proto/radv/config.Y",
+          "line": 75
+        },
+        "names": {
+          "3": "type",
+          "5": "value"
+        }
+      },
+      "radv.interface.custom-option": {
+        "rule": "radv_iface_item",
+        "production": 19,
+        "source": {
+          "file": "proto/radv/config.Y",
+          "line": 140
+        },
+        "names": {
+          "3": "type",
+          "5": "value"
+        }
+      },
+      "settle": {
+        "rule": "settle",
+        "production": 0,
+        "source": {
+          "file": "conf/confbase.Y",
+          "line": 547
+        },
+        "names": {
+          "0": "min",
+          "1": "max"
+        }
+      },
+      "static.recursive-mpls": {
+        "rule": "stat_route",
+        "production": 2,
+        "source": {
+          "file": "proto/static/config.Y",
+          "line": 145
+        },
+        "names": {
+          "2": "recursive",
+          "4": "recursive-mpls"
+        }
+      },
+      "table.cork-threshold": {
+        "rule": "table_opt",
+        "production": 5,
+        "source": {
+          "file": "nest/config.Y",
+          "line": 272
+        },
+        "names": {
+          "2": "low",
+          "3": "high"
+        }
+      },
+      "timeformat.limit": {
+        "rule": "timeformat_spec",
+        "production": 1,
+        "source": {
+          "file": "nest/config.Y",
+          "line": 477
+        },
+        "names": {
+          "0": "format1",
+          "1": "limit",
+          "2": "format2"
+        }
+      }
+    },
     "declaration_order": {
       "first": [
         "define",
@@ -116000,18 +116320,9 @@
         "aggregator_proto_opts[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
         "bgp_channel_opts[] export-in: exact net_flow4_ (conf/flowspec.Y:191)",
         "bgp_channel_opts[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
-        "bgp_channel_opts[] export-settle-time: exact settle (conf/confbase.Y:547)",
-        "bgp_proto[] error-wait-time: 2 parts after the setting name",
         "channel_opts[] export-in: exact net_flow4_ (conf/flowspec.Y:191)",
         "channel_opts[] export-in: exact net_flow6_ (conf/flowspec.Y:197)",
         "conf_entries[] : no setting path",
-        "conf_entries[] bt_test_same: 3 parts after the setting name",
-        "conf_entries[] filter-stacks: 2 parts after the setting name",
-        "conf_entries[] log: 4 parts after the setting name",
-        "conf_entries[] timeformat-base: exact timeformat_spec (nest/config.Y:475)",
-        "conf_entries[] timeformat-log: exact timeformat_spec (nest/config.Y:475)",
-        "conf_entries[] timeformat-protocol: exact timeformat_spec (nest/config.Y:475)",
-        "conf_entries[] timeformat-route: exact timeformat_spec (nest/config.Y:475)",
         "evpn_proto_opts[] export-target: exact ec_item (filter/config.Y:738)",
         "evpn_proto_opts[] import-target: exact ec_item (filter/config.Y:738)",
         "evpn_proto_opts[] route-target: exact ec_item (filter/config.Y:738)",
@@ -116029,16 +116340,9 @@
         "pipe_proto[] import-in: exact net_flow6_ (conf/flowspec.Y:197)",
         "pref_list[] : 2 parts after the setting name",
         "pref_list[] : no setting path",
-        "radv_iface_opts[] custom-option-type: 2 parts after the setting name",
-        "radv_proto_opts[] custom-option-type: 2 parts after the setting name",
         "stat_aspa_providers[] : no setting path",
-        "static_proto[] route: 5 parts after the setting name",
         "static_proto[] route: exact net_flow4_ (conf/flowspec.Y:191)",
-        "static_proto[] route: exact net_flow6_ (conf/flowspec.Y:197)",
-        "table_opts[] cork-threshold: 2 parts after the setting name",
-        "table_opts[] digest-settle-time: exact settle (conf/confbase.Y:547)",
-        "table_opts[] export-settle-time: exact settle (conf/confbase.Y:547)",
-        "table_opts[] route-refresh-export-settle-time: exact settle (conf/confbase.Y:547)"
+        "static_proto[] route: exact net_flow6_ (conf/flowspec.Y:197)"
       ],
       "unprojected": [
         "ACCEPT",

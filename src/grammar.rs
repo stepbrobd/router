@@ -50,6 +50,9 @@ pub struct Action {
     pub source: Location,
     pub storage: Vec<String>,
     pub symbol_classes: Vec<String>,
+    // `lhs = $n` assignments, which tie a C field to the value at Bison position n
+    #[serde(skip)]
+    pub assignments: Vec<(String, usize)>,
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
@@ -345,6 +348,7 @@ impl<'a> Lexer<'a> {
 fn annotation(action: &str, position: usize, source: Location) -> Action {
     let bytes = action.as_bytes();
     let mut storage = BTreeSet::new();
+    let mut assignments = Vec::new();
     let mut classes = BTreeSet::new();
     let mut lexer = Lexer::new(action, &source.file);
     // Inspect identifiers only outside comments and strings, and never ship upstream C actions.
@@ -390,7 +394,11 @@ fn annotation(action: &str, position: usize, source: Location) -> Action {
                 start -= 1;
             }
             if start < lhs_end {
-                storage.insert(action[start..lhs_end].to_owned());
+                let lhs = &action[start..lhs_end];
+                storage.insert(lhs.to_owned());
+                if let Some(position) = positional_value(&action[end + 1..]) {
+                    assignments.push((lhs.to_owned(), position));
+                }
             }
             lexer.advance();
         } else {
@@ -402,7 +410,18 @@ fn annotation(action: &str, position: usize, source: Location) -> Action {
         source,
         storage: storage.into_iter().collect(),
         symbol_classes: classes.into_iter().collect(),
+        assignments,
     }
+}
+
+// `$n` alone up to the end of the assignment, as in `cfg->low = $3;`
+fn positional_value(rhs: &str) -> Option<usize> {
+    let rhs = rhs.trim_start().strip_prefix('$')?;
+    let digits = rhs.find(|c: char| !c.is_ascii_digit()).unwrap_or(rhs.len());
+    if digits == 0 || !rhs[digits..].trim_start().starts_with([';', ',', ')', '}']) {
+        return None;
+    }
+    rhs[..digits].parse().ok()
 }
 
 pub fn parse(input: &str) -> Result<Grammar, Error> {
@@ -765,6 +784,16 @@ mod tests {
         let action = &grammar.rules["item"].productions[0].actions[0];
         assert!(action.storage.contains(&"cfg->value".to_owned()));
         assert_eq!(grammar.rules["entries"].productions.len(), 2);
+    }
+
+    #[test]
+    fn assignments_record_the_bison_position_they_read() {
+        let grammar = parse("%token END NUM\n%start config\n%%\nconfig: NUM NUM END { cfg->low = $1; cfg->high = $2 ; cfg->sum = $1 + $2; cfg->ptr = $$; };\n%%").unwrap();
+        let action = &grammar.rules["config"].productions[0].actions[0];
+        assert_eq!(
+            action.assignments,
+            [("cfg->low".to_owned(), 1), ("cfg->high".to_owned(), 2)]
+        );
     }
 
     #[test]

@@ -5,16 +5,18 @@ use crate::surface::Part;
 use std::collections::{BTreeMap, BTreeSet};
 
 impl Values<'_> {
+    // `origin` is the rule and production number `symbols` come from, which selects registry labels
     pub(super) fn symbol_records(
         &mut self,
         symbols: &[Symbol],
+        origin: Option<(&str, usize)>,
         fields: &BTreeMap<String, String>,
         active: &mut BTreeSet<String>,
         forced_label: Option<&str>,
     ) -> Option<Vec<RecordForm>> {
         let mut forms = vec![RecordForm { parts: Vec::new() }];
         let mut pending = Vec::new();
-        for symbol in symbols {
+        for (index, symbol) in symbols.iter().enumerate() {
             if let Some(text) = self.fixed(symbol) {
                 if !text.is_empty() {
                     pending.push(text.to_owned());
@@ -60,9 +62,17 @@ impl Values<'_> {
                     .and_then(|binding| binding.label.as_deref())
                     .or(forced_label);
                 let mut nested = Vec::new();
-                for production in &self.grammar.rules.get(reference)?.productions {
+                for (number, production) in self
+                    .grammar
+                    .rules
+                    .get(reference)?
+                    .productions
+                    .iter()
+                    .enumerate()
+                {
                     nested.extend(self.symbol_records(
                         &production.symbols,
+                        Some((reference, number)),
                         &nested_fields,
                         active,
                         label,
@@ -75,10 +85,16 @@ impl Values<'_> {
             }
             self.infer(reference);
             let is_body = matches!(self.types.get(reference), Some(ValueShape::Body { .. }));
-            let explicit_label = binding
-                .and_then(|binding| fields.get(&binding.id))
-                .or_else(|| fields.get(reference))
-                .map(String::as_str);
+            let slot_label = origin.and_then(|(rule, number)| {
+                self.registry
+                    .and_then(|registry| registry.slot_label(rule, number, index))
+            });
+            let explicit_label = slot_label.or_else(|| {
+                binding
+                    .and_then(|binding| fields.get(&binding.id))
+                    .or_else(|| fields.get(reference))
+                    .map(String::as_str)
+            });
             let name = explicit_label.or(forced_label).map_or_else(
                 || {
                     let keyword = pending
@@ -175,16 +191,19 @@ impl Values<'_> {
         for (position, part) in parts.iter().enumerate() {
             match part {
                 Part::Literal { text } => pending.push(text.clone()),
-                Part::Value { rule, .. } => {
+                Part::Value { rule, label, .. } => {
                     let binding = self.registry.and_then(|registry| registry.binding(rule));
                     if let Some(binding) = binding.filter(|binding| binding.expand) {
                         let mut nested = Vec::new();
                         let mut nested_fields = fields.clone();
                         nested_fields.extend(binding.fields.clone());
                         let forced = binding.label.as_deref();
-                        for production in &self.grammar.rules.get(rule)?.productions {
+                        for (number, production) in
+                            self.grammar.rules.get(rule)?.productions.iter().enumerate()
+                        {
                             nested.extend(self.symbol_records(
                                 &production.symbols,
+                                Some((rule, number)),
                                 &nested_fields,
                                 &mut BTreeSet::from([rule.clone()]),
                                 forced,
@@ -211,7 +230,9 @@ impl Values<'_> {
                         .filter(|text| !punctuation(text))
                         .cloned()
                         .collect::<Vec<_>>();
-                    let name = if keyword.is_empty() {
+                    let name = if let Some(label) = label {
+                        label.clone()
+                    } else if keyword.is_empty() {
                         self.label(rule, fields)
                     } else {
                         keyword.join("-")
@@ -392,6 +413,7 @@ mod tests {
             let forms = values
                 .symbol_records(
                     &production.symbols,
+                    None,
                     &fields,
                     &mut BTreeSet::new(),
                     Some("interface"),
@@ -418,6 +440,7 @@ mod tests {
             rule: rule.into(),
             value_kind: "typed".into(),
             value_type: None,
+            label: None,
         }
     }
 
