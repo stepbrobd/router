@@ -366,9 +366,12 @@ let
             let alternative = schema.value_types.${candidate.rule};
             in candidate.result.ok && !(alternative.kind == "primitive" && alternative.representation == "expression"))
           results;
+        # BIRD reserves keywords, so a plain string that spells one is the keyword and bird.string forces text
+        keywords = filter (candidate: candidate.result.ok && schema.value_types.${candidate.rule}.kind == "enum") results;
         # Prefer dedicated literal syntax over the same value wrapped in a general expression.
+        preferred = if isString value && keywords != [ ] then keywords else if direct != [ ] then direct else results;
       in
-      alternatives (map (candidate: candidate.result) (if direct != [ ] then direct else results))
+      alternatives (map (candidate: candidate.result) preferred)
     else if shape.kind == "body" then
       if isString value && !allowBodyString then bad else renderDeclaration shape value
     else if shape.kind == "exact" then bad
