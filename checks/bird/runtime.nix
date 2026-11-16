@@ -89,4 +89,15 @@ assert !(force (backend.render {
 assert lib.hasInfix "origin();" selfReading.config.services.bird.config;
 assert (backend.render { protocol.pipe.p.peer-table = "t2"; }) != "";
 assert !(force (backend.render { protocol.pipe.p.peer.table.t2 = { }; })).success;
+assert lib.hasInfix "route 192.0.2.0/24 via 192.0.2.1 bfd on weight 2 ;"
+  (backend.render {
+    protocol.static.s.route = [{ prefix = "192.0.2.0/24"; via = backend.ip "192.0.2.1"; weight = 2; bfd = true; }];
+  });
+assert lib.hasInfix "route 192.0.2.0/24 via 192.0.2.1 weight 1\nvia 192.0.2.2 ;"
+  (backend.render {
+    protocol.static.s.route = [{ prefix = "192.0.2.0/24"; via = [{ address = backend.ip "192.0.2.1"; weight = 1; } { address = backend.ip "192.0.2.2"; }]; }];
+  });
+assert !(force (backend.render {
+  protocol.static.s.route = [{ prefix = "192.0.2.0/24"; via = [ (backend.ip "192.0.2.1") (backend.ip "192.0.2.2") ]; }];
+})).success;
 true

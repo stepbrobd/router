@@ -91,6 +91,25 @@ let
         route = [{ prefix = { prefix = "192.0.2.0/24"; max = 24; as = 65000; }; }];
       };
     }]).text;
+    static-next-hops = (evaluate [{
+      protocol.static.next_hops4 = {
+        ipv4.table = "main4";
+        route = [
+          { prefix = "198.51.100.0/24"; via = bird.ip "192.0.2.2"; weight = 2; bfd = true; }
+          {
+            prefix = "203.0.113.0/24";
+            via = [
+              { address = bird.ip "192.0.2.2"; weight = 1; }
+              { address = bird.ip "192.0.2.3"; weight = 3; onlink = true; }
+            ];
+          }
+        ];
+      };
+      protocol.static.next_hops6 = {
+        ipv6.table = "main6";
+        route = [{ prefix = "2001:db8::/32"; via = { address = bird.ip "fe80::1"; interface = "eth0"; }; }];
+      };
+    }]).text;
     table-references = (evaluate [{
       ipv4.table.peer4 = { };
       protocol.pipe.mirror = {
