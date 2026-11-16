@@ -26,6 +26,25 @@
         "type": "github"
       }
     },
+    "bird": {
+      "flake": false,
+      "locked": {
+        "host": "gitlab.nic.cz",
+        "lastModified": 1791792256,
+        "narHash": "sha256-FPLQlvl+i81adfphQNssP8ylsNllESFzzCpIfrsNvoo=",
+        "owner": "labs",
+        "repo": "bird",
+        "rev": "c3669497e3949b942d86d07e343092cc439b4659",
+        "type": "gitlab"
+      },
+      "original": {
+        "host": "gitlab.nic.cz",
+        "owner": "labs",
+        "ref": "v3.4.0",
+        "repo": "bird",
+        "type": "gitlab"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1794495034,
@@ -65,6 +84,7 @@
     "root": {
       "inputs": {
         "autopilot": "autopilot",
+        "bird": "bird",
         "nixpkgs": "nixpkgs",
         "parts": "parts",
         "systems": "systems"

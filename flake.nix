@@ -7,6 +7,8 @@
   inputs.autopilot.inputs.nixpkgs.follows = "nixpkgs";
   inputs.autopilot.inputs.parts.follows = "parts";
   inputs.autopilot.inputs.systems.follows = "systems";
+  inputs.bird.url = "gitlab:labs/bird/v3.4.0?host=gitlab.nic.cz";
+  inputs.bird.flake = false;
   outputs = inputs: inputs.autopilot.lib.mkFlake
     {
       inherit inputs;
