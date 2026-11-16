@@ -1,11 +1,13 @@
 # NixOS Router
 
-Router compiles BIRD's source grammar into Nix configuration modules. It
-generates configuration only. Downstream NixOS configuration still owns the
-daemon, package selection, secrets and host networking.
+Router compiles routing daemons' source grammars into Nix configuration modules.
+This project is only intended to generates configuration. Downstream NixOS
+configurations still need to manage the routing daemon, package selection,
+secrets, host networking, etc.
 
 ## BIRD
 
+BIRD is currently the only supported routing daemon. Exported
 `nixosModules.bird` adds `services.bird.settings` to the nixpkgs module. The
 selected package must be built from the BIRD source the inventory was generated
 from, and an assertion compares the two. The inventory follows BIRD's
@@ -218,6 +220,9 @@ tests, `nix build` for the compiler, and `nix fmt` for the conventional checks
 and formatting. Autopilot still discovers the library, packages and modules.
 
 ## License
+
+This work is an extension of NixCon 2025 talk
+["Internet scale routing with NixOS"](https://talks.nixcon.org/nixcon-2025/talk/7YWTUC/).
 
 <p>
   Sponsored under
