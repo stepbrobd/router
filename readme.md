@@ -106,8 +106,26 @@ interface = [{
 }];
 ```
 
-An exclusion in one statement does not exclude matches in a later statement. See
-[`examples/bird`](examples/bird) for complete data, policy and peer examples.
+An exclusion in one statement does not exclude matches in a later statement.
+
+A static route's single next hop is `via` with its options beside it. Several
+next hops are a `via` list of records, which BIRD reads as a multipath route:
+
+```nix
+route = [
+  { prefix = "198.51.100.0/24"; via = bird.ip "192.0.2.2"; weight = 2; bfd = true; }
+  {
+    prefix = "203.0.113.0/24";
+    via = [
+      { address = bird.ip "192.0.2.2"; weight = 1; }
+      { address = bird.ip "192.0.2.3"; weight = 3; onlink = true; }
+    ];
+  }
+];
+```
+
+See [`examples/bird`](examples/bird) for complete data, policy and peer
+examples.
 
 Settings stay plain data while modules define them, which lets a module read
 `config.services.bird.settings` to decide what else to set. Rendering into
