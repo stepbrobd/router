@@ -47,7 +47,8 @@ pub fn inspect(source: &Path) -> Result<Inventory, grammar::Error> {
     })
 }
 
-// every setting must have an attribute form, so a BIRD bump that adds one without needs a registry change
+// every setting must have an attribute form and every field a name from a keyword or the registry,
+// so a BIRD bump that adds a setting without either needs a registry change
 pub fn generate(source: &Path, output: &Path) -> anyhow::Result<()> {
     let inventory = inspect(source)?;
     let unaddressable = &inventory.registry.diagnostics.unaddressable;
@@ -60,7 +61,7 @@ pub fn generate(source: &Path, output: &Path) -> anyhow::Result<()> {
     }
     let unnamed = &inventory.registry.diagnostics.unnamed;
     if !unnamed.is_empty() {
-        eprintln!(
+        anyhow::bail!(
             "{} setting fields are named after their grammar symbol, name them in registry/bird.toml:\n{}",
             unnamed.len(),
             unnamed.join("\n")
