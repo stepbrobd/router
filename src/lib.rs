@@ -64,11 +64,16 @@ pub fn generate(source: &Path, output: &Path) -> anyhow::Result<()> {
         .with_context(|| format!("cannot write {}", path.display()))
 }
 
-// NixOS options.json for every setting, with descriptions from the BIRD source's doc/bird.sgml
-pub fn options(source: &Path, source_url: &str) -> anyhow::Result<options::Options> {
+// NixOS options.json for every setting under `prefix`, with descriptions from the BIRD source's doc/bird.sgml
+pub fn options(source: &Path, source_url: &str, prefix: &str) -> anyhow::Result<options::Options> {
+    let prefix = prefix
+        .split('.')
+        .filter(|segment| !segment.is_empty())
+        .map(str::to_owned)
+        .collect::<Vec<_>>();
     let inventory = inspect(source)?;
     let manual = source.join("doc/bird.sgml");
     let manual =
         fs::read_to_string(&manual).with_context(|| format!("cannot read {}", manual.display()))?;
-    Ok(options::options(&inventory, &manual, source_url))
+    Ok(options::options(&inventory, &manual, source_url, &prefix))
 }

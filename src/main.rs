@@ -34,14 +34,21 @@ enum Command {
         /// URL the source tree's files are browsable under, ending with a slash
         #[arg(long)]
         source_url: String,
+        /// Option the settings live under, such as services.bird.settings
+        #[arg(long, default_value = "")]
+        prefix: String,
     },
 }
 
 fn main() -> anyhow::Result<()> {
     match Cli::parse().command {
         Command::Generate { source, output } => router::generate(&source, &output),
-        Command::Options { source, source_url } => {
-            let options = router::options(&source, &source_url)?;
+        Command::Options {
+            source,
+            source_url,
+            prefix,
+        } => {
+            let options = router::options(&source, &source_url, &prefix)?;
             eprintln!(
                 "{} of {} settings have no entry in doc/bird.sgml",
                 options.undocumented,

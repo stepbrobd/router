@@ -29,8 +29,10 @@ struct Entry {
 
 // every setting with its expected value, the manual entry its path matches and its grammar rule
 // `source_url` is where the grammar files are browsable, such as a GitHub blob URL at the pinned commit
-pub fn options(inventory: &Inventory, sgml: &str, source_url: &str) -> Options {
+// `prefix` is the option the settings live under, such as `services.bird.settings`
+pub fn options(inventory: &Inventory, sgml: &str, source_url: &str, prefix: &[String]) -> Options {
     let manual = manual(sgml);
+    let path = |loc: &[String]| prefix.iter().chain(loc).cloned().collect::<Vec<_>>();
     let mut options = BTreeMap::new();
     let mut undocumented = 0;
     let include = Setting {
@@ -52,7 +54,7 @@ pub fn options(inventory: &Inventory, sgml: &str, source_url: &str) -> Options {
         let mut description = match (entry, entry.is_none().then(parent).flatten()) {
             (Some(entry), _) => format!("{}\n\n{}", entry.syntax, entry.text),
             (None, Some((loc, entry))) => {
-                format!("Part of `{}`, {}.", loc.join("."), entry.syntax)
+                format!("Part of `{}`, {}.", path(loc).join("."), entry.syntax)
             }
             (None, None) => {
                 undocumented += 1;
@@ -62,7 +64,7 @@ pub fn options(inventory: &Inventory, sgml: &str, source_url: &str) -> Options {
         if let Some(first) = &setting.same_as {
             description.push_str(&format!(
                 "\n\nTakes the settings listed under `{}`.",
-                first.join(".")
+                path(first).join(".")
             ));
         }
         let sources = match declaration(inventory, &setting) {
@@ -82,12 +84,13 @@ pub fn options(inventory: &Inventory, sgml: &str, source_url: &str) -> Options {
                 source.file, source.line, source.file, source.line
             ));
         }
+        let loc = path(&setting.loc);
         options.insert(
-            setting.loc.join("."),
+            loc.join("."),
             OptionDoc {
                 declarations: vec!["lib/router/bird/module.nix".into()],
                 description: description.trim().to_owned(),
-                loc: setting.loc,
+                loc,
                 read_only: false,
                 r#type: setting.types.into_iter().collect::<Vec<_>>().join(" or "),
             },
