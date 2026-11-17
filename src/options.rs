@@ -412,7 +412,7 @@ fn markdown(sgml: &str) -> String {
         // short form `<cf/text/`
         if !closing && let Some(short) = after.strip_prefix('/') {
             let (content, tail) = short.split_once('/').unwrap_or((short, ""));
-            let content = decode(content);
+            let content = decode(&content.split_whitespace().collect::<Vec<_>>().join(" "));
             // a placeholder is a word of its own, also where the manual writes `pd preferred<m/switch/`
             if name == "m" && out.ends_with(|c: char| c.is_ascii_alphanumeric()) {
                 out.push(' ');
