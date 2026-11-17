@@ -233,14 +233,14 @@ fn retain_indexed<T>(items: &mut Vec<T>, mut keep: impl FnMut(usize) -> bool) {
 }
 
 #[cfg(test)]
-mod fixtures {
+pub(crate) mod fixtures {
     use super::Values;
     use crate::grammar::{Grammar, Location};
     use crate::registry;
     use crate::source::Keyword;
     use std::collections::{BTreeMap, BTreeSet};
 
-    pub(super) fn keywords(names: &[&str]) -> Vec<Keyword> {
+    pub(crate) fn keywords(names: &[&str]) -> Vec<Keyword> {
         names
             .iter()
             .map(|name| Keyword {

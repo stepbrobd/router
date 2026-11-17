@@ -1,5 +1,6 @@
 use crate::Inventory;
-use crate::grammar::{Location, Symbol};
+use crate::grammar::{Grammar, Location, Symbol};
+use crate::source::Keyword;
 use crate::values::{Setting, settings};
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
@@ -42,7 +43,12 @@ pub fn options(inventory: &Inventory, sgml: &str, source_url: &str, prefix: &[St
         same_as: None,
         keywords: Vec::new(),
     };
-    for setting in settings(&inventory.schema).into_iter().chain([include]) {
+    let settings = settings(&inventory.schema)
+        .into_iter()
+        .chain([include])
+        .collect::<Vec<_>>();
+    let sources = sources(&inventory.grammar, &inventory.keywords, &settings);
+    for setting in settings {
         let entry = lookup(&manual, &setting.loc);
         // a field such as `log.filename` points at the nearest setting the manual describes
         let parent = || {
@@ -67,18 +73,7 @@ pub fn options(inventory: &Inventory, sgml: &str, source_url: &str, prefix: &[St
                 path(first).join(".")
             ));
         }
-        let sources = match declaration(inventory, &setting) {
-            Some(source) => vec![source],
-            None => setting
-                .scopes
-                .iter()
-                .filter_map(|scope| {
-                    let rule = scope.strip_suffix("[]").unwrap_or(scope);
-                    inventory.grammar.rules.get(rule).map(|rule| &rule.source)
-                })
-                .collect(),
-        };
-        for source in sources {
+        for source in &sources[&setting.loc] {
             description.push_str(&format!(
                 "\n\nGrammar: [{}:{}]({source_url}{}#L{})",
                 source.file, source.line, source.file, source.line
@@ -102,15 +97,57 @@ pub fn options(inventory: &Inventory, sgml: &str, source_url: &str, prefix: &[St
     }
 }
 
+// the grammar each setting links to, by setting path, which is its statement's production
+// a setting without keywords of its own, such as a record field or `protocol.bgp.<name>.from`, links its
+// statement, which comes before it in path order
+fn sources<'a>(
+    grammar: &'a Grammar,
+    keywords: &[Keyword],
+    settings: &[Setting],
+) -> BTreeMap<Vec<String>, Vec<&'a Location>> {
+    let mut sources = BTreeMap::<Vec<String>, Vec<&Location>>::new();
+    for setting in settings {
+        let statement = || {
+            (1..setting.loc.len())
+                .rev()
+                .find_map(|end| sources.get(&setting.loc[..end]).cloned())
+        };
+        let found = match declaration(grammar, keywords, setting) {
+            Some(source) => vec![source],
+            None => setting
+                .keywords
+                .is_empty()
+                .then(statement)
+                .flatten()
+                .unwrap_or_else(|| {
+                    setting
+                        .scopes
+                        .iter()
+                        .filter_map(|scope| {
+                            let rule = scope.strip_suffix("[]").unwrap_or(scope);
+                            grammar.rules.get(rule).map(|rule| &rule.source)
+                        })
+                        .collect()
+                }),
+        };
+        sources.insert(setting.loc.clone(), found);
+    }
+    sources
+}
+
 // the production holding the statement's keyword tokens in a row, in the rule nearest its scope
-fn declaration<'a>(inventory: &'a Inventory, setting: &Setting) -> Option<&'a Location> {
-    let grammar = &inventory.grammar;
+// keywords that BIRD splits across rules, as in `proto_start BGP` and `LOG log_begin log_file`, then
+// take the production that joins them, where one symbol is the start of the run and those after it the rest
+fn declaration<'a>(
+    grammar: &'a Grammar,
+    keywords: &[Keyword],
+    setting: &Setting,
+) -> Option<&'a Location> {
     let tokens = setting
         .keywords
         .iter()
         .map(|spelling| {
-            inventory
-                .keywords
+            keywords
                 .iter()
                 .find(|keyword| &keyword.spelling == spelling)
                 .map(|keyword| Symbol::Reference(keyword.token.clone()))
@@ -119,18 +156,52 @@ fn declaration<'a>(inventory: &'a Inventory, setting: &Setting) -> Option<&'a Lo
     if tokens.is_empty() {
         return None;
     }
+    let scope = setting.scopes.first()?;
+    let scope = scope.strip_suffix("[]").unwrap_or(scope);
     // `IMPORT` in `IMPORT TABLE bool` is the start of another setting
-    let keyword = |symbol: Option<&Symbol>| matches!(symbol, Some(Symbol::Reference(name)) if inventory.keywords.iter().any(|keyword| &keyword.token == name));
-    let declares = |symbols: &[Symbol]| {
+    let keyword = |symbol: Option<&Symbol>| matches!(symbol, Some(Symbol::Reference(name)) if keywords.iter().any(|keyword| &keyword.token == name));
+    let opens = |symbols: &[Symbol], start: usize| {
+        !keyword(start.checked_sub(1).and_then(|before| symbols.get(before)))
+    };
+    let exact = |symbols: &[Symbol]| {
         (0..=symbols.len().saturating_sub(tokens.len())).any(|start| {
             let end = start + tokens.len();
             symbols.get(start..end) == Some(tokens.as_slice())
-                && !keyword(start.checked_sub(1).and_then(|before| symbols.get(before)))
+                && opens(symbols, start)
                 && !keyword(symbols.get(end))
         })
     };
-    let scope = setting.scopes.first()?;
-    let mut pending = VecDeque::from([scope.strip_suffix("[]").unwrap_or(scope)]);
+    let through = |symbols: &[Symbol]| {
+        (0..symbols.len()).any(|start| {
+            opens(symbols, start)
+                && (1..tokens.len()).any(|taken| {
+                    let mut seen = BTreeSet::new();
+                    fit(
+                        grammar,
+                        &symbols[start..=start],
+                        &tokens[..taken],
+                        true,
+                        &mut seen,
+                    ) && fit(
+                        grammar,
+                        &symbols[start + 1..],
+                        &tokens[taken..],
+                        false,
+                        &mut seen,
+                    )
+                })
+        })
+    };
+    holding(grammar, scope, exact).or_else(|| holding(grammar, scope, through))
+}
+
+// the first production, from `scope` outward, that `declares` accepts
+fn holding<'a>(
+    grammar: &'a Grammar,
+    scope: &str,
+    declares: impl Fn(&[Symbol]) -> bool,
+) -> Option<&'a Location> {
+    let mut pending = VecDeque::from([scope]);
     let mut seen = BTreeSet::new();
     while let Some(name) = pending.pop_front() {
         let Some(rule) = grammar.rules.get(name) else {
@@ -155,6 +226,61 @@ fn declaration<'a>(inventory: &'a Inventory, setting: &Setting) -> Option<&'a Lo
         }
     }
     None
+}
+
+// whether `symbols` begin with the tokens of `run`, or are exactly them when `whole`
+// a rule inside the run stands for exactly its tokens, as `ospf_variant` for `OSPF V2`, and only the last
+// may go on past the run, as `log_file` does after `UDP`
+// a rule that may be empty counts as empty, since `proto_name` may be a symbol and keywords are symbols
+// a rule within itself stands for nothing, so `bgp_proto` in `bgp_proto BFD bool` is no `PROTOCOL`
+fn fit(
+    grammar: &Grammar,
+    symbols: &[Symbol],
+    run: &[Symbol],
+    whole: bool,
+    seen: &mut BTreeSet<String>,
+) -> bool {
+    let optional = |symbol: &Symbol| {
+        matches!(symbol, Symbol::Reference(name) if grammar.rules.get(name).is_some_and(|rule| {
+            rule.productions.iter().any(|production| production.symbols.is_empty())
+        }))
+    };
+    let Some((first, rest)) = symbols.split_first() else {
+        return run.is_empty();
+    };
+    if run.is_empty() {
+        return !whole || symbols.iter().all(optional);
+    }
+    if optional(first) {
+        return fit(grammar, rest, run, whole, seen);
+    }
+    if first == &run[0] {
+        return fit(grammar, rest, &run[1..], whole, seen);
+    }
+    let Symbol::Reference(name) = first else {
+        return false;
+    };
+    let Some(inner) = grammar.rules.get(name) else {
+        return false;
+    };
+    if seen.contains(name) {
+        return false;
+    }
+    (1..=run.len()).any(|taken| {
+        let last = taken == run.len();
+        seen.insert(name.clone());
+        let stands = inner.productions.iter().any(|production| {
+            fit(
+                grammar,
+                &production.symbols,
+                &run[..taken],
+                whole || !last,
+                seen,
+            )
+        });
+        seen.remove(name);
+        stands && fit(grammar, rest, &run[taken..], whole, seen)
+    })
 }
 
 // manual ids are a context and the option's words, as in `bgp-hold-time`, `proto-import` and `static-route-weight`
@@ -386,6 +512,49 @@ fn decode(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::grammar::parse;
+
+    #[test]
+    fn settings_link_the_production_of_their_statement_and_fields_link_their_statement() {
+        let grammar = parse(
+            "%token END LOG UDP STDERR PROTOCOL BGP BFD OSPF V2 TEXT\n%start config\n%%\nconfig: entries END;\nentries: | entries conf;\nconf: log | other | dev | proto | ospf | bfd;\nlog: LOG begin dest ';';\nbegin: ;\ndest: STDERR | UDP TEXT;\ndev: start name '{';\nname: | TEXT | BGP | BFD;\nproto: start BGP '{' | proto BFD ';';\nstart: PROTOCOL;\nother: OSPF TEXT | BGP TEXT;\nospf: start variant '{';\nvariant: OSPF | OSPF V2;\nbfd: start BFD '{';\n%%",
+        )
+        .unwrap();
+        let keywords = crate::values::fixtures::keywords(&[
+            "LOG", "UDP", "STDERR", "PROTOCOL", "BGP", "BFD", "OSPF", "V2",
+        ]);
+        let setting = |path: &str, words: &[&str]| Setting {
+            loc: path.split('.').map(str::to_owned).collect(),
+            scopes: BTreeSet::from(["entries[]".to_owned()]),
+            keywords: words.iter().map(|word| (*word).to_owned()).collect(),
+            ..Setting::default()
+        };
+        let settings = [
+            setting("log", &["log"]),
+            setting("log-udp", &["log", "udp"]),
+            setting("log-udp.address", &[]),
+            setting("protocol.bgp.<name>", &["protocol", "bgp"]),
+            setting("protocol.bgp.<name>.from", &[]),
+            setting("protocol.bfd.<name>", &["protocol", "bfd"]),
+            setting("protocol.ospf.v2.<name>", &["protocol", "ospf", "v2"]),
+        ];
+        let lines = sources(&grammar, &keywords, &settings)
+            .into_iter()
+            .map(|(loc, sources)| {
+                let lines = sources.iter().map(|source| source.line).collect::<Vec<_>>();
+                (loc.join("."), lines)
+            })
+            .collect::<BTreeMap<_, _>>();
+        // decoys: `start name` whose optional name may be a keyword, `BGP TEXT` holding `BGP` alone,
+        // and `proto BFD`, where `proto` stands for the BGP block so far
+        assert_eq!(lines["log"], [7]);
+        assert_eq!(lines["log-udp"], [7]);
+        assert_eq!(lines["log-udp.address"], [7]);
+        assert_eq!(lines["protocol.bgp.<name>"], [12]);
+        assert_eq!(lines["protocol.bgp.<name>.from"], [12]);
+        assert_eq!(lines["protocol.bfd.<name>"], [17]);
+        assert_eq!(lines["protocol.ospf.v2.<name>"], [15]);
+    }
 
     #[test]
     fn manual_entries_become_markdown_keyed_by_label() {
