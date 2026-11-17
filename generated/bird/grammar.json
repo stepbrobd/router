@@ -75880,40 +75880,6 @@
           "parts": [
             {
               "kind": "literal",
-              "text": "bt_test_suite"
-            },
-            {
-              "kind": "value",
-              "rule": "$positional:conf_entries[]:bt_test_suite",
-              "value_kind": "typed",
-              "value_type": "$positional:conf_entries[]:bt_test_suite"
-            }
-          ],
-          "path": [
-            "bt_test_suite"
-          ]
-        },
-        {
-          "parts": [
-            {
-              "kind": "literal",
-              "text": "bt_test_same"
-            },
-            {
-              "kind": "value",
-              "rule": "$positional:conf_entries[]:bt_test_same",
-              "value_kind": "typed",
-              "value_type": "$positional:conf_entries[]:bt_test_same"
-            }
-          ],
-          "path": [
-            "bt_test_same"
-          ]
-        },
-        {
-          "parts": [
-            {
-              "kind": "literal",
               "text": "function"
             },
             {
@@ -103534,86 +103500,6 @@
         "nullable": false,
         "merge": "replace"
       },
-      "$positional:conf_entries[]:bt_test_same": {
-        "kind": "record",
-        "forms": [
-          {
-            "parts": [
-              {
-                "kind": "literal",
-                "text": "("
-              },
-              {
-                "kind": "field",
-                "name": "function",
-                "rule": "symbol_known",
-                "optional": false
-              },
-              {
-                "kind": "literal",
-                "text": ","
-              },
-              {
-                "kind": "field",
-                "name": "compare",
-                "rule": "symbol_known",
-                "optional": false
-              },
-              {
-                "kind": "literal",
-                "text": ","
-              },
-              {
-                "kind": "field",
-                "name": "result",
-                "rule": "expr",
-                "optional": false
-              },
-              {
-                "kind": "literal",
-                "text": ")"
-              }
-            ]
-          }
-        ],
-        "nullable": false,
-        "merge": "replace"
-      },
-      "$positional:conf_entries[]:bt_test_suite": {
-        "kind": "record",
-        "forms": [
-          {
-            "parts": [
-              {
-                "kind": "literal",
-                "text": "("
-              },
-              {
-                "kind": "field",
-                "name": "CF-SYM-KNOWN",
-                "rule": "CF_SYM_KNOWN",
-                "optional": false
-              },
-              {
-                "kind": "literal",
-                "text": ","
-              },
-              {
-                "kind": "field",
-                "name": "text",
-                "rule": "text",
-                "optional": false
-              },
-              {
-                "kind": "literal",
-                "text": ")"
-              }
-            ]
-          }
-        ],
-        "nullable": false,
-        "merge": "replace"
-      },
       "$positional:conf_entries[]:filter-stacks": {
         "kind": "record",
         "forms": [
@@ -124342,19 +124228,6 @@
           "3": "execution"
         }
       },
-      "filter.test-same": {
-        "rule": "bt_test_same",
-        "production": 0,
-        "source": {
-          "file": "filter/config.Y",
-          "line": 467
-        },
-        "names": {
-          "2": "function",
-          "4": "compare",
-          "6": "result"
-        }
-      },
       "flowspec.prefix-offset": {
         "rule": "flow6_item",
         "production": 1,
@@ -124476,7 +124349,22 @@
         }
       }
     },
-    "exclusions": {},
+    "exclusions": {
+      "bt_test_same": {
+        "source": {
+          "file": "filter/config.Y",
+          "line": 467
+        },
+        "reason": "registers a filter unit test that only BIRD's filter/filter_test.c runs, the daemon parses and ignores it"
+      },
+      "bt_test_suite": {
+        "source": {
+          "file": "filter/config.Y",
+          "line": 454
+        },
+        "reason": "registers a filter unit test that only BIRD's filter/filter_test.c runs, the daemon parses and ignores it"
+      }
+    },
     "declaration_order": {
       "first": [
         "define",

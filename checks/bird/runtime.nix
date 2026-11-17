@@ -128,4 +128,7 @@ assert !(force (backend.render { protocol.l3vpn.v.import-target = [ "rt" 65000 1
 assert lib.hasInfix "route flow4 { dst 10.0.0.0/8 ;\nport \n> 24 && < 30\n ; } ;"
   (backend.render { protocol.static.s.route = [{ prefix.flow4 = { dst = "10.0.0.0/8"; port.body = "> 24 && < 30"; }; }]; });
 assert !(force (backend.render { protocol.static.s.route = [{ prefix.flow4.not-a-component = "1"; }]; })).success;
+# the registry excludes filter unit test directives, which only BIRD's own test program runs
+assert !(force (backend.render { bt_test_same = { function = "f"; compare = "g"; result = 1; }; })).success;
+assert !(force (backend.render { bt_test_suite = { CF-SYM-KNOWN = "f"; text = "describes f"; }; })).success;
 true

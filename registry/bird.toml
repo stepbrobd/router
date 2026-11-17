@@ -783,25 +783,6 @@ fields = [
 ]
 
 [[labels]]
-id = "filter.test-same"
-rule = "bt_test_same"
-production = [
-  "BT_TEST_SAME",
-  "'('",
-  "symbol_known",
-  "','",
-  "symbol_known",
-  "','",
-  "expr",
-  "')'",
-]
-fields = [
-  { at = 3, name = "function" },
-  { at = 5, name = "compare" },
-  { at = 7, name = "result", storage = "t->result" },
-]
-
-[[labels]]
 id = "log.file"
 rule = "log_file"
 production = ["text", "log_limit"]
@@ -861,3 +842,13 @@ id = "flowspec.prefix-offset"
 rule = "flow6_item"
 production = ["flow_srcdst", "net_ip6", "OFFSET", "expr"]
 fields = [{ at = 2, name = "prefix" }, { at = 4, name = "offset" }]
+
+[[exclusions]]
+rule = "bt_test_suite"
+file = "filter/config.Y"
+reason = "registers a filter unit test that only BIRD's filter/filter_test.c runs, the daemon parses and ignores it"
+
+[[exclusions]]
+rule = "bt_test_same"
+file = "filter/config.Y"
+reason = "registers a filter unit test that only BIRD's filter/filter_test.c runs, the daemon parses and ignores it"
