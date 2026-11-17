@@ -703,27 +703,25 @@ impl Values<'_> {
         if bases.iter().any(|base| !base.is_empty() && *base != item) {
             return None;
         }
-        let mut separator = None;
-        for chunk in recursive {
-            let remaining = if direction == Some(true) && chunk.ends_with(item) {
-                &chunk[..chunk.len() - item.len()]
-            } else if direction == Some(false) && chunk.starts_with(item) {
-                &chunk[item.len()..]
-            } else {
-                return None;
-            };
-            let tokens = remaining
-                .iter()
-                .map(|symbol| self.fixed(symbol).map(str::to_owned))
-                .collect::<Option<Vec<_>>>()?;
-            if separator
-                .as_ref()
-                .is_some_and(|separator| separator != &tokens)
-            {
-                return None;
+        // the first item may take a rule of one production around the item, as `label_stack_start: expr` does
+        let unwrapped = match item {
+            [Symbol::Reference(reference)] if reference != name => {
+                self.grammar.rules.get(reference).and_then(|rule| {
+                    match rule.productions.as_slice() {
+                        [production] if !production.symbols.is_empty() => {
+                            Some(production.symbols.as_slice())
+                        }
+                        _ => None,
+                    }
+                })
             }
-            separator = Some(tokens);
-        }
+            _ => None,
+        };
+        let left = direction == Some(true);
+        let (item, separator) = [Some(item), unwrapped]
+            .into_iter()
+            .flatten()
+            .find_map(|item| Some((item, self.list_separator(&recursive, item, left)?)))?;
         let item_rule = if let [Symbol::Reference(reference)] = item {
             if self.active.contains(reference) {
                 return None;
@@ -751,12 +749,43 @@ impl Values<'_> {
         };
         Some(ValueShape::List {
             item_rule,
-            separator: separator.unwrap_or_default(),
+            separator,
             prefix: Vec::new(),
             suffix: Vec::new(),
             nullable,
             merge: Merge::Replace,
         })
+    }
+
+    // the literal tokens every recursive production puts between the list and its next item
+    fn list_separator(
+        &self,
+        recursive: &[&[Symbol]],
+        item: &[Symbol],
+        left: bool,
+    ) -> Option<Vec<String>> {
+        let mut separator = None;
+        for chunk in recursive {
+            let remaining = if left && chunk.ends_with(item) {
+                &chunk[..chunk.len() - item.len()]
+            } else if !left && chunk.starts_with(item) {
+                &chunk[item.len()..]
+            } else {
+                return None;
+            };
+            let tokens = remaining
+                .iter()
+                .map(|symbol| self.fixed(symbol).map(str::to_owned))
+                .collect::<Option<Vec<_>>>()?;
+            if separator
+                .as_ref()
+                .is_some_and(|separator| separator != &tokens)
+            {
+                return None;
+            }
+            separator = Some(tokens);
+        }
+        Some(separator.unwrap_or_default())
     }
 }
 
@@ -772,6 +801,17 @@ mod tests {
         let schema = crate::surface::compile(&grammar, &[]);
         assert!(
             matches!(&schema.value_types["names"], ValueShape::List { item_rule, separator, nullable: false, merge, .. } if item_rule == "TEXT" && separator == &[","] && *merge == Merge::Replace)
+        );
+    }
+
+    #[test]
+    fn a_list_whose_first_item_takes_a_one_production_rule_is_still_a_list() {
+        let grammar = parse("%union { int i; void *ad; }\n%token END\n%token <i> NUM\n%type <i> expr\n%type <ad> stack stack_start\n%start config\n%%\nconfig: stack END; stack_start: expr; stack: stack_start | stack '/' expr; expr: NUM;\n%%").unwrap();
+        let schema = crate::surface::compile(&grammar, &[]);
+        assert!(
+            matches!(&schema.value_types["stack"], ValueShape::List { item_rule, separator, nullable: false, .. } if item_rule == "expr" && separator == &["/"]),
+            "{:?}",
+            schema.value_types["stack"]
         );
     }
 

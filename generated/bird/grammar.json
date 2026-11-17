@@ -100468,33 +100468,6 @@
         },
         "nullable": false
       },
-      "$label_stack:record": {
-        "kind": "record",
-        "forms": [
-          {
-            "parts": [
-              {
-                "kind": "field",
-                "name": "label-stack",
-                "rule": "label_stack",
-                "optional": false
-              },
-              {
-                "kind": "literal",
-                "text": "/"
-              },
-              {
-                "kind": "field",
-                "name": "/",
-                "rule": "expr",
-                "optional": false
-              }
-            ]
-          }
-        ],
-        "nullable": false,
-        "merge": "replace"
-      },
       "$latency_debug_mask:enum": {
         "kind": "enum",
         "values": {
@@ -119307,12 +119280,15 @@
         "nullable": false
       },
       "label_stack": {
-        "kind": "choice",
-        "alternatives": [
-          "label_stack_start",
-          "$label_stack:record"
+        "kind": "list",
+        "item_rule": "expr",
+        "separator": [
+          "/"
         ],
-        "nullable": false
+        "prefix": [],
+        "suffix": [],
+        "nullable": false,
+        "merge": "replace"
       },
       "label_stack_start": {
         "kind": "choice",
@@ -125539,10 +125515,7 @@
         "var_list",
         "var_list_r"
       ],
-      "unnamed": [
-        "protocol.static.<name>.route.*.mpls./: / in $label_stack:record",
-        "protocol.static.<name>.route.*.mpls.label-stack: label-stack in $label_stack:record"
-      ]
+      "unnamed": []
     }
   }
 }

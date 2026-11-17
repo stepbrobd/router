@@ -146,6 +146,9 @@ assert lib.hasInfix "interface \"eth*\""
   (backend.render { protocol.device.d.interface = [{ pattern = "eth*"; }]; });
 assert lib.hasInfix "router id from ( IFACES ) ;"
   (backend.render { router-id-from = [{ expression = backend.expr "IFACES"; }]; });
+# an MPLS label stack is a list
+assert lib.hasInfix "mpls 16/ 17 ;"
+  (backend.render { protocol.static.s.route = [{ prefix = "10.0.0.0/8"; via = backend.ip "192.0.2.1"; mpls = [ 16 17 ]; }]; });
 # the registry excludes filter unit test directives, which only BIRD's own test program runs
 assert !(force (backend.render { bt_test_same = { function = "f"; compare = "g"; result = 1; }; })).success;
 assert !(force (backend.render { bt_test_suite = { CF-SYM-KNOWN = "f"; text = "describes f"; }; })).success;

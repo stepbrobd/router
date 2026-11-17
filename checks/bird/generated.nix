@@ -312,6 +312,12 @@ let
         };
       };
     }]).text;
+    label-stack = (evaluate [{
+      protocol.static.labelled = {
+        ipv4.table = "main4";
+        route = [{ prefix = "10.0.0.0/8"; via = bird.ip "192.0.2.1"; mpls = [ 16 17 ]; }];
+      };
+    }]).text;
     typed-constants = (evaluate [{
       define = {
         ENABLED = true;
