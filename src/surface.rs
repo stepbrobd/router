@@ -125,6 +125,14 @@ struct Compiler<'a> {
     scopes: BTreeMap<String, Vec<Form>>,
     active: BTreeSet<String>,
     registry: Option<&'a Registry>,
+    // rules the registry excludes, which leave with every alternative that is only them
+    excluded: BTreeSet<String>,
+}
+
+fn excluded(registry: Option<&Registry>) -> BTreeSet<String> {
+    registry.map_or_else(BTreeSet::new, |registry| {
+        registry.exclusions.keys().cloned().collect()
+    })
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -734,6 +742,10 @@ impl<'a> Compiler<'a> {
         let mut left = Vec::new();
         let mut right = Vec::new();
         for (number, production) in productions.iter().enumerate() {
+            if matches!(production.symbols.as_slice(), [Symbol::Reference(reference)] if self.excluded.contains(reference))
+            {
+                continue;
+            }
             if matches!(production.symbols.first(), Some(Symbol::Reference(reference)) if reference == name)
             {
                 left.push((number, 1, &production.symbols[1..]));
@@ -813,6 +825,7 @@ pub(crate) fn statement_scopes(
         scopes: BTreeMap::new(),
         active: BTreeSet::new(),
         registry,
+        excluded: excluded(registry),
     };
     let scope = format!("{name}[]");
     let forms = compiler.rule(name);
@@ -870,6 +883,7 @@ fn compile_syntax(grammar: &Grammar, keywords: &[Keyword], registry: Option<&Reg
         scopes: BTreeMap::new(),
         active: BTreeSet::new(),
         registry,
+        excluded: excluded(registry),
     };
     let mut root = compiler
         .rule(&grammar.configuration_start)
@@ -1065,6 +1079,40 @@ mod tests {
                     && parts.ends_with(&[options("hop[]"), options("hops[]"), literal(";")]))
         );
         assert!(routes.contains(&[options("hops[]"), literal(";")].as_slice()));
+    }
+
+    #[test]
+    fn excluded_rules_drop_the_alternatives_that_are_only_them() {
+        let grammar = parse("%token END X PROBE\n%start config\n%%\nconfig: entries END; entries: | entries conf; conf: X ';' | probe; probe: PROBE ';';\n%%").unwrap();
+        let keywords = ["X", "PROBE"].map(|name| Keyword {
+            spelling: name.to_lowercase(),
+            token: name.into(),
+            source: Location {
+                file: "test.Y".into(),
+                line: 1,
+            },
+        });
+        let entries = |excluded: BTreeSet<String>| {
+            let mut compiler = Compiler {
+                grammar: &grammar,
+                spellings: registry::spellings(&grammar, &keywords),
+                scopes: BTreeMap::new(),
+                active: BTreeSet::new(),
+                registry: None,
+                excluded,
+            };
+            compiler.rule(&grammar.configuration_start);
+            compiler.scopes["entries[]"].clone()
+        };
+        let offers = |forms: &[Form], keyword: &str| {
+            forms
+                .iter()
+                .any(|form| form.parts.contains(&literal(keyword)))
+        };
+        assert!(offers(&entries(BTreeSet::new()), "probe"));
+        let remaining = entries(BTreeSet::from(["probe".to_owned()]));
+        assert!(!offers(&remaining, "probe"));
+        assert!(offers(&remaining, "x"));
     }
 
     #[test]

@@ -74,6 +74,8 @@ pub(crate) struct Definition {
     pub declaration_order: DeclarationOrder,
     #[serde(default)]
     pub labels: Vec<LabelDefinition>,
+    #[serde(default)]
+    pub exclusions: Vec<ExclusionDefinition>,
 }
 
 // Root declarations BIRD must read before the entries that reference them. Entries not named here
@@ -174,6 +176,15 @@ pub(crate) struct LabelField {
     storage: Option<String>,
 }
 
+// a grammar rule left out of the settings, such as a directive only BIRD's own test program reads
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ExclusionDefinition {
+    rule: String,
+    file: String,
+    reason: String,
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct FieldDefinition {
@@ -200,6 +211,12 @@ pub struct Label {
     pub source: Location,
     // value names by symbol index within the production
     pub names: BTreeMap<usize, String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct Exclusion {
+    pub source: Location,
+    pub reason: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -279,6 +296,8 @@ pub struct Registry {
     pub aliases: Vec<Effect>,
     pub constructors: BTreeMap<String, Constructor>,
     pub labels: BTreeMap<String, Label>,
+    // excluded grammar rules by name
+    pub exclusions: BTreeMap<String, Exclusion>,
     pub declaration_order: DeclarationOrder,
     pub diagnostics: Diagnostics,
     #[serde(skip)]
@@ -483,6 +502,50 @@ fn resolve_label(grammar: &Grammar, label: &LabelDefinition) -> Result<Label, Er
     })
 }
 
+// dropping an exclusion must remove nothing else, so every use of the rule is a whole alternative
+fn resolve_exclusion(
+    grammar: &Grammar,
+    exclusion: &ExclusionDefinition,
+) -> Result<Exclusion, Error> {
+    let fail = |message: String| error(format!("exclusion {}: {message}", exclusion.rule));
+    let rule = grammar
+        .rules
+        .get(&exclusion.rule)
+        .ok_or_else(|| fail("no grammar rule has this name".into()))?;
+    if rule.source.file != exclusion.file {
+        return Err(fail(format!(
+            "defined in {}, expected {}",
+            rule.source.file, exclusion.file
+        )));
+    }
+    let reference = Symbol::Reference(exclusion.rule.clone());
+    let mut alternatives = 0;
+    for (name, parent) in &grammar.rules {
+        if name == &exclusion.rule {
+            continue;
+        }
+        for production in &parent.productions {
+            if !production.symbols.contains(&reference) {
+                continue;
+            }
+            if production.symbols.len() != 1 {
+                return Err(fail(format!(
+                    "{name} uses it inside a longer production at {}:{}",
+                    production.source.file, production.source.line
+                )));
+            }
+            alternatives += 1;
+        }
+    }
+    if alternatives == 0 {
+        return Err(fail("no rule offers it as an alternative".into()));
+    }
+    Ok(Exclusion {
+        source: rule.source.clone(),
+        reason: exclusion.reason.clone(),
+    })
+}
+
 fn select_binding<'a>(
     grammar: &'a Grammar,
     binding: &BindingDefinition,
@@ -650,6 +713,7 @@ impl Registry {
             aliases: Vec::new(),
             constructors: BTreeMap::new(),
             labels: BTreeMap::new(),
+            exclusions: BTreeMap::new(),
             declaration_order: definition.declaration_order.clone(),
             diagnostics: Diagnostics::default(),
             definition,
@@ -832,6 +896,16 @@ impl Registry {
                     "duplicate stable label identity {}",
                     label.id
                 )));
+            }
+        }
+        for exclusion in &definition.exclusions {
+            let resolved = resolve_exclusion(grammar, exclusion)?;
+            if registry
+                .exclusions
+                .insert(exclusion.rule.clone(), resolved)
+                .is_some()
+            {
+                return Err(error(format!("duplicate exclusion {}", exclusion.rule)));
             }
         }
         registry.protocols = protocol_facts(facts, &definition.copy_fields)?;
@@ -1390,6 +1464,37 @@ mod tests {
                 .unwrap_err()
                 .message
                 .contains("is not a grammar symbol")
+        );
+    }
+
+    #[test]
+    fn exclusions_must_be_whole_alternatives_in_their_source_file() {
+        let grammar = |conf: &str| {
+            crate::grammar::parse(&format!("#line 1 \"test.Y\"\n%token END X PROBE\n%start config\n%%\nconfig: entries END; entries: | entries conf;\n{conf}\nprobe: PROBE ';';\n%%")).unwrap()
+        };
+        let exclusion = |rule: &str, file: &str| -> ExclusionDefinition {
+            toml::from_str(&format!(
+                "rule='{rule}'\nfile='{file}'\nreason='only a test program reads it'\n"
+            ))
+            .unwrap()
+        };
+        let alternative = grammar("conf: X ';' | probe;");
+        let resolved = resolve_exclusion(&alternative, &exclusion("probe", "test.Y")).unwrap();
+        assert_eq!(resolved.source.file, "test.Y");
+        assert_eq!(resolved.reason, "only a test program reads it");
+        let moved = resolve_exclusion(&alternative, &exclusion("probe", "other.Y")).unwrap_err();
+        assert!(moved.message.contains("exclusion probe"));
+        assert!(moved.message.contains("test.Y"));
+        let absent = resolve_exclusion(&alternative, &exclusion("absent", "test.Y")).unwrap_err();
+        assert!(absent.message.contains("no grammar rule"));
+        let embedded = resolve_exclusion(&grammar("conf: X probe;"), &exclusion("probe", "test.Y"))
+            .unwrap_err();
+        assert!(embedded.message.contains("inside a longer production"));
+        let start = resolve_exclusion(&alternative, &exclusion("config", "test.Y")).unwrap_err();
+        assert!(
+            start.message.contains("no rule offers it"),
+            "{}",
+            start.message
         );
     }
 
