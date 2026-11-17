@@ -361,7 +361,7 @@ id = "interface.pattern"
 rules = ["iface_patt_node"]
 file = "nest/config.Y"
 shape = "record"
-fields = { "string" = "pattern", "TEXT" = "pattern", "IP4" = "address", "IP6" = "address" }
+fields = { "string" = "pattern", "TEXT" = "pattern", "conf_expr" = "expression", "IP4" = "address", "IP6" = "address" }
 
 [[bindings]]
 id = "interface.pattern-data"
@@ -369,7 +369,7 @@ rules = ["iface_patt_node_body"]
 file = "nest/config.Y"
 shape = "record"
 expand = true
-fields = { "string" = "pattern", "TEXT" = "pattern", "IP4" = "address", "IP6" = "address", "prefix-or-address" = "prefix" }
+fields = { "string" = "pattern", "TEXT" = "pattern", "conf_expr" = "expression", "IP4" = "address", "IP6" = "address", "prefix-or-address" = "prefix" }
 
 [[bindings]]
 id = "interface.exclude"
@@ -524,6 +524,13 @@ file = "conf/confbase.Y"
 storage = "net"
 representation = "prefix"
 label = "prefix"
+
+[[bindings]]
+id = "prefix.ipv6-slash"
+rules = ["net_ip6_slash"]
+file = "conf/confbase.Y"
+storage = "a"
+expand = true
 
 [[bindings]]
 id = "prefix-or-address"
@@ -842,6 +849,78 @@ id = "flowspec.prefix-offset"
 rule = "flow6_item"
 production = ["flow_srcdst", "net_ip6", "OFFSET", "expr"]
 fields = [{ at = 2, name = "prefix" }, { at = 4, name = "offset" }]
+
+[[labels]]
+id = "attribute.type"
+rule = "custom_attr"
+production = ["ATTRIBUTE", "type", "symbol", "';'"]
+fields = [{ at = 2, name = "type" }]
+
+[[labels]]
+id = "attribute.bgp"
+rule = "custom_attr"
+production = ["ATTRIBUTE", "BGP", "NUM", "type", "symbol", "';'"]
+fields = [{ at = 3, name = "number" }, { at = 4, name = "type" }]
+
+[[labels]]
+id = "ospf.virtual-link"
+rule = "ospf_vlink_start"
+production = ["VIRTUAL", "LINK", "idval"]
+fields = [{ at = 3, name = "id" }]
+
+[[labels]]
+id = "prefix.vpn4"
+rule = "net_vpn4_"
+production = ["VPN_RD", "net_ip4_"]
+fields = [{ at = 1, name = "rd" }]
+
+[[labels]]
+id = "prefix.vpn6"
+rule = "net_vpn6_"
+production = ["VPN_RD", "net_ip6_"]
+fields = [{ at = 1, name = "rd" }]
+
+[[labels]]
+id = "prefix.evpn-ead"
+rule = "net_evpn_ead_"
+production = ["EVPN", "EAD", "VPN_RD", "NUM", "evpn_esi"]
+fields = [{ at = 4, name = "tag" }, { at = 5, name = "esi" }]
+
+[[labels]]
+id = "prefix.evpn-mac"
+rule = "net_evpn_mac_"
+production = ["EVPN", "MAC", "VPN_RD", "NUM", "MAC_", "'*'"]
+fields = [{ at = 4, name = "tag" }, { at = 5, name = "mac" }]
+
+[[labels]]
+id = "prefix.evpn-mac-ip"
+rule = "net_evpn_mac_ip_"
+production = ["EVPN", "MAC", "VPN_RD", "NUM", "MAC_", "ipa"]
+fields = [{ at = 4, name = "tag" }, { at = 5, name = "mac" }]
+
+[[labels]]
+id = "prefix.evpn-imet"
+rule = "net_evpn_imet_"
+production = ["EVPN", "IMET", "VPN_RD", "NUM", "ipa"]
+fields = [{ at = 4, name = "tag" }]
+
+[[labels]]
+id = "prefix.evpn-es"
+rule = "net_evpn_es_"
+production = ["EVPN", "ES", "VPN_RD", "evpn_esi", "ipa"]
+fields = [{ at = 4, name = "esi" }]
+
+[[labels]]
+id = "prefix.sadr-destination"
+rule = "net_ip6_slash"
+production = ["IP6", "'/'"]
+fields = [{ at = 1, name = "dst" }]
+
+[[labels]]
+id = "prefix.sadr"
+rule = "net_ip6_sadr_"
+production = ["net_ip6_slash", "NUM", "FROM", "IP6", "'/'", "NUM"]
+fields = [{ at = 2, name = "dst-length" }, { at = 6, name = "from-length" }]
 
 [[exclusions]]
 rule = "bt_test_suite"

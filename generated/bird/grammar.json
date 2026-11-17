@@ -85101,7 +85101,8 @@
               "kind": "value",
               "rule": "idval",
               "value_kind": "semantic",
-              "value_type": "idval"
+              "value_type": "idval",
+              "label": "id"
             },
             {
               "kind": "block",
@@ -85130,7 +85131,8 @@
               "kind": "value",
               "rule": "idval",
               "value_kind": "semantic",
-              "value_type": "idval"
+              "value_type": "idval",
+              "label": "id"
             },
             {
               "kind": "value",
@@ -85162,7 +85164,8 @@
               "kind": "value",
               "rule": "idval",
               "value_kind": "semantic",
-              "value_type": "idval"
+              "value_type": "idval",
+              "label": "id"
             },
             {
               "kind": "literal",
@@ -101826,7 +101829,7 @@
               },
               {
                 "kind": "field",
-                "name": "virtual-link",
+                "name": "id",
                 "rule": "idval",
                 "optional": false
               },
@@ -101854,7 +101857,7 @@
               },
               {
                 "kind": "field",
-                "name": "virtual-link",
+                "name": "id",
                 "rule": "idval",
                 "optional": false
               },
@@ -101892,7 +101895,7 @@
               },
               {
                 "kind": "field",
-                "name": "virtual-link",
+                "name": "id",
                 "rule": "idval",
                 "optional": false
               },
@@ -101914,7 +101917,7 @@
               },
               {
                 "kind": "field",
-                "name": "virtual-link",
+                "name": "id",
                 "rule": "idval",
                 "optional": false
               },
@@ -103478,7 +103481,7 @@
             "parts": [
               {
                 "kind": "field",
-                "name": "NUM",
+                "name": "number",
                 "rule": "NUM",
                 "optional": false
               },
@@ -103810,7 +103813,7 @@
             "parts": [
               {
                 "kind": "field",
-                "name": "idval",
+                "name": "id",
                 "rule": "idval",
                 "optional": false
               },
@@ -104971,7 +104974,7 @@
               },
               {
                 "kind": "field",
-                "name": "conf-expr",
+                "name": "expression",
                 "rule": "conf_expr",
                 "optional": false
               },
@@ -105239,7 +105242,7 @@
               },
               {
                 "kind": "field",
-                "name": "conf-expr",
+                "name": "expression",
                 "rule": "conf_expr",
                 "optional": false
               },
@@ -105447,7 +105450,7 @@
               },
               {
                 "kind": "field",
-                "name": "conf-expr",
+                "name": "expression",
                 "rule": "conf_expr",
                 "optional": false
               },
@@ -105691,7 +105694,7 @@
               },
               {
                 "kind": "field",
-                "name": "conf-expr",
+                "name": "expression",
                 "rule": "conf_expr",
                 "optional": false
               },
@@ -105959,7 +105962,7 @@
               },
               {
                 "kind": "field",
-                "name": "conf-expr",
+                "name": "expression",
                 "rule": "conf_expr",
                 "optional": false
               },
@@ -106261,7 +106264,7 @@
               },
               {
                 "kind": "field",
-                "name": "conf-expr",
+                "name": "expression",
                 "rule": "conf_expr",
                 "optional": false
               },
@@ -106549,7 +106552,7 @@
               },
               {
                 "kind": "field",
-                "name": "conf-expr",
+                "name": "expression",
                 "rule": "conf_expr",
                 "optional": false
               },
@@ -106817,7 +106820,7 @@
               },
               {
                 "kind": "field",
-                "name": "conf-expr",
+                "name": "expression",
                 "rule": "conf_expr",
                 "optional": false
               },
@@ -119019,7 +119022,7 @@
               },
               {
                 "kind": "field",
-                "name": "conf-expr",
+                "name": "expression",
                 "rule": "conf_expr",
                 "optional": false
               }
@@ -119906,13 +119909,13 @@
               },
               {
                 "kind": "field",
-                "name": "NUM",
+                "name": "tag",
                 "rule": "NUM",
                 "optional": false
               },
               {
                 "kind": "field",
-                "name": "evpn-esi",
+                "name": "esi",
                 "rule": "evpn_esi",
                 "optional": false
               }
@@ -119943,7 +119946,7 @@
               },
               {
                 "kind": "field",
-                "name": "evpn-esi",
+                "name": "esi",
                 "rule": "evpn_esi",
                 "optional": false
               },
@@ -119980,7 +119983,7 @@
               },
               {
                 "kind": "field",
-                "name": "NUM",
+                "name": "tag",
                 "rule": "NUM",
                 "optional": false
               },
@@ -120017,13 +120020,13 @@
               },
               {
                 "kind": "field",
-                "name": "NUM",
+                "name": "tag",
                 "rule": "NUM",
                 "optional": false
               },
               {
                 "kind": "field",
-                "name": "MAC-",
+                "name": "mac",
                 "rule": "MAC_",
                 "optional": false
               },
@@ -120058,13 +120061,13 @@
               },
               {
                 "kind": "field",
-                "name": "NUM",
+                "name": "tag",
                 "rule": "NUM",
                 "optional": false
               },
               {
                 "kind": "field",
-                "name": "MAC-",
+                "name": "mac",
                 "rule": "MAC_",
                 "optional": false
               },
@@ -120174,13 +120177,17 @@
             "parts": [
               {
                 "kind": "field",
-                "name": "net-ip6-slash",
-                "rule": "net_ip6_slash",
+                "name": "dst",
+                "rule": "IP6",
                 "optional": false
               },
               {
+                "kind": "literal",
+                "text": "/"
+              },
+              {
                 "kind": "field",
-                "name": "NUM",
+                "name": "dst-length",
                 "rule": "NUM",
                 "optional": false
               },
@@ -120200,7 +120207,7 @@
               },
               {
                 "kind": "field",
-                "name": "/",
+                "name": "from-length",
                 "rule": "NUM",
                 "optional": false
               }
@@ -120217,7 +120224,7 @@
             "parts": [
               {
                 "kind": "field",
-                "name": "IP6",
+                "name": "dst",
                 "rule": "IP6",
                 "optional": false
               },
@@ -120440,7 +120447,7 @@
             "parts": [
               {
                 "kind": "field",
-                "name": "VPN-RD",
+                "name": "rd",
                 "rule": "VPN_RD",
                 "optional": false
               },
@@ -120463,7 +120470,7 @@
             "parts": [
               {
                 "kind": "field",
-                "name": "VPN-RD",
+                "name": "rd",
                 "rule": "VPN_RD",
                 "optional": false
               },
@@ -122868,6 +122875,21 @@
           "net_ip6_"
         ]
       },
+      "prefix.ipv6-slash": {
+        "rule": "net_ip6_slash",
+        "source": {
+          "file": "conf/confbase.Y",
+          "line": 317
+        },
+        "storage": "a",
+        "c_type": "ip_addr",
+        "representation": null,
+        "label": null,
+        "shape": null,
+        "checked_aliases": [
+          "net_ip6_slash"
+        ]
+      },
       "protocol.header": {
         "rule": "proto_name",
         "source": {
@@ -124204,6 +124226,29 @@
       }
     },
     "labels": {
+      "attribute.bgp": {
+        "rule": "custom_attr",
+        "production": 1,
+        "source": {
+          "file": "proto/bgp/config.Y",
+          "line": 513
+        },
+        "names": {
+          "2": "number",
+          "3": "type"
+        }
+      },
+      "attribute.type": {
+        "rule": "custom_attr",
+        "production": 0,
+        "source": {
+          "file": "filter/config.Y",
+          "line": 438
+        },
+        "names": {
+          "1": "type"
+        }
+      },
       "bgp.error-wait-time": {
         "rule": "bgp_proto",
         "production": 43,
@@ -124273,6 +124318,120 @@
         "names": {
           "0": "limit",
           "1": "backup"
+        }
+      },
+      "ospf.virtual-link": {
+        "rule": "ospf_vlink_start",
+        "production": 0,
+        "source": {
+          "file": "proto/ospf/config.Y",
+          "line": 361
+        },
+        "names": {
+          "2": "id"
+        }
+      },
+      "prefix.evpn-ead": {
+        "rule": "net_evpn_ead_",
+        "production": 0,
+        "source": {
+          "file": "conf/confbase.Y",
+          "line": 430
+        },
+        "names": {
+          "3": "tag",
+          "4": "esi"
+        }
+      },
+      "prefix.evpn-es": {
+        "rule": "net_evpn_es_",
+        "production": 0,
+        "source": {
+          "file": "conf/confbase.Y",
+          "line": 454
+        },
+        "names": {
+          "3": "esi"
+        }
+      },
+      "prefix.evpn-imet": {
+        "rule": "net_evpn_imet_",
+        "production": 0,
+        "source": {
+          "file": "conf/confbase.Y",
+          "line": 448
+        },
+        "names": {
+          "3": "tag"
+        }
+      },
+      "prefix.evpn-mac": {
+        "rule": "net_evpn_mac_",
+        "production": 0,
+        "source": {
+          "file": "conf/confbase.Y",
+          "line": 436
+        },
+        "names": {
+          "3": "tag",
+          "4": "mac"
+        }
+      },
+      "prefix.evpn-mac-ip": {
+        "rule": "net_evpn_mac_ip_",
+        "production": 0,
+        "source": {
+          "file": "conf/confbase.Y",
+          "line": 442
+        },
+        "names": {
+          "3": "tag",
+          "4": "mac"
+        }
+      },
+      "prefix.sadr": {
+        "rule": "net_ip6_sadr_",
+        "production": 0,
+        "source": {
+          "file": "conf/confbase.Y",
+          "line": 342
+        },
+        "names": {
+          "1": "dst-length",
+          "5": "from-length"
+        }
+      },
+      "prefix.sadr-destination": {
+        "rule": "net_ip6_slash",
+        "production": 0,
+        "source": {
+          "file": "conf/confbase.Y",
+          "line": 317
+        },
+        "names": {
+          "0": "dst"
+        }
+      },
+      "prefix.vpn4": {
+        "rule": "net_vpn4_",
+        "production": 0,
+        "source": {
+          "file": "conf/confbase.Y",
+          "line": 370
+        },
+        "names": {
+          "0": "rd"
+        }
+      },
+      "prefix.vpn6": {
+        "rule": "net_vpn6_",
+        "production": 0,
+        "source": {
+          "file": "conf/confbase.Y",
+          "line": 376
+        },
+        "names": {
+          "0": "rd"
         }
       },
       "radv.custom-option": {
@@ -125214,7 +125373,6 @@
         "net_ip4",
         "net_ip6",
         "net_ip6_sadr_",
-        "net_ip6_slash",
         "net_mpls_",
         "net_nbr_",
         "net_roa4_",
@@ -125383,33 +125541,7 @@
       ],
       "unnamed": [
         "protocol.static.<name>.route.*.mpls./: / in $label_stack:record",
-        "protocol.static.<name>.route.*.mpls.label-stack: label-stack in $label_stack:record",
-        "attribute.type: type in $positional:conf_entries[]:attribute",
-        "attribute-bgp.NUM: NUM in $positional:conf_entries[]:attribute-bgp",
-        "attribute-bgp.type: type in $positional:conf_entries[]:attribute-bgp",
-        "protocol.ospf.<name>.area.<name>.virtual-link.idval: idval in $positional:ospf_area_opts[]:virtual-link",
-        "protocol.babel.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:babel_proto_opts[]:item",
-        "protocol.bfd.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:bfd_proto_opts[]:item",
-        "protocol.direct.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:dev_proto[]:item",
-        "protocol.device.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:kif_proto[]:item",
-        "protocol.ospf.<name>.area.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:ospf_area_opts[]:item",
-        "protocol.radv.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:radv_proto_opts[]:item",
-        "protocol.rip.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:rip_proto_opts[]:item",
-        "router-id-from.*.conf-expr: conf-expr in iface_patt_node (nest/config.Y:519)",
-        "protocol.direct.<name>.ipv4.export-in.prefix.NUM: NUM in net_evpn_ead_ (conf/confbase.Y:430)",
-        "protocol.direct.<name>.ipv4.export-in.prefix.evpn-esi: evpn-esi in net_evpn_ead_ (conf/confbase.Y:430)",
-        "protocol.direct.<name>.ipv4.export-in.prefix.evpn-esi: evpn-esi in net_evpn_es_ (conf/confbase.Y:454)",
-        "protocol.direct.<name>.ipv4.export-in.prefix.NUM: NUM in net_evpn_imet_ (conf/confbase.Y:448)",
-        "protocol.direct.<name>.ipv4.export-in.prefix.MAC-: MAC- in net_evpn_mac_ (conf/confbase.Y:436)",
-        "protocol.direct.<name>.ipv4.export-in.prefix.NUM: NUM in net_evpn_mac_ (conf/confbase.Y:436)",
-        "protocol.direct.<name>.ipv4.export-in.prefix.MAC-: MAC- in net_evpn_mac_ip_ (conf/confbase.Y:442)",
-        "protocol.direct.<name>.ipv4.export-in.prefix.NUM: NUM in net_evpn_mac_ip_ (conf/confbase.Y:442)",
-        "protocol.direct.<name>.ipv4.export-in.prefix./: / in net_ip6_sadr_ (conf/confbase.Y:342)",
-        "protocol.direct.<name>.ipv4.export-in.prefix.NUM: NUM in net_ip6_sadr_ (conf/confbase.Y:342)",
-        "protocol.direct.<name>.ipv4.export-in.prefix.net-ip6-slash: net-ip6-slash in net_ip6_sadr_ (conf/confbase.Y:342)",
-        "protocol.direct.<name>.ipv4.export-in.prefix.net-ip6-slash.IP6: IP6 in net_ip6_slash (conf/confbase.Y:317)",
-        "protocol.direct.<name>.ipv4.export-in.prefix.VPN-RD: VPN-RD in net_vpn4_ (conf/confbase.Y:370)",
-        "protocol.direct.<name>.ipv4.export-in.prefix.VPN-RD: VPN-RD in net_vpn6_ (conf/confbase.Y:376)"
+        "protocol.static.<name>.route.*.mpls.label-stack: label-stack in $label_stack:record"
       ]
     }
   }

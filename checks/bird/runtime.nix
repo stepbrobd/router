@@ -128,6 +128,24 @@ assert !(force (backend.render { protocol.l3vpn.v.import-target = [ "rt" 65000 1
 assert lib.hasInfix "route flow4 { dst 10.0.0.0/8 ;\nport \n> 24 && < 30\n ; } ;"
   (backend.render { protocol.static.s.route = [{ prefix.flow4 = { dst = "10.0.0.0/8"; port.body = "> 24 && < 30"; }; }]; });
 assert !(force (backend.render { protocol.static.s.route = [{ prefix.flow4.not-a-component = "1"; }]; })).success;
+# values BIRD leaves unnamed take labels, named after the manual's filter operators where it has them
+assert lib.hasInfix "attribute bgp 64 bytestring big_attr ;"
+  (backend.render { attribute-bgp = { number = 64; type = "bytestring"; name = "big_attr"; }; });
+assert lib.hasInfix "route 65000:1 10.0.0.0/8 unreachable"
+  (backend.render { protocol.static.s.route = [{ prefix = { rd = backend.expr "65000:1"; prefix = "10.0.0.0/8"; }; unreachable = true; }]; });
+assert lib.hasInfix "route evpn mac 65000:1 5 00:11:22:33:44:55 * unreachable"
+  (backend.render { protocol.static.s.route = [{ prefix = { evpn-mac = backend.expr "65000:1"; tag = 5; mac = backend.expr "00:11:22:33:44:55"; }; unreachable = true; }]; });
+assert lib.hasInfix "route evpn es 65000:1 ( hex:00:01:02:03:04:05:06:07:08:09 ) 192.0.2.1 unreachable"
+  (backend.render { protocol.static.s.route = [{ prefix = { evpn-es = backend.expr "65000:1"; esi = backend.expr "hex:00:01:02:03:04:05:06:07:08:09"; address = "192.0.2.1"; }; unreachable = true; }]; });
+assert lib.hasInfix "route 2001:db8:: / 48 from 2001:db8:1:: / 48 unreachable"
+  (backend.render { protocol.static.s.route = [{ prefix = { dst = "2001:db8::"; dst-length = 48; from = "2001:db8:1::"; from-length = 48; }; unreachable = true; }]; });
+# an interface pattern written as an expression keeps a name of its own, so a plain string stays text
+assert lib.hasInfix "interface ( IFACES )"
+  (backend.render { protocol.device.d.interface = [{ expression = backend.expr "IFACES"; }]; });
+assert lib.hasInfix "interface \"eth*\""
+  (backend.render { protocol.device.d.interface = [{ pattern = "eth*"; }]; });
+assert lib.hasInfix "router id from ( IFACES ) ;"
+  (backend.render { router-id-from = [{ expression = backend.expr "IFACES"; }]; });
 # the registry excludes filter unit test directives, which only BIRD's own test program runs
 assert !(force (backend.render { bt_test_same = { function = "f"; compare = "g"; result = 1; }; })).success;
 assert !(force (backend.render { bt_test_suite = { CF-SYM-KNOWN = "f"; text = "describes f"; }; })).success;
