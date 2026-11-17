@@ -6,20 +6,20 @@
 
 rustPlatform.buildRustPackage {
   pname = "router";
-  version = (lib.importTOML ../../Cargo.toml).package.version;
+  version = (lib.importTOML ./Cargo.toml).package.version;
 
   src = lib.fileset.toSource {
-    root = ../..;
+    root = ./.;
     fileset = lib.fileset.unions [
-      ../../Cargo.toml
-      ../../Cargo.lock
-      ../../src
-      ../../registry
-      ../../license.txt
+      ./Cargo.toml
+      ./Cargo.lock
+      ./src
+      ./registry
+      ./license.txt
     ];
   };
 
-  cargoLock.lockFile = ../../Cargo.lock;
+  cargoLock.lockFile = ./Cargo.lock;
   useNextest = true;
 
   nativeBuildInputs = [ makeWrapper m4 ];

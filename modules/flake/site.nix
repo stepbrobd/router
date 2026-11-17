@@ -3,7 +3,7 @@
   perSystem = { config, inputs', pkgs, ... }:
     let
       # one entry per setting under services.bird.settings, described from the manual of the pinned BIRD source
-      bird = pkgs.runCommand "bird-options.json" { nativeBuildInputs = [ config.packages.router ]; } ''
+      bird = pkgs.runCommand "bird-options.json" { nativeBuildInputs = [ config.packages.default ]; } ''
         router options ${inputs.bird} --prefix services.bird.settings \
           --source-url https://github.com/cz-nic/bird/blob/${inputs.bird.rev}/ > "$out"
       '';

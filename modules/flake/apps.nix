@@ -6,7 +6,7 @@
       runtimeInputs = [ pkgs.git ];
       text = ''
         cd "$(git rev-parse --show-toplevel)"
-        ${lib.getExe config.packages.router} generate ${inputs.bird} --output generated/bird
+        ${lib.getExe config.packages.default} generate ${inputs.bird} --output generated/bird
       '';
     };
   };

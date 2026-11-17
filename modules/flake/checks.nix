@@ -11,6 +11,6 @@
           router = inputs.self.lib.router;
           self = inputs.self;
         };
-      }) // { compiler = config.packages.router; };
+      }) // { compiler = config.packages.default; };
   };
 }

@@ -35,5 +35,8 @@
     }
     {
       systems = import inputs.systems;
+      perSystem = { pkgs, ... }: {
+        packages.default = pkgs.callPackage ./. { };
+      };
     };
 }
