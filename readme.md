@@ -192,9 +192,9 @@ See [`examples/bird`](examples/bird) for more usage.
 Settings stay plain data while modules define them, which lets a module read
 `config.services.bird.settings` to decide what else to set. Rendering into
 `services.bird.config` validates them and names the failing setting, for example
-`protocol.bgp.peer.hold-time: invalid value, expected number-expression`.
-Setting `settings` together with a different handwritten `config` is an error,
-and leaving `settings` unset keeps the upstream handwritten configuration.
+`protocol.bgp.peer.hold-time: invalid value, expected integer`. Setting
+`settings` together with a different handwritten `config` is an error, and
+leaving `settings` unset keeps the upstream handwritten configuration.
 
 An `include = [ "/run/bird/credentials.conf" ];` setting renders BIRD includes
 at the start of the root or of any braced block, without copying the files into

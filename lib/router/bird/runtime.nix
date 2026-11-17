@@ -519,12 +519,32 @@ let
         paths;
     in
     if hints == [ ] then "" else " (canonical spelling ${concatStringsSep "." (head hints)})";
+  # the Nix values a primitive takes, as describe in src/values/settings.rs names them
+  describePrimitive = shape:
+    let
+      family = { ipv4 = "IPv4"; ipv6 = "IPv6"; }.${shape.family or ""} or "IP";
+      listed = names: concatStringsSep ", " names;
+      suffixes = map join (shape.suffixes or [ ]);
+    in
+    {
+      switch = "boolean";
+      integer = "integer";
+      number-expression = "integer";
+      string = "string";
+      symbol = "symbol name";
+      expression = "expression";
+      ip-address = "${family} address";
+      prefix = "${family} prefix";
+      duration = "{ value, unit } with unit one of ${listed (attrNames (shape.units or { }))}";
+      type-name = "one of ${listed (attrNames (shape.values or { }))}"
+        + lib.optionalString (suffixes != [ ]) ", optionally followed by ${concatStringsSep " or " suffixes}";
+    }.${shape.representation};
   describeValue = depth: name:
     let
       shape = schema.value_types.${name};
       fields = form: map (part: part.name) (filter (part: elem part.kind [ "field" "body" ]) form.parts);
     in
-    if shape.kind == "primitive" then shape.representation
+    if shape.kind == "primitive" then describePrimitive shape
     else if shape.kind == "enum" then "one of ${concatStringsSep ", " (attrNames shape.values)}"
     else if shape.kind == "record" then "{ ${concatStringsSep ", " (lib.unique (concatMap fields shape.forms))} }"
     else if shape.kind == "list" then if depth > 1 then "a list" else "[ ${describeValue (depth + 1) shape.item_rule} ]"

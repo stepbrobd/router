@@ -1,4 +1,5 @@
 use super::{Naming, RecordPart, ValueShape, leading, named_entry, statement_tail};
+use crate::registry::Representation;
 use crate::surface::{Form, Part, Schema};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -214,13 +215,56 @@ fn child(loc: &[String], name: &str) -> Vec<String> {
     loc
 }
 
-// the runtime's describeValue, which names the expected value in its errors
+// the runtime's describeValue and describePrimitive, which name the expected value in its errors
 fn describe(types: &BTreeMap<String, ValueShape>, depth: usize, name: &str) -> String {
     match &types[name] {
-        ValueShape::Primitive { representation, .. } => serde_json::to_value(representation)
-            .ok()
-            .and_then(|value| value.as_str().map(str::to_owned))
-            .unwrap_or_default(),
+        ValueShape::Primitive {
+            representation,
+            family,
+            units,
+            values,
+            suffixes,
+            ..
+        } => {
+            let family = match family.as_deref() {
+                Some("ipv4") => "IPv4",
+                Some("ipv6") => "IPv6",
+                _ => "IP",
+            };
+            let listed = |names: Vec<&String>| {
+                names
+                    .into_iter()
+                    .map(String::as_str)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            match representation {
+                Representation::Switch => "boolean".into(),
+                Representation::Integer | Representation::NumberExpression => "integer".into(),
+                Representation::String => "string".into(),
+                Representation::Symbol => "symbol name".into(),
+                Representation::Expression => "expression".into(),
+                Representation::IpAddress => format!("{family} address"),
+                Representation::Prefix => format!("{family} prefix"),
+                Representation::Duration => {
+                    format!(
+                        "{{ value, unit }} with unit one of {}",
+                        listed(units.keys().collect())
+                    )
+                }
+                Representation::TypeName => {
+                    let suffixes = suffixes
+                        .iter()
+                        .map(|suffix| suffix.join(" "))
+                        .collect::<Vec<_>>();
+                    let mut text = format!("one of {}", listed(values.keys().collect()));
+                    if !suffixes.is_empty() {
+                        text += &format!(", optionally followed by {}", suffixes.join(" or "));
+                    }
+                    text
+                }
+            }
+        }
         ValueShape::Enum { values, .. } => format!(
             "one of {}",
             values.keys().cloned().collect::<Vec<_>>().join(", ")
@@ -333,6 +377,81 @@ mod tests {
         assert_eq!(
             names(&schema).unnamed.keys().cloned().collect::<Vec<_>>(),
             [("pair".to_owned(), "/".to_owned())]
+        );
+    }
+
+    #[test]
+    fn primitives_are_described_as_the_nix_values_they_take() {
+        let primitive = |representation, family: Option<&str>, units: &[&str], values: &[&str]| {
+            ValueShape::Primitive {
+                representation,
+                rule: "rule".into(),
+                nullable: false,
+                expression_rule: None,
+                family: family.map(str::to_owned),
+                bare: (!units.is_empty()).then_some(false),
+                expression_prefix: Vec::new(),
+                expression_suffix: Vec::new(),
+                units: units
+                    .iter()
+                    .map(|unit| ((*unit).to_owned(), vec![(*unit).to_owned()]))
+                    .collect(),
+                values: values
+                    .iter()
+                    .map(|value| ((*value).to_owned(), vec![(*value).to_owned()]))
+                    .collect(),
+                suffixes: if values.is_empty() {
+                    Vec::new()
+                } else {
+                    vec![vec!["set".to_owned()]]
+                },
+            }
+        };
+        let types = BTreeMap::from([
+            (
+                "switch".to_owned(),
+                primitive(Representation::Switch, None, &[], &[]),
+            ),
+            (
+                "number".to_owned(),
+                primitive(Representation::NumberExpression, None, &[], &[]),
+            ),
+            (
+                "symbol".to_owned(),
+                primitive(Representation::Symbol, None, &[], &[]),
+            ),
+            (
+                "ip".to_owned(),
+                primitive(Representation::IpAddress, None, &[], &[]),
+            ),
+            (
+                "ip4".to_owned(),
+                primitive(Representation::IpAddress, Some("ipv4"), &[], &[]),
+            ),
+            (
+                "net6".to_owned(),
+                primitive(Representation::Prefix, Some("ipv6"), &[], &[]),
+            ),
+            (
+                "time".to_owned(),
+                primitive(Representation::Duration, None, &["ms", "s"], &[]),
+            ),
+            (
+                "type".to_owned(),
+                primitive(Representation::TypeName, None, &[], &["int", "ip"]),
+            ),
+        ]);
+        let described = |name: &str| describe(&types, 0, name);
+        assert_eq!(described("switch"), "boolean");
+        assert_eq!(described("number"), "integer");
+        assert_eq!(described("symbol"), "symbol name");
+        assert_eq!(described("ip"), "IP address");
+        assert_eq!(described("ip4"), "IPv4 address");
+        assert_eq!(described("net6"), "IPv6 prefix");
+        assert_eq!(described("time"), "{ value, unit } with unit one of ms, s");
+        assert_eq!(
+            described("type"),
+            "one of int, ip, optionally followed by set"
         );
     }
 
