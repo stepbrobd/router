@@ -89,14 +89,18 @@ BIRD's three forms: `bird.ec [ "rt" 65000 1 ]`, the range
 
 A statement with several values is a record keyed by the keyword before each
 value. Values without a keyword, such as the two thresholds of `cork-threshold`,
-take names from the `[[labels]]` table in `registry/bird.toml`. A label maps a
-Bison position in one production to a field, and generation checks it against
-the C field BIRD's action assigns. Options after an entry's name stay in its
-record:
+take names from the `[[labels]]` table in `registry/bird.toml`. Where BIRD's
+manual names a value through a filter operator, the label uses that name, such
+as `rd`, `tag`, `mac` and `esi` in VPN and EVPN prefixes. A label maps a Bison
+position in one production to a field, and generation checks it against the C
+field BIRD's action assigns. Generation fails when a field would otherwise be
+named after its grammar symbol, and when no setting reaches a label. Options
+after an entry's name stay in its record:
 
 ```nix
 {
   attribute = [{ type = "int"; name = "local_mark"; }];
+  attribute-bgp = [{ number = 64; type = "bytestring"; name = "big_attr"; }];
 
   ipv4.table.main4.cork-threshold = { low = 1000; high = 2000; };
 
@@ -145,12 +149,17 @@ interface = [{
 }];
 ```
 
+A pattern given as a constant or an expression is `expression`, as in
+`interface = [{ expression = bird.expr "UPLINKS"; }]`. It has a name of its own
+because a plain string would match it as well as `pattern`.
+
 A static route with one next hop puts the next hop's options beside `via`. A
-list of `via` records is a multipath route:
+list of `via` records is a multipath route, and an MPLS label stack is a list:
 
 ```nix
 route = [
   { prefix = "198.51.100.0/24"; via = bird.ip "192.0.2.2"; weight = 2; bfd = true; }
+  { prefix = "10.0.0.0/8"; via = bird.ip "192.0.2.2"; mpls = [ 16 17 ]; }
   {
     prefix = "203.0.113.0/24";
     via = [
@@ -276,11 +285,13 @@ passes:
    alternative, so dropping it removes nothing else.
 4. Surface compilation expands nonterminals from the configuration start symbol
    into statement forms per scope. A braced repetition `X: | X item ';'` becomes
-   a nested scope, a comma recursion `X: item | X ',' item` becomes a list,
-   keyword alternatives become an enum, and a rule whose storage role is program
-   stays native BIRD text. Statements that share a keyword run and carry several
+   a nested scope, a comma recursion `X: item | X ',' item` becomes a list, also
+   when the first item goes through a rule of one production, and keyword
+   alternatives become an enum. A rule whose storage role is program stays
+   native BIRD text. Statements that share a keyword run and carry several
    values merge into one record type. Generation fails while any form lacks an
-   attribute form.
+   attribute form, any field lacks a name from a keyword or the registry, or any
+   label names no value a setting reaches.
 
 The runtime in `lib/router/bird` loads the inventory with `lib.importJSON` and
 interprets it in Nix. Its option type merges by schema: each definition's
