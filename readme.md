@@ -183,9 +183,9 @@ route = [{
 ```
 
 See [`examples/bird`](examples/bird) for complete data, policy and peer
-examples. The [settings search](https://stepbrobd.github.io/router/bird/) lists
-every setting path with the value it expects, its entry in BIRD's manual and its
-grammar line at the pinned commit.
+examples. The [settings search](https://stepbrobd.github.io/router/) lists every
+setting path under `services.bird.settings` with the value it expects, its entry
+in BIRD's manual and its grammar line at the pinned commit.
 
 Settings stay plain data while modules define them, which lets a module read
 `config.services.bird.settings` to decide what else to set. Rendering into
@@ -253,7 +253,8 @@ The Rust CLI takes a BIRD source directory:
 ```sh
 router inspect /path/to/bird
 router generate /path/to/bird --output generated/bird
-router options /path/to/bird --source-url https://github.com/cz-nic/bird/blob/REV/
+router options /path/to/bird --prefix services.bird.settings \
+  --source-url https://github.com/cz-nic/bird/blob/REV/
 ```
 
 The `generate` command writes `generated/bird/grammar.json`, the grammar
@@ -264,12 +265,15 @@ productions remain available through their exact production form,
 `{ _rule; _production; _args; }`.
 
 The `options` command prints a NixOS-style `options.json` with one entry per
-setting path, described from `doc/bird.sgml` and linked to its production under
-`--source-url`. A scope shared by several paths, such as a template's block or a
-second channel of one protocol, is listed once and the other paths point there.
-The flake's `packages.site` indexes it with
-[NuschtOS Search](https://github.com/NuschtOS/search) beside the NixCon slides,
-and `.github/workflows/pages.yaml` publishes the site from `master`.
+setting path under `--prefix`, described from `doc/bird.sgml` and linked to its
+production under `--source-url`. A scope shared by several paths, such as a
+template's block or a second channel of one protocol, is listed once and the
+other paths point there. The flake's `packages.site` serves it at the site root
+with [NuschtOS Search](https://github.com/NuschtOS/search), beside the NixCon
+slides, and `.github/workflows/pages.yaml` publishes the site from `master`.
+Each module is one entry of the search's `scopes` list in
+`modules/flake/site.nix`, given as an `options.json` or as the module itself,
+and a second entry adds a scope picker to the page.
 
 Generation fails when a setting form cannot be written as attributes, and names
 each such form with its BIRD source location. The `inspect` command lists the
