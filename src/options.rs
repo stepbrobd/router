@@ -48,13 +48,18 @@ pub fn options(inventory: &Inventory, sgml: &str, source_url: &str, prefix: &[St
         .chain([include])
         .collect::<Vec<_>>();
     let sources = sources(&inventory.grammar, &inventory.keywords, &settings);
+    let fields = settings
+        .iter()
+        .filter(|setting| setting.keywords.is_empty())
+        .map(|setting| setting.loc.clone())
+        .collect::<BTreeSet<_>>();
     for setting in settings {
-        let entry = lookup(&manual, &setting.loc);
+        let entry = lookup(&manual, &setting.loc, fields.contains(&setting.loc));
         // a field such as `log.filename` points at the nearest setting the manual describes
         let parent = || {
             (1..setting.loc.len()).rev().find_map(|end| {
                 let loc = &setting.loc[..end];
-                lookup(&manual, loc).map(|entry| (loc, entry))
+                lookup(&manual, loc, fields.contains(loc)).map(|entry| (loc, entry))
             })
         };
         let mut description = match (entry, entry.is_none().then(parent).flatten()) {
@@ -284,7 +289,13 @@ fn fit(
 }
 
 // manual ids are a context and the option's words, as in `bgp-hold-time`, `proto-import` and `static-route-weight`
-fn lookup<'a>(manual: &'a BTreeMap<String, Entry>, loc: &[String]) -> Option<&'a Entry> {
+// a `field`, a setting without keywords of its own, takes only an id that also names what holds it, as
+// `babel-tx-class` does, so a route prefix's `neighbor` does not take BGP's `neighbor` statement
+fn lookup<'a>(
+    manual: &'a BTreeMap<String, Entry>,
+    loc: &[String],
+    field: bool,
+) -> Option<&'a Entry> {
     let words = |segments: &[String]| {
         segments
             .iter()
@@ -337,10 +348,18 @@ fn lookup<'a>(manual: &'a BTreeMap<String, Entry>, loc: &[String]) -> Option<&'a
             .iter()
             .find_map(|context| manual.get(&format!("{context}-{key}")))
     };
-    (0..segments.len())
+    let last = if field {
+        segments.len().saturating_sub(2)
+    } else {
+        segments.len() - 1
+    };
+    (0..=last)
         .find_map(|start| find(&segments[start..].join("-")))
         .or_else(|| {
             // a setting named past its manual entry, such as `timeformat-route` under `opt-timeformat`
+            if field {
+                return None;
+            }
             let words = segments.last()?.split('-').collect::<Vec<_>>();
             (1..words.len())
                 .rev()
@@ -592,7 +611,7 @@ mod tests {
         ]);
         let find = |path: &str| {
             let loc = path.split('.').map(str::to_owned).collect::<Vec<_>>();
-            lookup(&manual, &loc).map(|entry| entry.syntax.clone())
+            lookup(&manual, &loc, false).map(|entry| entry.syntax.clone())
         };
         assert_eq!(
             find("protocol.bgp.<name>.hold-time").as_deref(),
@@ -618,5 +637,37 @@ mod tests {
             Some("dst")
         );
         assert_eq!(find("protocol.bgp.<name>.neighbor"), None);
+    }
+
+    #[test]
+    fn fields_take_only_entries_that_also_name_what_holds_them() {
+        let entry = |text: &str| Entry {
+            syntax: text.into(),
+            text: String::new(),
+        };
+        let manual = BTreeMap::from([
+            ("bgp-neighbor".to_owned(), entry("neighbor")),
+            ("babel-tx-class".to_owned(), entry("tx class")),
+            ("rtable-sorted".to_owned(), entry("sorted")),
+            ("proto-from".to_owned(), entry("from")),
+        ]);
+        let field = |path: &str| {
+            let loc = path.split('.').map(str::to_owned).collect::<Vec<_>>();
+            lookup(&manual, &loc, true).map(|entry| entry.syntax.clone())
+        };
+        assert_eq!(
+            field("protocol.bgp.<name>.ipv4.export-in.prefix.neighbor"),
+            None
+        );
+        assert_eq!(
+            field("protocol.babel.<name>.interface.*.tx.class").as_deref(),
+            Some("tx class")
+        );
+        assert_eq!(field("ipv4.table.<name>.sorted").as_deref(), Some("sorted"));
+        // a field named past an entry, as `from-length` is past `from`, is not that entry
+        assert_eq!(
+            field("protocol.static.<name>.route.*.prefix.from-length"),
+            None
+        );
     }
 }
