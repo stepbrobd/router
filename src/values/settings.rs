@@ -28,11 +28,16 @@ pub(crate) fn settings(schema: &Schema) -> Vec<Setting> {
 pub(crate) struct Names {
     // the `[[labels]]` ids that name a field some setting reaches
     pub labels: BTreeSet<String>,
+    // fields that only their own grammar symbol or punctuation names, by record and field name,
+    // with the first setting path that reaches each
+    pub unnamed: BTreeMap<(String, String), Vec<String>>,
 }
 
 pub(crate) fn names(schema: &Schema) -> Names {
+    let walk = walk(schema);
     Names {
-        labels: walk(schema).labels,
+        labels: walk.labels,
+        unnamed: walk.unnamed,
     }
 }
 
@@ -44,6 +49,7 @@ fn walk(schema: &Schema) -> Walk<'_> {
         declaration: schema.root.clone(),
         values: BTreeSet::new(),
         labels: BTreeSet::new(),
+        unnamed: BTreeMap::new(),
     };
     walk.scope(&schema.root, &[]);
     walk
@@ -59,6 +65,7 @@ struct Walk<'a> {
     // the value types on the current path, which stops recursion without hiding siblings
     values: BTreeSet<String>,
     labels: BTreeSet<String>,
+    unnamed: BTreeMap<(String, String), Vec<String>>,
 }
 
 impl Walk<'_> {
@@ -159,16 +166,19 @@ impl Walk<'_> {
         match types.get(rule) {
             Some(ValueShape::Record { forms, .. }) => {
                 for part in forms.iter().flat_map(|form| &form.parts) {
-                    if let RecordPart::Field {
-                        naming: Naming::Label(id),
-                        ..
-                    }
-                    | RecordPart::Body {
-                        naming: Naming::Label(id),
-                        ..
-                    } = part
+                    if let RecordPart::Field { name, naming, .. }
+                    | RecordPart::Body { name, naming, .. } = part
                     {
-                        self.labels.insert(id.clone());
+                        if let Naming::Label(id) = naming {
+                            self.labels.insert(id.clone());
+                        }
+                        if *naming == Naming::Fallback
+                            || !name.chars().any(|c| c.is_ascii_alphanumeric())
+                        {
+                            self.unnamed
+                                .entry((rule.to_owned(), name.clone()))
+                                .or_insert_with(|| child(loc, name));
+                        }
                     }
                     match part {
                         RecordPart::Field { name, rule, .. } => {
@@ -299,6 +309,30 @@ mod tests {
         assert_eq!(
             names(&schema).labels,
             BTreeSet::from(["pair.low".to_owned()])
+        );
+    }
+
+    #[test]
+    fn names_report_fields_named_after_their_symbol_or_punctuation() {
+        let mut schema = pair_schema();
+        let unnamed = names(&schema).unnamed;
+        assert_eq!(
+            unnamed.keys().cloned().collect::<Vec<_>>(),
+            [
+                ("pair".to_owned(), "/".to_owned()),
+                ("pair".to_owned(), "expr".to_owned()),
+            ]
+        );
+        assert_eq!(unnamed[&("pair".into(), "expr".into())], ["limit", "expr"]);
+        name_field(
+            &mut schema,
+            "pair",
+            "expr",
+            Naming::Label("pair.low".into()),
+        );
+        assert_eq!(
+            names(&schema).unnamed.keys().cloned().collect::<Vec<_>>(),
+            [("pair".to_owned(), "/".to_owned())]
         );
     }
 

@@ -58,6 +58,14 @@ pub fn generate(source: &Path, output: &Path) -> anyhow::Result<()> {
             unaddressable.join("\n")
         );
     }
+    let unnamed = &inventory.registry.diagnostics.unnamed;
+    if !unnamed.is_empty() {
+        eprintln!(
+            "{} setting fields are named after their grammar symbol, name them in registry/bird.toml:\n{}",
+            unnamed.len(),
+            unnamed.join("\n")
+        );
+    }
     fs::create_dir_all(output).with_context(|| format!("cannot create {}", output.display()))?;
     let path = output.join("grammar.json");
     fs::write(&path, serde_json::to_string_pretty(&inventory)? + "\n")

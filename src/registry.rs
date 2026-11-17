@@ -269,6 +269,8 @@ pub struct Effect {
 pub struct Diagnostics {
     pub unaddressable: Vec<String>,
     pub unprojected: Vec<String>,
+    // setting fields that only their own grammar symbol or punctuation names
+    pub unnamed: Vec<String>,
 }
 
 #[derive(Debug, Default, Serialize)]
@@ -1120,6 +1122,18 @@ impl Registry {
                 label.source.file, label.source.line
             )));
         }
+        self.diagnostics.unnamed = names
+            .unnamed
+            .iter()
+            .map(|((record, name), loc)| {
+                let at = grammar
+                    .rules
+                    .get(record)
+                    .map(|rule| format!(" ({}:{})", rule.source.file, rule.source.line))
+                    .unwrap_or_default();
+                format!("{}: {name} in {record}{at}", loc.join("."))
+            })
+            .collect();
         self.diagnostics.unaddressable = crate::values::unaddressable(grammar, schema);
         self.diagnostics.unprojected = schema
             .value_types

@@ -125380,6 +125380,36 @@
         "var",
         "var_list",
         "var_list_r"
+      ],
+      "unnamed": [
+        "protocol.static.<name>.route.*.mpls./: / in $label_stack:record",
+        "protocol.static.<name>.route.*.mpls.label-stack: label-stack in $label_stack:record",
+        "attribute.type: type in $positional:conf_entries[]:attribute",
+        "attribute-bgp.NUM: NUM in $positional:conf_entries[]:attribute-bgp",
+        "attribute-bgp.type: type in $positional:conf_entries[]:attribute-bgp",
+        "protocol.ospf.<name>.area.<name>.virtual-link.idval: idval in $positional:ospf_area_opts[]:virtual-link",
+        "protocol.babel.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:babel_proto_opts[]:item",
+        "protocol.bfd.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:bfd_proto_opts[]:item",
+        "protocol.direct.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:dev_proto[]:item",
+        "protocol.device.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:kif_proto[]:item",
+        "protocol.ospf.<name>.area.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:ospf_area_opts[]:item",
+        "protocol.radv.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:radv_proto_opts[]:item",
+        "protocol.rip.<name>.interface.*.conf-expr: conf-expr in $projection:interface.block:rip_proto_opts[]:item",
+        "router-id-from.*.conf-expr: conf-expr in iface_patt_node (nest/config.Y:519)",
+        "protocol.direct.<name>.ipv4.export-in.prefix.NUM: NUM in net_evpn_ead_ (conf/confbase.Y:430)",
+        "protocol.direct.<name>.ipv4.export-in.prefix.evpn-esi: evpn-esi in net_evpn_ead_ (conf/confbase.Y:430)",
+        "protocol.direct.<name>.ipv4.export-in.prefix.evpn-esi: evpn-esi in net_evpn_es_ (conf/confbase.Y:454)",
+        "protocol.direct.<name>.ipv4.export-in.prefix.NUM: NUM in net_evpn_imet_ (conf/confbase.Y:448)",
+        "protocol.direct.<name>.ipv4.export-in.prefix.MAC-: MAC- in net_evpn_mac_ (conf/confbase.Y:436)",
+        "protocol.direct.<name>.ipv4.export-in.prefix.NUM: NUM in net_evpn_mac_ (conf/confbase.Y:436)",
+        "protocol.direct.<name>.ipv4.export-in.prefix.MAC-: MAC- in net_evpn_mac_ip_ (conf/confbase.Y:442)",
+        "protocol.direct.<name>.ipv4.export-in.prefix.NUM: NUM in net_evpn_mac_ip_ (conf/confbase.Y:442)",
+        "protocol.direct.<name>.ipv4.export-in.prefix./: / in net_ip6_sadr_ (conf/confbase.Y:342)",
+        "protocol.direct.<name>.ipv4.export-in.prefix.NUM: NUM in net_ip6_sadr_ (conf/confbase.Y:342)",
+        "protocol.direct.<name>.ipv4.export-in.prefix.net-ip6-slash: net-ip6-slash in net_ip6_sadr_ (conf/confbase.Y:342)",
+        "protocol.direct.<name>.ipv4.export-in.prefix.net-ip6-slash.IP6: IP6 in net_ip6_slash (conf/confbase.Y:317)",
+        "protocol.direct.<name>.ipv4.export-in.prefix.VPN-RD: VPN-RD in net_vpn4_ (conf/confbase.Y:370)",
+        "protocol.direct.<name>.ipv4.export-in.prefix.VPN-RD: VPN-RD in net_vpn6_ (conf/confbase.Y:376)"
       ]
     }
   }
