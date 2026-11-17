@@ -1,4 +1,4 @@
-use super::{RecordPart, ValueShape, leading, named_entry, statement_tail};
+use super::{Naming, RecordPart, ValueShape, leading, named_entry, statement_tail};
 use crate::surface::{Form, Part, Schema};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -21,15 +21,32 @@ pub(crate) struct Setting {
 // each scope is listed under the first path that reaches it in grammar order and the others point there
 // mirrors formInfo and describeSetting in lib/router/bird/runtime.nix
 pub(crate) fn settings(schema: &Schema) -> Vec<Setting> {
+    walk(schema).found.into_values().collect()
+}
+
+// where the names of reachable settings come from
+pub(crate) struct Names {
+    // the `[[labels]]` ids that name a field some setting reaches
+    pub labels: BTreeSet<String>,
+}
+
+pub(crate) fn names(schema: &Schema) -> Names {
+    Names {
+        labels: walk(schema).labels,
+    }
+}
+
+fn walk(schema: &Schema) -> Walk<'_> {
     let mut walk = Walk {
         schema,
         found: BTreeMap::new(),
         documented: BTreeMap::new(),
         declaration: schema.root.clone(),
         values: BTreeSet::new(),
+        labels: BTreeSet::new(),
     };
     walk.scope(&schema.root, &[]);
-    walk.found.into_values().collect()
+    walk
 }
 
 struct Walk<'a> {
@@ -41,6 +58,7 @@ struct Walk<'a> {
     declaration: String,
     // the value types on the current path, which stops recursion without hiding siblings
     values: BTreeSet<String>,
+    labels: BTreeSet<String>,
 }
 
 impl Walk<'_> {
@@ -141,6 +159,17 @@ impl Walk<'_> {
         match types.get(rule) {
             Some(ValueShape::Record { forms, .. }) => {
                 for part in forms.iter().flat_map(|form| &form.parts) {
+                    if let RecordPart::Field {
+                        naming: Naming::Label(id),
+                        ..
+                    }
+                    | RecordPart::Body {
+                        naming: Naming::Label(id),
+                        ..
+                    } = part
+                    {
+                        self.labels.insert(id.clone());
+                    }
                     match part {
                         RecordPart::Field { name, rule, .. } => {
                             let field = child(loc, name);
@@ -223,6 +252,55 @@ mod tests {
     use super::super::fixtures::keywords;
     use super::*;
     use crate::grammar::parse;
+
+    fn pair_schema() -> Schema {
+        let grammar = parse("%union { int i; }\n%token END LIMIT\n%token <i> NUM\n%type <i> expr pair\n%start config\n%%\nconfig: entries END; entries: | entries conf;\nconf: LIMIT pair ';';\npair: expr '/' expr;\nexpr: NUM;\n%%").unwrap();
+        crate::surface::compile(&grammar, &keywords(&["LIMIT"]))
+    }
+
+    fn name_field(schema: &mut Schema, record: &str, field: &str, given: Naming) {
+        let Some(ValueShape::Record { forms, .. }) = schema.value_types.get_mut(record) else {
+            panic!("expected a record {record}");
+        };
+        for part in forms.iter_mut().flat_map(|form| &mut form.parts) {
+            if let RecordPart::Field { name, naming, .. } = part
+                && name == field
+            {
+                *naming = given.clone();
+            }
+        }
+    }
+
+    #[test]
+    fn names_collect_the_labels_reachable_settings_use() {
+        let mut schema = pair_schema();
+        assert_eq!(names(&schema).labels, BTreeSet::new());
+        name_field(
+            &mut schema,
+            "pair",
+            "expr",
+            Naming::Label("pair.low".into()),
+        );
+        schema.value_types.insert(
+            "$unreachable".into(),
+            ValueShape::Record {
+                forms: vec![super::super::RecordForm {
+                    parts: vec![RecordPart::Field {
+                        name: "low".into(),
+                        rule: "expr".into(),
+                        optional: false,
+                        naming: Naming::Label("stale".into()),
+                    }],
+                }],
+                nullable: false,
+                merge: crate::registry::Merge::Replace,
+            },
+        );
+        assert_eq!(
+            names(&schema).labels,
+            BTreeSet::from(["pair.low".to_owned()])
+        );
+    }
 
     #[test]
     fn settings_follow_blocks_names_records_and_lists() {

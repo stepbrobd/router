@@ -5,7 +5,7 @@ mod settings;
 mod shapes;
 
 pub(crate) use addressable::unaddressable;
-pub(crate) use settings::{Setting, settings};
+pub(crate) use settings::{Setting, names, settings};
 
 use crate::grammar::Grammar;
 use crate::registry::{self, Merge, Registry, Representation};

@@ -1107,6 +1107,19 @@ impl Registry {
                 )));
             }
         }
+        // a label names values in settings, so one no setting reaches is stale, such as one
+        // on an excluded rule or on a production only native BIRD code contains
+        let names = crate::values::names(schema);
+        if let Some((id, label)) = self
+            .labels
+            .iter()
+            .find(|(id, _)| !names.labels.contains(*id))
+        {
+            return Err(error(format!(
+                "stale label {id}: no setting reaches the values it names at {}:{}",
+                label.source.file, label.source.line
+            )));
+        }
         self.diagnostics.unaddressable = crate::values::unaddressable(grammar, schema);
         self.diagnostics.unprojected = schema
             .value_types
