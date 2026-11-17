@@ -18,7 +18,7 @@ pub enum Part {
         value_type: Option<String>,
         // registry name of the production slot that produced this value
         #[serde(skip_serializing_if = "Option::is_none")]
-        label: Option<String>,
+        label: Option<registry::SlotLabel>,
     },
     Body {
         rule: String,
@@ -583,7 +583,7 @@ impl<'a> Compiler<'a> {
             let mut choices = self.symbol(symbol);
             // values a nested production made carry that production's label already
             if let Some((rule, number, offset)) = origin
-                && let Some(name) = self
+                && let Some(slot) = self
                     .registry
                     .and_then(|registry| registry.slot_label(rule, number, offset + index))
             {
@@ -593,7 +593,7 @@ impl<'a> Compiler<'a> {
                         ..
                     } = part
                     {
-                        *label = Some(name.to_owned());
+                        *label = Some(slot.clone());
                     }
                 }
             }

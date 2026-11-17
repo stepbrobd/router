@@ -1,7 +1,7 @@
 use crate::grammar::{Error, Grammar, Location, Production, Rule, Symbol};
 use crate::source::Keyword;
 use crate::surface::Schema;
-use crate::values::{RecordPart, ValueShape};
+use crate::values::{Naming, RecordPart, ValueShape};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::LazyLock;
@@ -213,6 +213,15 @@ pub struct Label {
     pub names: BTreeMap<usize, String>,
 }
 
+// a label's name for one value slot, serialized as the name alone
+#[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(transparent)]
+pub struct SlotLabel {
+    pub name: String,
+    #[serde(skip)]
+    pub id: String,
+}
+
 #[derive(Debug, Serialize)]
 pub struct Exclusion {
     pub source: Location,
@@ -353,6 +362,14 @@ pub(crate) fn spellings(grammar: &Grammar, keywords: &[Keyword]) -> BTreeMap<Str
         .filter(|keyword| grammar.tokens.contains_key(&keyword.token))
         .map(|keyword| (keyword.token.clone(), keyword.spelling.clone()))
         .collect()
+}
+
+// a binding's field names, or else the rule's own name
+pub(crate) fn fallback_name(rule: &str, fields: &BTreeMap<String, String>) -> (String, Naming) {
+    fields.get(rule).map_or_else(
+        || (rule.replace('_', "-"), Naming::Fallback),
+        |name| (name.clone(), Naming::Registry),
+    )
 }
 
 pub(crate) fn canonical_path(prefix: &[String], named: bool) -> Vec<String> {
@@ -863,6 +880,7 @@ impl Registry {
                             name,
                             rule: rule.clone(),
                             optional: false,
+                            naming: Naming::Registry,
                         }
                     }
                 })
@@ -912,12 +930,20 @@ impl Registry {
         Ok(registry)
     }
 
-    pub(crate) fn slot_label(&self, rule: &str, production: usize, symbol: usize) -> Option<&str> {
-        self.labels
-            .values()
-            .find(|label| label.rule == rule && label.production == production)
-            .and_then(|label| label.names.get(&symbol))
-            .map(String::as_str)
+    pub(crate) fn slot_label(
+        &self,
+        rule: &str,
+        production: usize,
+        symbol: usize,
+    ) -> Option<SlotLabel> {
+        let (id, label) = self
+            .labels
+            .iter()
+            .find(|(_, label)| label.rule == rule && label.production == production)?;
+        label.names.get(&symbol).map(|name| SlotLabel {
+            name: name.clone(),
+            id: id.clone(),
+        })
     }
 
     pub(crate) fn rule(&self, id: &str) -> Result<&str, Error> {
@@ -935,16 +961,13 @@ impl Registry {
         })
     }
 
-    pub(crate) fn label(&self, rule: &str, fields: &BTreeMap<String, String>) -> String {
+    pub(crate) fn label(&self, rule: &str, fields: &BTreeMap<String, String>) -> (String, Naming) {
         if let Some(binding) = self.binding(rule)
             && let Some(label) = fields.get(&binding.id).or(binding.label.as_ref())
         {
-            return label.clone();
+            return (label.clone(), Naming::Registry);
         }
-        fields
-            .get(rule)
-            .cloned()
-            .unwrap_or_else(|| rule.replace('_', "-"))
+        fallback_name(rule, fields)
     }
 
     pub fn complete(&mut self, grammar: &Grammar, schema: &Schema) -> Result<(), Error> {

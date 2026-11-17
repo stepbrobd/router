@@ -1,5 +1,5 @@
 use super::records::dedup_records;
-use super::{RecordPart, ValueShape, Values, common_prefix};
+use super::{Naming, RecordPart, ValueShape, Values, common_prefix};
 use crate::grammar::{Rule, Symbol, Token};
 use crate::registry::{self, BindingDefinition, Merge, Representation, Shape, StorageRole};
 use crate::surface::DeclarationRole;
@@ -42,14 +42,9 @@ impl Values<'_> {
         registry::fixed(self.grammar, &self.spellings, symbol)
     }
 
-    pub(super) fn label(&self, name: &str, fields: &BTreeMap<String, String>) -> String {
+    pub(super) fn label(&self, name: &str, fields: &BTreeMap<String, String>) -> (String, Naming) {
         self.registry.map_or_else(
-            || {
-                fields
-                    .get(name)
-                    .cloned()
-                    .unwrap_or_else(|| name.replace('_', "-"))
-            },
+            || registry::fallback_name(name, fields),
             |registry| registry.label(name, fields),
         )
     }
@@ -601,6 +596,7 @@ impl Values<'_> {
                             name,
                             rule,
                             optional,
+                            naming,
                         } = part
                             && rule == &native_rule
                         {
@@ -608,6 +604,7 @@ impl Values<'_> {
                                 name: name.clone(),
                                 rule: key.clone(),
                                 optional: *optional,
+                                naming: naming.clone(),
                             };
                         }
                     }

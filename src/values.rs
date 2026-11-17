@@ -74,6 +74,19 @@ pub enum ValueShape {
     },
 }
 
+// where a field's name comes from, which generation checks and the inventory leaves out
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Naming {
+    // keywords before the value in BIRD's source
+    Keyword,
+    // a binding's label or field names, or a native role, in registry/bird.toml
+    Registry,
+    // a `[[labels]]` entry, by id
+    Label(String),
+    // the value's own grammar symbol, as nothing else names it
+    Fallback,
+}
+
 #[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct RecordForm {
     pub parts: Vec<RecordPart>,
@@ -89,6 +102,8 @@ pub enum RecordPart {
         name: String,
         rule: String,
         optional: bool,
+        #[serde(skip)]
+        naming: Naming,
     },
     Spread {
         scope: String,
@@ -97,6 +112,8 @@ pub enum RecordPart {
         name: String,
         rule: String,
         optional: bool,
+        #[serde(skip)]
+        naming: Naming,
     },
 }
 

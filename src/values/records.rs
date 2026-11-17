@@ -1,4 +1,4 @@
-use super::{RecordForm, RecordPart, ValueShape, Values, punctuation, retain_indexed};
+use super::{Naming, RecordForm, RecordPart, ValueShape, Values, punctuation, retain_indexed};
 use crate::grammar::Symbol;
 use crate::registry::{self, Shape};
 use crate::surface::Part;
@@ -35,14 +35,16 @@ impl Values<'_> {
             }
             if let Some(close) = self.statement_block(symbols, index, &pending) {
                 pending.pop();
-                let name = self
-                    .keyword_name(&pending)
-                    .unwrap_or_else(|| self.label(reference, fields));
+                let (name, naming) = match self.keyword_name(&pending) {
+                    Some(name) => (name, Naming::Keyword),
+                    None => self.label(reference, fields),
+                };
                 append_literals(&mut forms, &mut pending);
                 let part = RecordPart::Field {
                     name,
                     rule: format!("$block:{reference}[]"),
                     optional: false,
+                    naming,
                 };
                 for form in &mut forms {
                     form.parts.push(part.clone());
@@ -110,20 +112,22 @@ impl Values<'_> {
                 self.registry
                     .and_then(|registry| registry.slot_label(rule, number, index))
             });
-            let explicit_label = slot_label.or_else(|| {
-                binding
-                    .and_then(|binding| fields.get(&binding.id))
-                    .or_else(|| fields.get(reference))
-                    .map(String::as_str)
+            let explicit = slot_label
+                .map(|slot| (slot.name, Naming::Label(slot.id)))
+                .or_else(|| {
+                    binding
+                        .and_then(|binding| fields.get(&binding.id))
+                        .or_else(|| fields.get(reference))
+                        .map(String::as_str)
+                        .or(forced_label)
+                        .map(|name| (name.to_owned(), Naming::Registry))
+                });
+            let (name, naming) = explicit.unwrap_or_else(|| {
+                match self.keyword_name(&pending).filter(|_| !is_body) {
+                    Some(name) => (name, Naming::Keyword),
+                    None => self.label(reference, fields),
+                }
             });
-            let name = explicit_label.or(forced_label).map_or_else(
-                || {
-                    self.keyword_name(&pending)
-                        .filter(|_| !is_body)
-                        .unwrap_or_else(|| self.label(reference, fields))
-                },
-                str::to_owned,
-            );
             let optional = (is_body || !pending.iter().any(|text| !punctuation(text)))
                 && self.nullable(reference, &mut BTreeSet::new());
             append_literals(&mut forms, &mut pending);
@@ -132,12 +136,14 @@ impl Values<'_> {
                     name,
                     rule: reference.clone(),
                     optional,
+                    naming,
                 }
             } else {
                 RecordPart::Field {
                     name,
                     rule: reference.clone(),
                     optional,
+                    naming,
                 }
             };
             for form in &mut forms {
@@ -285,11 +291,13 @@ impl Values<'_> {
                     self.infer(rule);
                     if matches!(self.types.get(rule), Some(ValueShape::Body { .. })) {
                         self.flush_flags(&mut forms, &mut pending, namespace, position);
+                        let (name, naming) = self.label(rule, fields);
                         for form in &mut forms {
                             form.parts.push(RecordPart::Body {
-                                name: self.label(rule, fields),
+                                name: name.clone(),
                                 rule: rule.clone(),
                                 optional: self.nullable(rule, &mut BTreeSet::new()),
+                                naming: naming.clone(),
                             });
                         }
                         continue;
@@ -299,12 +307,12 @@ impl Values<'_> {
                         .filter(|text| !punctuation(text))
                         .cloned()
                         .collect::<Vec<_>>();
-                    let name = if let Some(label) = label {
-                        label.clone()
+                    let (name, naming) = if let Some(label) = label {
+                        (label.name.clone(), Naming::Label(label.id.clone()))
                     } else if keyword.is_empty() {
                         self.label(rule, fields)
                     } else {
-                        keyword.join("-")
+                        (keyword.join("-"), Naming::Keyword)
                     };
                     append_literals(&mut forms, &mut pending);
                     let mut choices = vec![RecordForm {
@@ -313,6 +321,7 @@ impl Values<'_> {
                             rule: rule.clone(),
                             optional: keyword.is_empty()
                                 && self.nullable(rule, &mut BTreeSet::new()),
+                            naming,
                         }],
                     }];
                     if let Some(ValueShape::List {
@@ -359,6 +368,7 @@ impl Values<'_> {
                             name: registry::role_field("body"),
                             rule: rule.clone(),
                             optional: false,
+                            naming: Naming::Registry,
                         });
                     }
                 }
@@ -405,6 +415,7 @@ impl Values<'_> {
                     name: name.clone(),
                     rule: key.clone(),
                     optional: false,
+                    naming: Naming::Keyword,
                 });
                 form.parts.extend(
                     pending[last + 1..]
@@ -498,6 +509,60 @@ mod tests {
                 .collect::<Vec<_>>();
             assert_eq!(names, [expected]);
         }
+    }
+
+    #[test]
+    fn record_fields_remember_where_their_names_come_from() {
+        let grammar = parse("%union { void *s; char *t; }\n%token END DEV\n%token <s> WORD\n%token <t> TEXT\n%type <s> symbol\n%type <t> text\n%start config\n%%\nconfig: iface END; iface: '%' symbol | DEV text; symbol: WORD; text: TEXT;\n%%").unwrap();
+        let program_rules = BTreeSet::new();
+        let mut values = value_compiler(&grammar, &["DEV"], &program_rules);
+        let productions = &grammar.rules["iface"].productions;
+        let mut field = |production: usize, fields: &BTreeMap<String, String>| {
+            let forms = values
+                .symbol_records(
+                    &productions[production].symbols,
+                    None,
+                    fields,
+                    &mut BTreeSet::new(),
+                    None,
+                )
+                .unwrap();
+            forms[0]
+                .parts
+                .iter()
+                .find_map(|part| match part {
+                    RecordPart::Field { name, naming, .. } => Some((name.clone(), naming.clone())),
+                    _ => None,
+                })
+                .unwrap()
+        };
+        assert_eq!(
+            field(0, &BTreeMap::new()),
+            ("symbol".into(), Naming::Fallback)
+        );
+        assert_eq!(field(1, &BTreeMap::new()), ("dev".into(), Naming::Keyword));
+        let fields = BTreeMap::from([("symbol".into(), "interface-symbol".into())]);
+        assert_eq!(
+            field(0, &fields),
+            ("interface-symbol".into(), Naming::Registry)
+        );
+        let labelled = [Part::Value {
+            rule: "text".into(),
+            value_kind: "typed".into(),
+            value_type: None,
+            label: Some(registry::SlotLabel {
+                id: "demo.pattern".into(),
+                name: "pattern".into(),
+            }),
+        }];
+        let forms = values
+            .projection_records(&labelled, &BTreeMap::new(), "test")
+            .unwrap();
+        assert!(matches!(
+            forms[0].parts.as_slice(),
+            [RecordPart::Field { name, naming: Naming::Label(id), .. }]
+                if name == "pattern" && id == "demo.pattern"
+        ));
     }
 
     fn projection_grammar() -> Grammar {
@@ -651,7 +716,7 @@ mod tests {
         assert_eq!(forms, original);
         assert!(forms.iter().all(|form| matches!(
             form.parts.last(),
-            Some(RecordPart::Body { name, rule, optional: true })
+            Some(RecordPart::Body { name, rule, optional: true, .. })
                 if name == "route-body" && rule == "route_body"
         )));
         assert!(matches!(
@@ -681,6 +746,7 @@ mod tests {
                             name: "flow".into(),
                             rule: "$block:opts[]".into(),
                             optional: false,
+                            naming: Naming::Keyword,
                         },
                     ],
                 }],
