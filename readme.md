@@ -21,6 +21,7 @@ configuration at build time.
 
   services.bird = {
     enable = true;
+
     settings = {
       router-id = "192.0.2.1";
       protocol.device.device0 = { };
@@ -32,9 +33,8 @@ configuration at build time.
 Each setting has one path. Multiword directives are dashed, as in `router-id`,
 `hold-time` and `peer-table`, declarations are namespaced, as in
 `protocol.bgp.peer`, and records and blocks nest. Keyword paths such as
-`hold.time` are rejected, because a second spelling would bypass module
-priorities. Repeated entries are ordered lists, and executable bodies are native
-BIRD text:
+`hold.time` are rejected. Repeated entries are ordered lists, and executable
+bodies are native BIRD text:
 
 ```nix
 {
@@ -45,10 +45,12 @@ BIRD text:
       return candidate ~ [ 203.0.113.0/24 ];
     '';
   };
+
   filter.export_owned.body = ''
     if owned(net) then accept;
     reject;
   '';
+
   protocol.bgp.peer = {
     local.as = 65000;
     neighbor = { address = "192.0.2.2"; as = 65001; };
@@ -95,11 +97,14 @@ record:
 ```nix
 {
   attribute = [{ type = "int"; name = "local_mark"; }];
+
   ipv4.table.main4.cork-threshold = { low = 1000; high = 2000; };
+
   protocol.ospf.ospf0 = {
     ecmp = { enabled = true; limit = 8; };
     area."0.0.0.1".virtual-link."192.0.2.9" = { instance = 1; hello = 5; };
   };
+
   protocol.pipe.mirror.export-in = { prefix = "192.0.2.0/24"; policy = "all"; };
 }
 ```
@@ -114,6 +119,7 @@ area."0.0.0.1" = {
     { prefix = "172.16.1.0/24"; }
     { prefix = "172.16.2.0/24"; hidden = true; }
   ];
+
   interface = [{
     pattern = "eth1";
     type = "nbma";
@@ -172,10 +178,7 @@ route = [{
 }];
 ```
 
-See [`examples/bird`](examples/bird) for complete data, policy and peer
-examples, and the [option search](https://stepbrobd.github.io/router/) for each
-setting's expected value, BIRD documentation and grammar rule at the pinned
-commit.
+See [`examples/bird`](examples/bird) for more usage.
 
 Settings stay plain data while modules define them, which lets a module read
 `config.services.bird.settings` to decide what else to set. Rendering into
@@ -186,8 +189,8 @@ and leaving `settings` unset keeps the upstream handwritten configuration.
 
 An `include = [ "/run/bird/credentials.conf" ];` setting renders BIRD includes
 at the start of the root or of any braced block, without copying the files into
-the Nix store. BIRD expands an include at the start of any line, and
-`bird.include` can therefore stand in for a value or a list item, as in
+the Nix store. Because BIRD expands an include at the start of any line,
+`bird.include` can stand in for a value or a list item, as in
 `password = bird.include "/run/bird/password.conf";`. A pure build cannot read
 runtime files, which leaves `checkConfig` two choices: fixtures from upstream
 `preCheckConfig`, or disabling it.
@@ -200,6 +203,7 @@ let
 in
 {
   generated = bird.eval { modules = [ ./bird.nix ]; };
+
   checked = bird.check {
     inherit pkgs;
     package = pkgs.bird3;
@@ -231,50 +235,60 @@ types, ranges, symbol classes and postconfig constraints.
 
 ## Grammar compiler
 
-The Rust CLI takes a BIRD source directory:
+A BIRD statement is a production whose right-hand side opens with a run of
+keyword terminals, such as `ROUTER ID idval ';'` in `nest/config.Y`. The
+compiler names the statement by joining the run's spellings with a dash, which
+gives `router-id`, and `ROUTER ID FROM iface_patt ';'` becomes `router-id-from`.
+Keyword spellings are C identifiers, mostly the `CF_KEYWORDS` token names that
+`conf/gen_keywords.m4` lowercases, and none contains a dash. The join is
+therefore injective: `router-id` splits back into exactly `ROUTER ID`, and two
+different keyword runs never share a name. Dots stay reserved for grammar
+nesting, meaning a braced block, a declaration namespace such as
+`protocol.bgp.<name>` or a record field. Each statement thus has one attribute
+path, and the module system resolves priorities and conflicts per path. A second
+spelling such as `hold.time` would render the same statement outside that
+resolution, and the runtime rejects it as an unknown setting whose canonical
+spelling is `hold-time`.
 
-```sh
-router inspect /path/to/bird
-router generate /path/to/bird --output generated/bird
-router options /path/to/bird --prefix services.bird.settings --source-url https://github.com/cz-nic/bird/blob/REV/
-```
+The compiler turns a BIRD source tree into `generated/bird/grammar.json` in four
+passes:
 
-The `generate` command writes the grammar inventory,
-`generated/bird/grammar.json`, for the Nix runtime in `lib/router/bird` to
-interpret. The checked-in inventory follows the `bird` input in `flake.lock`,
-BIRD's `thread-next` branch. A production can also be written in its raw form,
-`{ _rule; _production; _args; }`.
+1. Assembly reads the Linux protocol set from `configure.ac` and each protocol's
+   `.Y` fragments from the Makefiles, then runs BIRD's own `conf/gen_parser.m4`
+   and `conf/gen_keywords.m4` through GNU m4, as BIRD's build does. The result
+   is the concatenated Bison grammar and the `CF_KEYWORDS` table of spellings
+   and tokens, extended with the keyword rules of the flex lexer
+   `conf/cf-lex.l`. Each file read is SHA-256 hashed into a source fingerprint.
+2. A Bison front end parses the `%union`, `%token` and `%type <tag>`
+   declarations, the rules and their productions, numbers mid-rule actions as
+   Bison does, and records the `$$` and `$n` assignments of each C action.
+   Productions that need a token the lexer never emits are dead and dropped.
+3. Registry resolution binds rules to stable ids and value representations from
+   `registry/bird.toml`, each verified against its defining file, `%union` tag
+   and referenced symbols. The `[storage]` table maps `%union` tags to roles:
+   semantic value, symbol, text or native program. Labels name, by Bison
+   position, the values that no keyword precedes, and each is checked against
+   the C field the action assigns, such as `$$.min`. Namespaces and projections
+   give declarations and keyword-led option groups their paths and records.
+4. Surface compilation expands nonterminals from the configuration start symbol
+   into statement forms per scope. A braced repetition `X: | X item ';'` becomes
+   a nested scope, a comma recursion `X: item | X ',' item` becomes a list,
+   keyword alternatives become an enum, and a rule whose storage role is program
+   stays native BIRD text. Statements that share a keyword run and carry several
+   values merge into one record type. Generation fails while any form lacks an
+   attribute form.
 
-The `options` command prints a NixOS `options.json` with one entry per setting
-under `--prefix`, described from BIRD's `doc/bird.sgml` and linked to its
-production under `--source-url`. A block reachable from several paths, such as a
-template's or a second channel's, is listed under the first path and the others
-point there. The flake's `packages.site` indexes the file with
-[NuschtOS Search](https://github.com/NuschtOS/search), and
-`.github/workflows/pages.yaml` publishes it to GitHub Pages. Another module
-joins the search as one more entry in the `scopes` list of
-`modules/flake/site.nix`.
-
-Generation fails on a setting that cannot be written as attributes and prints
-its BIRD source location. The `inspect` command lists the same settings under
-`registry.diagnostics.unaddressable`. A BIRD commit that adds one fails the
-weekly bump until the registry names its values.
-
-The registry, `registry/bird.toml`, holds public type and field names, rule
-aliases, value labels, projection hints and declaration order. Syntax,
-delimiters, alternatives and repetition come from the grammar. A required
-binding fails when its source match is missing, ambiguous or incompatible. When
-upstream renames a rule, keep the binding's `id` and update its `rules` aliases
-and source checks. Field names belong in the registry rather than in
-protocol-specific Nix code.
-
-Recorded source hashes keep a stale inventory from being used with changed BIRD
-sources. The `bird-generation` check regenerates the inventory from the pinned
-input and compares it with the checked-in file.
-
-Development uses `nix develop` for the toolchain, `cargo nextest run` for tests,
-`nix build` for the compiler and `nix fmt` for formatting and lints. Autopilot
-discovers the library, packages and modules.
+The runtime in `lib/router/bird` loads the inventory with `lib.importJSON` and
+interprets it in Nix. Its option type merges by schema: each definition's
+location is looked up in the inventory, statement lists concatenate, `body` and
+`variables` merge as `types.lines`, blocks and records recurse, and scalars must
+agree after the module system applies priorities. Rendering walks each scope,
+selects the forms whose path prefixes the attribute path and emits the keyword
+run, the entry name, the `from` header and the remaining values by shape.
+Candidates are scored by specificity, and exactly one rendered text must remain.
+An ambiguous setting can be written as an exact production node,
+`{ _rule; _production; _args; }`. Root declarations follow the registry's
+`declaration_order`, and BIRD's `bird -p` performs the semantic check.
 
 ## License
 
