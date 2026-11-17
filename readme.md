@@ -270,6 +270,10 @@ passes:
    position, the values that no keyword precedes, and each is checked against
    the C field the action assigns, such as `$$.min`. Namespaces and projections
    give declarations and keyword-led option groups their paths and records.
+   Exclusions leave out rules no configuration needs, such as the filter unit
+   test directives `bt_test_suite` and `bt_test_same` that only BIRD's test
+   program runs. Each must be defined in its named file and used only as a whole
+   alternative, so dropping it removes nothing else.
 4. Surface compilation expands nonterminals from the configuration start symbol
    into statement forms per scope. A braced repetition `X: | X item ';'` becomes
    a nested scope, a comma recursion `X: item | X ',' item` becomes a list,
