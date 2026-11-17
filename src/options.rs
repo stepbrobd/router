@@ -65,7 +65,7 @@ pub fn options(inventory: &Inventory, sgml: &str, source_url: &str, prefix: &[St
         let mut description = match (entry, entry.is_none().then(parent).flatten()) {
             (Some(entry), _) => format!("{}\n\n{}", entry.syntax, entry.text),
             (None, Some((loc, entry))) => {
-                format!("Part of `{}`, {}.", path(loc).join("."), entry.syntax)
+                format!("Part of `{}`.\n\n{}", path(loc).join("."), entry.syntax)
             }
             (None, None) => {
                 undocumented += 1;
@@ -381,9 +381,10 @@ fn manual(sgml: &str) -> BTreeMap<String, Entry> {
             .filter_map(|marker| rest.find(marker))
             .min()
             .unwrap_or(rest.len());
+        // the default a sentence states closes an entry, so it reads as a paragraph of its own
         entries.entry(id.to_owned()).or_insert_with(|| Entry {
             syntax: markdown(syntax),
-            text: markdown(&rest[..end]),
+            text: markdown(&rest[..end]).replace(". Default", ".\n\nDefault"),
         });
     }
     entries
@@ -412,6 +413,10 @@ fn markdown(sgml: &str) -> String {
         if !closing && let Some(short) = after.strip_prefix('/') {
             let (content, tail) = short.split_once('/').unwrap_or((short, ""));
             let content = decode(content);
+            // a placeholder is a word of its own, also where the manual writes `pd preferred<m/switch/`
+            if name == "m" && out.ends_with(|c: char| c.is_ascii_alphanumeric()) {
+                out.push(' ');
+            }
             out.push_str(&match name {
                 "cf" | "tt" | "file" => format!("`{content}`"),
                 "m" | "it" | "em" => format!("*{content}*"),
@@ -590,6 +595,16 @@ mod tests {
         assert_eq!(
             entries["proto-import"].text,
             "Import filter, for example\n\n```\nimport all;\n```"
+        );
+        let entries = manual(
+            "<tag><label id=\"radv-prefix-pd-preferred\">pd preferred<m/switch/</tag>\n\tWhether hosts use DHCPv6. Default value is no.\n",
+        );
+        assert_eq!(
+            entries["radv-prefix-pd-preferred"],
+            Entry {
+                syntax: "pd preferred *switch*".into(),
+                text: "Whether hosts use DHCPv6.\n\nDefault value is no.".into(),
+            }
         );
     }
 
